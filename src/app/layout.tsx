@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
+import { Caveat, Fira_Code, Geologica, Inter } from "next/font/google";
 import "./globals.css";
+
+const geologica = Geologica({
+  variable: "--font-geologica",
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+});
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "cyrillic", "cyrillic-ext"],
 });
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const firaCode = Fira_Code({
+  variable: "--font-fira-code",
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+});
+
+const caveat = Caveat({
+  variable: "--font-caveat",
   subsets: ["latin", "cyrillic", "cyrillic-ext"],
 });
 
@@ -22,9 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="tg"
-      className={`${inter.variable} ${manrope.variable} h-full antialiased`}
+      className={`${geologica.variable} ${inter.variable} ${firaCode.variable} ${caveat.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-surface font-body-md text-on-surface">
+      <body className="min-h-full bg-notebook font-body-md text-ink">
         {children}
       </body>
     </html>
