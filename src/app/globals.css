@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "material-symbols/outlined.css" layer(base);
 
 @theme {
   --color-surface: #fafaf5;
@@ -54,13 +55,13 @@
   --color-on-error-container: #93000a;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-jakarta), var(--font-manrope), ui-sans-serif, sans-serif;
+  --font-heading: var(--font-manrope), ui-sans-serif, sans-serif;
 
-  --font-display-hero: var(--font-jakarta), var(--font-manrope), sans-serif;
-  --font-display-hero-mobile: var(--font-jakarta), var(--font-manrope), sans-serif;
-  --font-headline-lg: var(--font-jakarta), var(--font-manrope), sans-serif;
-  --font-headline-md: var(--font-jakarta), var(--font-manrope), sans-serif;
-  --font-headline-sm: var(--font-jakarta), var(--font-manrope), sans-serif;
+  --font-display-hero: var(--font-manrope), sans-serif;
+  --font-display-hero-mobile: var(--font-manrope), sans-serif;
+  --font-headline-lg: var(--font-manrope), sans-serif;
+  --font-headline-md: var(--font-manrope), sans-serif;
+  --font-headline-sm: var(--font-manrope), sans-serif;
   --font-body-lg: var(--font-inter), sans-serif;
   --font-body-md: var(--font-inter), sans-serif;
   --font-body-sm: var(--font-inter), sans-serif;
@@ -119,6 +120,16 @@
   --spacing-margin: 1rem;
   --spacing-margin-tablet: 2rem;
   --spacing-margin-desktop: 3rem;
+
+  --radius-sm: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+
+  --shadow-card: 0 1px 3px rgba(15, 42, 35, 0.04), 0 4px 12px rgba(15, 42, 35, 0.02);
+  --shadow-raised: 0 8px 24px rgba(15, 42, 35, 0.08), 0 2px 6px rgba(15, 42, 35, 0.03);
+  --shadow-modal: 0 16px 40px rgba(15, 42, 35, 0.16);
 }
 
 @layer base {
