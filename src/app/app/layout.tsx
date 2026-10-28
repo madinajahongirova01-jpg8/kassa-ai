@@ -1,16 +1,12 @@
-import { AppHeader } from "@/components/layout/AppHeader";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { MobileNav } from "@/components/layout/MobileNav";
+import { AppTopBar } from "@/components/daftar/AppTopBar";
+import { BottomNav } from "@/components/daftar/BottomNav";
 
 export default function AppLayout({ children }: LayoutProps<"/app">) {
   return (
-    <div className="min-h-screen bg-surface lg:pl-72">
-      <AppSidebar />
-      <AppHeader />
-      <main className="relative min-h-screen bg-surface pt-16 pb-28 lg:pb-0">
-        {children}
-      </main>
-      <MobileNav />
+    <div className="mx-auto flex min-h-dvh w-full max-w-[600px] flex-col gap-4 px-[18px] pt-[18px] pb-[132px] xl:max-w-[1600px] xl:gap-5 xl:px-7 xl:py-[22px]">
+      <AppTopBar />
+      <main className="min-w-0 flex-1">{children}</main>
+      <BottomNav />
     </div>
   );
 }

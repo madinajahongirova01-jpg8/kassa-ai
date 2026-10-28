@@ -199,7 +199,19 @@
   background-image:
     linear-gradient(var(--color-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-size: 22px 22px;
+  @variant xl {
+    background-size: 24px 24px;
+  }
+}
+
+@utility receipt-tape {
+  background:
+    linear-gradient(-45deg, transparent 7px, var(--color-card) 0) 0 100% / 14px 14px repeat-x,
+    linear-gradient(45deg, transparent 7px, var(--color-card) 0) 0 100% / 14px 14px repeat-x,
+    linear-gradient(-135deg, transparent 7px, var(--color-card) 0) 0 0 / 14px 14px repeat-x,
+    linear-gradient(135deg, transparent 7px, var(--color-card) 0) 0 0 / 14px 14px repeat-x,
+    linear-gradient(var(--color-card), var(--color-card)) 0 14px / 100% calc(100% - 28px) no-repeat;
 }
 
 @utility marker {

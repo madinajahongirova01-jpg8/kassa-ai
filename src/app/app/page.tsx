@@ -1,53 +1,40 @@
-import { CloudSyncBanner, CloudSyncPill } from "@/components/overview/CloudSync";
-import { DueDebtsAlert, DueDebtsCard } from "@/components/overview/DueDebtsCard";
-import { ExpenseBreakdownCard } from "@/components/overview/ExpenseBreakdownCard";
-import { FlowChartCard, FlowChartCompact } from "@/components/overview/FlowChartCard";
-import { OverviewKpis } from "@/components/overview/OverviewKpis";
-import { QuickInputCard, QuickInputCompact } from "@/components/overview/QuickInputCard";
-import { RecentTransactionsCard, RecentTransactionsList } from "@/components/overview/RecentTransactions";
-import { SmartReceipt } from "@/components/receipt/SmartReceipt";
-import { DemoBadge } from "@/components/ui/DemoBadge";
-import { todayReceipt } from "@/data/overview";
+import { MicCta } from "@/components/daftar/MicCta";
+import { DebtStickers, UrgentDebtSticker } from "@/components/imruz/DebtStickers";
+import { TodayHeadline, TodayHeadlineMobile } from "@/components/imruz/TodayHeadline";
+import { TodayReceipt, TodayReceiptMobile } from "@/components/imruz/TodayReceipt";
+import { TodayStats, TodayStatsMobile } from "@/components/imruz/TodayStats";
+import { WeekProfitChart } from "@/components/imruz/WeekProfitChart";
+import { expenseHint, todayEntries, weekProfit } from "@/data/imruz";
+import { changeFromYesterday, daySummary } from "@/lib/imruz";
 
-export default function OverviewPage() {
+export default function ImruzPage() {
+  const summary = daySummary(todayEntries);
+  const change = changeFromYesterday(weekProfit);
+
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-space-md px-margin pt-space-sm pb-space-md lg:space-y-space-lg lg:p-space-lg">
-      <div className="flex justify-end">
-        <DemoBadge />
-      </div>
-
-      <div className="space-y-space-md lg:hidden">
-        <QuickInputCompact />
-        <SmartReceipt receipt={todayReceipt} />
-        <OverviewKpis compact />
-        <FlowChartCompact />
-        <DueDebtsAlert />
-        <RecentTransactionsList />
-        <CloudSyncPill />
-      </div>
-
-      <div className="hidden space-y-space-lg lg:block">
-        <section className="grid grid-cols-12 items-start gap-space-lg">
-          <div className="col-span-7">
-            <QuickInputCard />
-          </div>
-          <SmartReceipt receipt={todayReceipt} className="col-span-5" />
+    <>
+      <div className="hidden h-[calc(100dvh-116px)] min-h-[744px] grid-cols-[minmax(0,1fr)_350px_268px] gap-[26px] xl:grid">
+        <section className="flex min-w-0 flex-col gap-[22px]">
+          <TodayHeadline profit={summary.profit} change={change} />
+          <TodayStats income={summary.income} expense={summary.expense} salesCount={summary.salesCount} expenseHint={expenseHint} />
+          <WeekProfitChart week={weekProfit} />
         </section>
-
-        <OverviewKpis />
-
-        <section className="grid grid-cols-12 items-start gap-space-lg">
-          <div className="col-span-12 space-y-space-lg xl:col-span-7">
-            <FlowChartCard />
-            <RecentTransactionsCard />
-          </div>
-          <div className="col-span-12 space-y-space-lg xl:col-span-5">
-            <ExpenseBreakdownCard />
-            <DueDebtsCard />
-            <CloudSyncBanner />
-          </div>
+        <section className="flex min-h-0 flex-col">
+          <TodayReceipt entries={todayEntries} />
+        </section>
+        <section className="flex min-h-0 flex-col gap-3.5">
+          <DebtStickers />
+          <div className="flex-1" />
+          <MicCta />
         </section>
       </div>
-    </div>
+
+      <div className="flex flex-col gap-4 xl:hidden">
+        <TodayHeadlineMobile profit={summary.profit} change={change} />
+        <TodayStatsMobile income={summary.income} expense={summary.expense} />
+        <TodayReceiptMobile entries={todayEntries} />
+        <UrgentDebtSticker />
+      </div>
+    </>
   );
 }

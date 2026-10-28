@@ -34,7 +34,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="tg"
       className={`${geologica.variable} ${inter.variable} ${firaCode.variable} ${caveat.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-notebook font-body-md text-ink">
+      <body
+        className="min-h-full bg-notebook font-body-md text-ink"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>
