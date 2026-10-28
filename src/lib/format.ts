@@ -1,7 +1,6 @@
 type FormatOptions = {
   sign?: boolean;
   unit?: boolean;
-  decimals?: number;
 };
 
 export const MINUS = "−";
@@ -17,7 +16,7 @@ export function formatNumber(value: number, decimals = 0) {
 }
 
 export function formatSomoni(value: number, options: FormatOptions = {}) {
-  const { sign = false, unit = true, decimals = 0 } = options;
+  const { sign = false, unit = true } = options;
   const prefix = value < 0 ? MINUS : sign && value > 0 ? "+" : "";
-  return `${prefix}${formatNumber(Math.abs(value), decimals)}${unit ? " смн" : ""}`;
+  return `${prefix}${formatNumber(Math.round(Math.abs(value)))}${unit ? " смн" : ""}`;
 }

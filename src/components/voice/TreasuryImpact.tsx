@@ -21,13 +21,13 @@ export function TreasuryImpact() {
         <div className="rounded-lg bg-surface-container-lowest px-space-md py-space-xs text-right">
           <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Хазинаи нақдӣ</span>
           <p className="font-tabular-ledger text-tabular-ledger font-bold text-primary tnum">
-            {formatSomoni(cash, { sign: true, decimals: 2 })}
+            {formatSomoni(cash, { sign: true })}
           </p>
         </div>
         <div className="rounded-lg bg-surface-container-lowest px-space-md py-space-xs text-right">
           <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Насияи пӯшидашуда</span>
           <p className="font-tabular-ledger text-tabular-ledger font-bold text-tertiary-container tnum">
-            {formatSomoni(-closedDebt, { decimals: 2 })}
+            {formatSomoni(-closedDebt)}
           </p>
         </div>
       </div>

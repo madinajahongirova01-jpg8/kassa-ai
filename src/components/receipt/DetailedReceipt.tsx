@@ -63,7 +63,7 @@ function ReceiptRow({ item, index }: { item: VoiceReceiptItem; index: number }) 
       <div className="flex shrink-0 flex-col items-end">
         <p className={cn("font-tabular-ledger text-tabular-ledger font-bold tnum", style.amount)}>
           <span className="lg:hidden">{formatSomoni(item.amount, { sign: true })}</span>
-          <span className="hidden lg:inline">{formatSomoni(item.amount, { sign: true, unit: false, decimals: 2 })}</span>
+          <span className="hidden lg:inline">{formatSomoni(item.amount, { sign: true, unit: false })}</span>
         </p>
         <span className={cn("font-label-caps text-label-caps", style.labelClass)}>
           <span className="lg:hidden">{style.mobileLabel}</span>
@@ -142,13 +142,13 @@ export function DetailedReceipt({ items, actions }: { items: VoiceReceiptItem[];
           <div className="flex justify-between text-on-surface-variant">
             <span>Умумии даромад:</span>
             <span className="font-tabular-ledger text-tabular-ledger font-semibold text-primary tnum">
-              {formatSomoni(income, { sign: true, decimals: 2 })}
+              {formatSomoni(income, { sign: true })}
             </span>
           </div>
           <div className="flex justify-between text-on-surface-variant">
             <span>Умумии хароҷот:</span>
             <span className="font-tabular-ledger text-tabular-ledger font-semibold text-error tnum">
-              {formatSomoni(expense, { decimals: 2 })}
+              {formatSomoni(expense)}
             </span>
           </div>
           <div className="mt-space-sm flex items-center justify-between rounded-lg bg-primary/5 p-space-sm">
@@ -157,7 +157,7 @@ export function DetailedReceipt({ items, actions }: { items: VoiceReceiptItem[];
               <p className="font-body-sm text-body-sm text-on-surface-variant">Кассаи соф барои имрӯз</p>
             </div>
             <span className="font-headline-md text-headline-md font-black tracking-tight text-primary tnum">
-              {formatSomoni(net, { sign: true, decimals: 2 })}
+              {formatSomoni(net, { sign: true })}
             </span>
           </div>
         </div>
