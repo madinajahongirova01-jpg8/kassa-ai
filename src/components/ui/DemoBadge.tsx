@@ -1,15 +1,13 @@
-import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/cn";
 
 export function DemoBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-surface-container-high px-2 py-0.5 font-label-caps text-label-caps font-semibold text-on-surface-variant",
+        "inline-flex shrink-0 items-center rounded-full border-[1.5px] border-dashed border-ink-3 bg-card px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap text-ink-2",
         className,
       )}
     >
-      <Icon name="info" className="text-[14px]" />
       Маълумоти намунавӣ
     </span>
   );
