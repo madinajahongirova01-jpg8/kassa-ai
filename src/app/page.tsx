@@ -14,7 +14,7 @@ export default function LandingPage() {
         <LandingSteps />
         <LandingFeatures />
         <LandingCta />
-      </main>
+          </main>
       <LandingFooter />
     </div>
   );
