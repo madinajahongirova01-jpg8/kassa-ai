@@ -14,9 +14,9 @@ export function LogoMark({ size = "lg" }: { size?: "lg" | "sm" }) {
   );
 }
 
-export function Logo() {
+export function Logo({ href = "/app" }: { href?: string }) {
   return (
-    <Link href="/app" className="flex items-center gap-2.5 text-ink hover:text-ink">
+    <Link href={href} className="flex items-center gap-2.5 text-ink hover:text-ink">
       <LogoMark />
       <span className="font-display text-lg font-extrabold">
         Kassa <span className="text-pen">AI</span>
