@@ -1,12 +1,21 @@
-const groupFormatter = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 });
+type FormatOptions = {
+  sign?: boolean;
+  unit?: boolean;
+  decimals?: number;
+};
 
-export function formatNumber(value: number) {
-  return groupFormatter.format(value).replace(/\s/g, " ");
+export function formatNumber(value: number, decimals = 0) {
+  return new Intl.NumberFormat("ru-RU", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })
+    .format(value)
+    .replace(/\s/g, " ")
+    .replace(",", ".");
 }
 
-export function formatSomoni(value: number, options: { sign?: boolean; unit?: boolean } = {}) {
-  const { sign = false, unit = true } = options;
-  const prefix = sign ? (value > 0 ? "+" : value < 0 ? "-" : "") : value < 0 ? "-" : "";
-  const body = formatNumber(Math.abs(value));
-  return `${prefix}${body}${unit ? " смн" : ""}`;
+export function formatSomoni(value: number, options: FormatOptions = {}) {
+  const { sign = false, unit = true, decimals = 0 } = options;
+  const prefix = value < 0 ? "-" : sign && value > 0 ? "+" : "";
+  return `${prefix}${formatNumber(Math.abs(value), decimals)}${unit ? " смн" : ""}`;
 }

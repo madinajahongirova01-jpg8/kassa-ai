@@ -64,7 +64,10 @@ export function AppSidebar() {
       </div>
 
       <div className="space-y-space-md p-space-md">
-        <div className="flex cursor-pointer items-center justify-between rounded-xl bg-on-surface-variant/20 p-space-sm transition-colors hover:bg-on-surface-variant/30">
+        <Link
+          href="/app/new"
+          className="flex items-center justify-between rounded-xl bg-on-surface-variant/20 p-space-sm transition-colors hover:bg-on-surface-variant/30"
+        >
           <div className="flex items-center gap-space-sm">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-container text-on-primary-container shadow-sm">
               <Icon name="mic" className="text-xl" />
@@ -79,7 +82,7 @@ export function AppSidebar() {
             </div>
           </div>
           <Icon name="arrow_forward" className="text-base text-outline-variant" />
-        </div>
+        </Link>
 
         <div className="flex items-center justify-between pt-space-xs">
           <div className="flex items-center gap-space-sm">

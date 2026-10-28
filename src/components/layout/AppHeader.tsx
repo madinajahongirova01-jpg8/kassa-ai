@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { currentBusiness } from "@/data/business";
 
@@ -63,13 +64,13 @@ export function AppHeader() {
               {currentBusiness.notifications}
             </span>
           </button>
-          <button
-            type="button"
+          <Link
+            href="/app/new"
             className="flex items-center gap-space-xs rounded-lg bg-tertiary-container px-space-md py-2 font-headline-sm text-headline-sm font-bold text-on-tertiary-container shadow-sm transition-opacity hover:opacity-95"
           >
             <Icon name="add" className="text-lg" />
             <span>Сабти нав</span>
-          </button>
+          </Link>
         </div>
       </div>
     </header>

@@ -36,7 +36,7 @@ export function MobileNav() {
         <NavLink item={second} active={isActive(second.href)} />
         <div className="relative -top-3 flex min-w-[64px] flex-col items-center justify-center">
           <Link
-            href="/app"
+            href="/app/new"
             aria-label="Сабти нав"
             className="flex h-14 w-14 items-center justify-center rounded-full bg-tertiary-fixed-dim text-on-tertiary-fixed shadow-[0_4px_16px_rgba(156,100,0,0.35)] transition-transform active:scale-95"
           >
