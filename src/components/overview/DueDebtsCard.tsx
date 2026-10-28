@@ -1,13 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { Pill } from "@/components/ui/Pill";
-import { debtorsCount, dueDebts } from "@/data/overview";
+import { useDebtOverview } from "@/lib/useDebtOverview";
 import { cn } from "@/lib/cn";
 import { formatSomoni } from "@/lib/format";
 
 export function DueDebtsCard() {
+  const { totals, dueSoon: dueDebts } = useDebtOverview();
   return (
     <Card>
       <CardHeader
@@ -57,7 +60,7 @@ export function DueDebtsCard() {
       </div>
       <div className="mt-space-md pt-space-xs text-center">
         <Link href="/app/debts" className="font-body-sm text-body-sm font-semibold text-primary hover:underline">
-          Ба дафтари пурраи насия гузаштан ({debtorsCount} нафар) →
+          Ба дафтари пурраи насия гузаштан ({totals.debtorCount} нафар) →
         </Link>
       </div>
     </Card>
@@ -65,6 +68,7 @@ export function DueDebtsCard() {
 }
 
 export function DueDebtsAlert() {
+  const { dueSoon: dueDebts } = useDebtOverview();
   return (
     <section className="space-y-space-sm rounded-xl bg-error-container/40 p-space-md">
       <div className="flex items-center justify-between">
@@ -83,7 +87,7 @@ export function DueDebtsAlert() {
         >
           <div className="min-w-0 pr-2">
             <div className="truncate font-body-md text-body-sm font-bold text-on-surface">{debt.name}</div>
-            <div className={cn("font-body-sm text-[11px] font-medium", debt.id === "d1" ? "text-error" : "text-tertiary")}>
+            <div className={cn("font-body-sm text-[11px] font-medium", debt.urgent ? "text-error" : "text-tertiary")}>
               {debt.dueShort} • <span className="font-semibold tnum">{formatSomoni(debt.amount)}</span>
             </div>
           </div>

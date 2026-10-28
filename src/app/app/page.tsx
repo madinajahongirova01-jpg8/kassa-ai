@@ -2,12 +2,12 @@ import { CloudSyncBanner, CloudSyncPill } from "@/components/overview/CloudSync"
 import { DueDebtsAlert, DueDebtsCard } from "@/components/overview/DueDebtsCard";
 import { ExpenseBreakdownCard } from "@/components/overview/ExpenseBreakdownCard";
 import { FlowChartCard, FlowChartCompact } from "@/components/overview/FlowChartCard";
+import { OverviewKpis } from "@/components/overview/OverviewKpis";
 import { QuickInputCard, QuickInputCompact } from "@/components/overview/QuickInputCard";
 import { RecentTransactionsCard, RecentTransactionsList } from "@/components/overview/RecentTransactions";
 import { SmartReceipt } from "@/components/receipt/SmartReceipt";
 import { DemoBadge } from "@/components/ui/DemoBadge";
-import { KpiCard, KpiCardCompact } from "@/components/ui/KpiCard";
-import { overviewKpis, todayReceipt } from "@/data/overview";
+import { todayReceipt } from "@/data/overview";
 
 export default function OverviewPage() {
   return (
@@ -19,11 +19,7 @@ export default function OverviewPage() {
       <div className="space-y-space-md lg:hidden">
         <QuickInputCompact />
         <SmartReceipt receipt={todayReceipt} />
-        <section className="grid grid-cols-2 gap-space-sm">
-          {overviewKpis.map((kpi) => (
-            <KpiCardCompact key={kpi.label} kpi={kpi} />
-          ))}
-        </section>
+        <OverviewKpis compact />
         <FlowChartCompact />
         <DueDebtsAlert />
         <RecentTransactionsList />
@@ -38,11 +34,7 @@ export default function OverviewPage() {
           <SmartReceipt receipt={todayReceipt} className="col-span-5" />
         </section>
 
-        <section className="grid grid-cols-2 gap-space-md xl:grid-cols-4">
-          {overviewKpis.map((kpi) => (
-            <KpiCard key={kpi.label} kpi={kpi} />
-          ))}
-        </section>
+        <OverviewKpis />
 
         <section className="grid grid-cols-12 items-start gap-space-lg">
           <div className="col-span-12 space-y-space-lg xl:col-span-7">

@@ -73,4 +73,5 @@ export type DueDebt = {
   dueShort: string;
   avatarClassName: string;
   dueClassName: string;
+  urgent: boolean;
 };

@@ -5,10 +5,15 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { currentBusiness } from "@/data/business";
 import { appSidebarNav } from "@/data/navigation";
+import { buildDebtRows, debtTotals } from "@/lib/debts";
+import { useDebtState } from "@/lib/debtStore";
+import { formatSomoni } from "@/lib/format";
 import { isNavActive } from "@/lib/nav";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { customers, events } = useDebtState();
+  const debtTotal = debtTotals(buildDebtRows(customers, events)).total;
 
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-full w-72 flex-col justify-between overflow-y-auto bg-inverse-surface text-inverse-on-surface no-scrollbar lg:flex">
@@ -52,9 +57,9 @@ export function AppSidebar() {
                   <Icon name={item.icon} className="text-xl" />
                   <span className="font-body-md text-body-md">{item.label}</span>
                 </div>
-                {item.href === "/app/debts" && (
+                {item.href === "/app/debts" && debtTotal > 0 && (
                   <span className="rounded-sm bg-error/20 px-space-xs py-0.5 font-label-caps text-label-caps text-error-container">
-                    {currentBusiness.activeDebt} смн
+                    {formatSomoni(debtTotal)}
                   </span>
                 )}
               </Link>

@@ -4,6 +4,7 @@ import { categories, sources, type LedgerEntry } from "@/data/transactions";
 import { cn } from "@/lib/cn";
 import { formatSomoni } from "@/lib/format";
 import { formatLedgerDate, type SortOrder } from "@/lib/ledger";
+import { isDebtEntry } from "@/lib/ledgerDebts";
 
 export const PAGE_SIZE = 7;
 
@@ -140,8 +141,8 @@ export function LedgerTable(props: LedgerTableProps) {
                     <div className="flex items-center justify-end gap-1">
                       <button
                         type="button"
-                        title="Таҳрир"
-                        aria-label={`Таҳрири ${entry.title}`}
+                        title={isDebtEntry(entry) ? "Дар дафтари насия идора мешавад" : "Таҳрир"}
+                        aria-label={isDebtEntry(entry) ? `Кушодани дафтари насия: ${entry.title}` : `Таҳрири ${entry.title}`}
                         onClick={(event) => {
                           event.stopPropagation();
                           onEdit(entry);
@@ -151,20 +152,22 @@ export function LedgerTable(props: LedgerTableProps) {
                           selectedId === entry.id ? "text-primary" : "text-outline-variant",
                         )}
                       >
-                        <Icon name="edit" className="text-lg" />
+                        <Icon name={isDebtEntry(entry) ? "open_in_new" : "edit"} className="text-lg" />
                       </button>
-                      <button
-                        type="button"
-                        title="Нест кардан"
-                        aria-label={`Нест кардани ${entry.title}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onDelete(entry);
-                        }}
-                        className="rounded-sm p-1 text-outline transition-colors hover:bg-surface-container hover:text-error"
-                      >
-                        <Icon name="delete" className="text-lg" />
-                      </button>
+                      {!isDebtEntry(entry) && (
+                        <button
+                          type="button"
+                          title="Нест кардан"
+                          aria-label={`Нест кардани ${entry.title}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onDelete(entry);
+                          }}
+                          className="rounded-sm p-1 text-outline transition-colors hover:bg-surface-container hover:text-error"
+                        >
+                          <Icon name="delete" className="text-lg" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

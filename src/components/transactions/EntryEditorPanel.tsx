@@ -116,7 +116,7 @@ export function EntryEditorPanel({ draft, base, onChange, onSave, onClose }: Edi
         <div>
           <span className={cn(fieldLabel, "mb-2")}>{expense ? "Категорияи хароҷот" : "Категорияи даромад"}</span>
           <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(categories) as EntryCategory[]).map((key) => {
+            {(Object.keys(categories) as EntryCategory[]).filter((key) => key !== "debt").map((key) => {
               const category = categories[key];
               const active = draft.category === key;
               return (

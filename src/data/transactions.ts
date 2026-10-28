@@ -158,7 +158,7 @@ export const periods = [
 
 export type PeriodId = (typeof periods)[number]["id"];
 
-const owner = { name: "Ҷамшед Р.", initials: "ҶР", className: "bg-secondary-fixed text-on-secondary-fixed" };
+export const ledgerOwner = { name: "Ҷамшед Р.", initials: "ҶР", className: "bg-secondary-fixed text-on-secondary-fixed" };
 const cashier = { name: "Алишер М.", initials: "АМ", className: "bg-surface-container-high text-on-surface" };
 const waiter = { name: "Мавзуна", initials: "М", className: "bg-tertiary-fixed text-on-tertiary-fixed" };
 const seller = { name: "Сӯҳроб", initials: "С", className: "bg-surface-container-highest text-on-surface" };
@@ -175,7 +175,7 @@ export const ledgerEntries: LedgerEntry[] = [
     amount: -600,
     date: "2024-05-24",
     time: "16:40",
-    author: owner,
+    author: ledgerOwner,
     status: "confirmed",
     voiceNote: { text: "Имрӯз 2 халта орд гирифтам 600 сомонӣ аз бозори Корвон", duration: "0:04" },
     aiConfidence: 98.9,
@@ -206,7 +206,7 @@ export const ledgerEntries: LedgerEntry[] = [
     amount: -30,
     date: "2024-05-24",
     time: "15:10",
-    author: owner,
+    author: ledgerOwner,
     status: "confirmed",
     voiceNote: { text: "Такси барои бор аз бозори Саховат 30 сомонӣ додам", duration: "0:03" },
     aiConfidence: 97.1,
@@ -224,21 +224,6 @@ export const ledgerEntries: LedgerEntry[] = [
     time: "14:00",
     author: waiter,
     status: "confirmed",
-  },
-  {
-    id: "1044",
-    title: "Бозпардохти насия (Алишер Қ.)",
-    shortTitle: "Бозпардохти насия",
-    description: "Дафтари насия: сабти №104 пурра пӯшида шуд",
-    category: "debt",
-    source: "ai",
-    payment: "cash",
-    amount: 120,
-    date: "2024-05-24",
-    time: "11:20",
-    author: owner,
-    status: "confirmed",
-    aiConfidence: 98.4,
   },
   {
     id: "1043",
@@ -265,7 +250,7 @@ export const ledgerEntries: LedgerEntry[] = [
     amount: -240,
     date: "2024-05-24",
     time: "09:15",
-    author: owner,
+    author: ledgerOwner,
     status: "confirmed",
   },
   {
@@ -294,7 +279,7 @@ export const ledgerEntries: LedgerEntry[] = [
     amount: -180,
     date: "2024-05-23",
     time: "18:30",
-    author: owner,
+    author: ledgerOwner,
     status: "confirmed",
   },
   {
@@ -308,7 +293,7 @@ export const ledgerEntries: LedgerEntry[] = [
     amount: -400,
     date: "2024-05-23",
     time: "13:05",
-    author: owner,
+    author: ledgerOwner,
     status: "confirmed",
     voiceNote: { text: "Панҷ кило гӯшти гов гирифтам 400 сомонӣ", duration: "0:05" },
     aiConfidence: 97.8,
@@ -339,7 +324,7 @@ export const ledgerEntries: LedgerEntry[] = [
     amount: -25,
     date: "2024-05-23",
     time: "09:40",
-    author: owner,
+    author: ledgerOwner,
     status: "pending",
     voiceNote: { text: "Такси барои сабзавот 25 сомонӣ", duration: "0:02" },
     aiConfidence: 96.5,
@@ -355,7 +340,7 @@ export const ledgerEntries: LedgerEntry[] = [
     amount: -1500,
     date: "2024-05-22",
     time: "10:00",
-    author: owner,
+    author: ledgerOwner,
     status: "confirmed",
   },
   {

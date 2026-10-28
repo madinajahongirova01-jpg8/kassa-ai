@@ -7,5 +7,4 @@ export const currentBusiness = {
   },
   today: "Имрӯз, 24 Май",
   notifications: 3,
-  activeDebt: 545,
 };

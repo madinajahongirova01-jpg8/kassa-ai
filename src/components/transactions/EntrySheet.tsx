@@ -122,7 +122,7 @@ export function EntrySheet({ draft, base, onChange, onSave, onClose, onDelete }:
           <div className="flex flex-col gap-1.5">
             <span className="font-label-caps text-label-caps font-bold text-outline uppercase">Гурӯҳбандӣ</span>
             <div className="flex flex-wrap gap-1.5">
-              {(Object.keys(categories) as EntryCategory[]).map((key) => {
+              {(Object.keys(categories) as EntryCategory[]).filter((key) => key !== "debt").map((key) => {
                 const active = draft.category === key;
                 return (
                   <button

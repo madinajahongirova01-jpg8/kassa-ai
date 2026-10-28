@@ -4,16 +4,10 @@ import { useState } from "react";
 import { DebtDialog, dialogCancel, dialogInput, dialogLabel, dialogSubmit } from "@/components/debts/DebtDialog";
 import { Icon } from "@/components/ui/Icon";
 import { debtsToday, type DebtCustomer } from "@/data/debts";
+import type { NewDebtRecord } from "@/lib/debtStore";
 import { formatSomoni } from "@/lib/format";
 
-export type NewDebtInput = {
-  customerId: string | null;
-  name: string;
-  phone: string;
-  description: string;
-  amount: number;
-  dueDate: string;
-};
+export type NewDebtInput = NewDebtRecord;
 
 type AddDebtDialogProps = {
   customers: { customer: DebtCustomer; balance: number }[];

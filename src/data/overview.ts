@@ -1,4 +1,4 @@
-import type { DailyFlow, DueDebt, ExpenseShare, Kpi, Receipt, Transaction } from "@/data/types";
+import type { DailyFlow, ExpenseShare, Kpi, Receipt, Transaction } from "@/data/types";
 
 export const quickInput = {
   transcript: "Имрӯз 2 халта орд гирифтам 600, такси 30, ба коргар 150 додам. Фурӯш 1800 шуд.",
@@ -76,24 +76,6 @@ export const overviewKpis: Kpi[] = [
       valueClassName: "text-primary",
       note: "+28.5% рушди моҳона",
       noteClassName: "text-primary",
-    },
-  },
-  {
-    label: "Қарзи фаъол (Насия)",
-    value: 545,
-    icon: "menu_book",
-    iconClassName: "bg-error-container text-on-error-container",
-    valueClassName: "text-error",
-    badge: "2 мӯҳлаташ наздик",
-    badgeTone: "tertiary",
-    note: "4 муштарӣ қарздоранд",
-    compact: {
-      label: "Қарзи фаъол",
-      icon: "schedule",
-      iconClassName: "bg-tertiary-fixed text-on-tertiary-fixed",
-      valueClassName: "text-tertiary",
-      note: "2 мӯҳлаташ наздик",
-      noteClassName: "text-error",
     },
   },
 ];
@@ -179,30 +161,27 @@ export const recentTransactions: Transaction[] = [
   },
 ];
 
-export const dueDebts: DueDebt[] = [
-  {
-    id: "d1",
-    name: "Алишер Қосимов",
-    initials: "АҚ",
-    phone: "+992 90 777 4433",
-    amount: 220,
-    due: "Мӯҳлат: Фардо",
-    dueShort: "Мӯҳлат: Фардо",
-    avatarClassName: "bg-tertiary-fixed text-on-tertiary-fixed",
-    dueClassName: "text-tertiary",
-  },
-  {
-    id: "d2",
-    name: "Дилшод Назаров",
-    initials: "ДН",
-    phone: "+992 93 512 8899",
-    amount: 180,
-    due: "Баъди 2 рӯз",
-    dueShort: "Мӯҳлат: Пас аз 2 рӯз",
-    avatarClassName: "bg-secondary-container text-on-secondary-container",
-    dueClassName: "text-secondary",
-  },
-];
 
-export const debtorsCount = 4;
 export const branchesCount = 8;
+
+export function debtKpi(totals: { total: number; debtorCount: number; nearCount: number }): Kpi {
+  const near = `${totals.nearCount} мӯҳлаташ наздик`;
+  return {
+    label: "Қарзи фаъол (Насия)",
+    value: totals.total,
+    icon: "menu_book",
+    iconClassName: "bg-error-container text-on-error-container",
+    valueClassName: "text-error",
+    badge: near,
+    badgeTone: "tertiary",
+    note: `${totals.debtorCount} муштарӣ қарздоранд`,
+    compact: {
+      label: "Қарзи фаъол",
+      icon: "schedule",
+      iconClassName: "bg-tertiary-fixed text-on-tertiary-fixed",
+      valueClassName: "text-tertiary",
+      note: near,
+      noteClassName: "text-error",
+    },
+  };
+}

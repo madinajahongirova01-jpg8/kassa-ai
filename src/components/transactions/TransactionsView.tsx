@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { EntryEditorPanel } from "@/components/transactions/EntryEditorPanel";
 import { EntrySheet } from "@/components/transactions/EntrySheet";
@@ -13,12 +14,20 @@ import { Icon } from "@/components/ui/Icon";
 import { ledgerEntries, periods, type LedgerEntry } from "@/data/transactions";
 import { cn } from "@/lib/cn";
 import { defaultFilters, entriesToCsv, filterEntries, inPeriod, percentChange, previousPeriod, summarize, type LedgerFilters } from "@/lib/ledger";
+import { useDebtState } from "@/lib/debtStore";
+import { debtPaymentEntries, isDebtEntry } from "@/lib/ledgerDebts";
 import { applyDraft, draftFromEntry, emptyDraft, type EntryDraft } from "@/lib/ledgerDraft";
 
 const periodWord: Record<string, string> = { today: "имрӯз", yesterday: "дирӯз", week: "ҳафта" };
 
 export function TransactionsView() {
-  const [entries, setEntries] = useState<LedgerEntry[]>(ledgerEntries);
+  const router = useRouter();
+  const debtState = useDebtState();
+  const [localEntries, setEntries] = useState<LedgerEntry[]>(ledgerEntries);
+  const entries = useMemo(
+    () => [...localEntries, ...debtPaymentEntries(debtState.customers, debtState.events)],
+    [localEntries, debtState],
+  );
   const [filters, setFilters] = useState<LedgerFilters>(defaultFilters);
   const [page, setPage] = useState(1);
   const [draft, setDraft] = useState<EntryDraft | null>(() => draftFromEntry(ledgerEntries[0]));
@@ -55,6 +64,10 @@ export function TransactionsView() {
   };
 
   const openEntry = (entry: LedgerEntry, mobile: boolean) => {
+    if (isDebtEntry(entry)) {
+      router.push("/app/debts");
+      return;
+    }
     setDraft(draftFromEntry(entry));
     if (mobile) setSheetOpen(true);
   };
@@ -70,13 +83,14 @@ export function TransactionsView() {
 
   const saveDraft = () => {
     if (!draft) return;
-    const nextId = String(Math.max(...entries.map((e) => Number(e.id)), 1000) + 1);
+    const nextId = String(Math.max(...localEntries.map((e) => Number(e.id)).filter(Number.isFinite), 1000) + 1);
     const saved = applyDraft(draft, base, nextId);
     setEntries((current) => (draft.id ? current.map((e) => (e.id === draft.id ? saved : e)) : [saved, ...current]));
     setDraft(draftFromEntry(saved));
     setSheetOpen(false);
   };
   const deleteEntry = (entry: LedgerEntry) => {
+    if (isDebtEntry(entry)) return;
     setEntries((current) => current.filter((e) => e.id !== entry.id));
     if (draft?.id === entry.id) closeEditor();
   };

@@ -15,20 +15,12 @@ import { SelectedCustomerPanel } from "@/components/debts/SelectedCustomerPanel"
 import { DemoBadge } from "@/components/ui/DemoBadge";
 import { Icon } from "@/components/ui/Icon";
 import { currentBusiness } from "@/data/business";
+import { debtsToday, type RepaymentMethod } from "@/data/debts";
 import {
-  debtCustomers,
-  debtEvents,
-  debtReceipts,
-  debtsToday,
-  type DebtCustomer,
-  type DebtEvent,
-  type DebtReceipt,
-  type RepaymentMethod,
-} from "@/data/debts";
-import {
+  buildDebtRows,
   customerBalance,
   customersToCsv,
-  debtStatus,
+  debtTotals,
   downloadCsv,
   dueLabel,
   matchesQuery,
@@ -39,6 +31,7 @@ import {
   type DebtSort,
   type StatusFilter,
 } from "@/lib/debts";
+import { recordDebt, recordReminder, recordRepayment, useDebtState } from "@/lib/debtStore";
 import { percentChange } from "@/lib/ledger";
 
 type DialogState =
@@ -54,37 +47,15 @@ const sortOptions: { value: DebtSort; label: string }[] = [
   { value: "name", label: "Аз рӯи ном" },
 ];
 
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-
-function nowTime() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-}
-
 export function DebtsView() {
-  const [customers, setCustomers] = useState<DebtCustomer[]>(debtCustomers);
-  const [events, setEvents] = useState<DebtEvent[]>(debtEvents);
-  const [receipts, setReceipts] = useState<DebtReceipt[]>(debtReceipts);
+  const { customers, events, receipts } = useDebtState();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [sort, setSort] = useState<DebtSort>("amount");
   const [selectedId, setSelectedId] = useState<string>("c1");
   const [dialog, setDialog] = useState<DialogState>(null);
 
-  const allRows: CustomerRow[] = useMemo(
-    () =>
-      customers.map((customer) => {
-        const balance = customerBalance(customer.id, events);
-        return { customer, balance, status: debtStatus(customer, balance) };
-      }),
-    [customers, events],
-  );
+  const allRows: CustomerRow[] = useMemo(() => buildDebtRows(customers, events), [customers, events]);
 
   const searched = allRows.filter((row) => matchesQuery(row.customer, query));
   const rows = sortCustomers(
@@ -100,14 +71,14 @@ export function DebtsView() {
   };
 
   const debtors = allRows.filter((r) => r.balance > 0);
-  const overdueRows = allRows.filter((r) => r.status === "overdue");
+  const totals = debtTotals(allRows);
   const paidThisMonth = paymentsInMonth(events, debtsToday.slice(0, 7));
-  const total = debtors.reduce((sum, r) => sum + r.balance, 0);
+  const total = totals.total;
   const summary: DebtSummary = {
     total,
-    activeCount: debtors.length,
-    overdue: overdueRows.reduce((sum, r) => sum + r.balance, 0),
-    overdueCount: overdueRows.length,
+    activeCount: totals.debtorCount,
+    overdue: totals.overdue,
+    overdueCount: totals.overdueCount,
     paidThisMonth,
     paidChange: percentChange(paidThisMonth, paymentsInMonth(events, "2024-04")),
     reliability: Math.round(customers.reduce((sum, c) => sum + c.reliability, 0) / Math.max(customers.length, 1)),
@@ -132,93 +103,21 @@ export function DebtsView() {
     }
   };
 
-  const nextEventId = () => `e${events.length + 1}-${Date.now()}`;
-
-  const recordRepayment = (customerId: string, amount: number, method: RepaymentMethod) => {
-    const balance = customerBalance(customerId, events);
-    setEvents((current) => [
-      ...current,
-      {
-        id: nextEventId(),
-        customerId,
-        type: "payment",
-        title: amount >= balance ? "Қарз пурра пардохт шуд" : "Қисми қарз пардохт шуд",
-        note: amount >= balance ? "Қарзи боқимонда пӯшида шуд." : `Боқимонда: ${balance - amount} смн`,
-        tag: method,
-        amount: -amount,
-        date: debtsToday,
-        time: nowTime(),
-      },
-    ]);
-    if (amount >= balance) {
-      setCustomers((current) => current.map((c) => (c.id === customerId ? { ...c, dueDate: null } : c)));
-    }
+  const saveRepayment = (customerId: string, amount: number, method: RepaymentMethod) => {
+    recordRepayment(customerId, amount, method);
     setDialog(null);
   };
 
-  const recordDebt = (input: NewDebtInput) => {
-    let customerId = input.customerId;
-    if (!customerId) {
-      customerId = `c${Date.now()}`;
-      const created: DebtCustomer = {
-        id: customerId,
-        name: input.name,
-        initials: initials(input.name),
-        phone: input.phone,
-        limit: 500,
-        dueDate: input.dueDate,
-        reliability: 90,
-        avatarClassName: "bg-surface-container-highest text-on-surface-variant",
-        mobileAvatarClassName: "bg-surface-container-high text-on-surface-variant",
-      };
-      setCustomers((current) => [...current, created]);
-    } else {
-      const id = customerId;
-      setCustomers((current) => current.map((c) => (c.id === id ? { ...c, dueDate: input.dueDate } : c)));
-    }
-    const time = nowTime();
-    const receiptId = String(Math.max(...receipts.map((r) => Number(r.id)), 1000) + 1);
-    const ownerName = customers.find((c) => c.id === input.customerId)?.name ?? input.name;
-    const [firstName, lastName] = ownerName.split(" ");
-    setEvents((current) => [
-      ...current,
-      { id: nextEventId(), customerId, type: "debt", title: "Мол ба насия дода шуд", note: input.description, tag: "Қайди дастӣ", amount: input.amount, date: debtsToday, time },
-    ]);
-    setReceipts((current) => [
-      ...current,
-      {
-        id: receiptId,
-        customerId,
-        date: debtsToday,
-        time,
-        place: "Душанбе, Дӯкони марказӣ",
-        source: "manual",
-        signedBy: lastName ? `${firstName} ${lastName[0]}.` : firstName,
-        items: [{ name: input.description, quantity: "1", price: input.amount, total: input.amount }],
-      },
-    ]);
-    setSelectedId(customerId);
+  const saveDebt = (input: NewDebtInput) => {
+    setSelectedId(recordDebt(input));
     setStatus("all");
     setDialog(null);
   };
 
-  const recordReminder = (customerId: string, channel: ReminderChannel) => {
+  const saveReminder = (customerId: string, channel: ReminderChannel) => {
     const customer = customers.find((c) => c.id === customerId);
     if (!customer) return;
-    setEvents((current) => [
-      ...current,
-      {
-        id: nextEventId(),
-        customerId,
-        type: "reminder",
-        title: "Ёдраскунӣ омода шуд",
-        note: reminderText(customer, customerBalance(customerId, current), currentBusiness.name),
-        tag: channel,
-        amount: 0,
-        date: debtsToday,
-        time: nowTime(),
-      },
-    ]);
+    recordReminder(customerId, channel, reminderText(customer, customerBalance(customerId, events), currentBusiness.name));
   };
 
   const exportCsv = () =>
@@ -416,7 +315,7 @@ export function DebtsView() {
           customer={dialogRow.customer}
           balance={dialogRow.balance}
           onClose={() => setDialog(null)}
-          onConfirm={(amount, method) => recordRepayment(dialogRow.customer.id, amount, method)}
+          onConfirm={(amount, method) => saveRepayment(dialogRow.customer.id, amount, method)}
         />
       )}
       {dialog?.kind === "add" && (
@@ -424,18 +323,18 @@ export function DebtsView() {
           customers={allRows.map((r) => ({ customer: r.customer, balance: r.balance }))}
           initialCustomerId={dialog.customerId}
           onClose={() => setDialog(null)}
-          onConfirm={recordDebt}
+          onConfirm={saveDebt}
         />
       )}
       {dialog?.kind === "remind" && dialogRow && (
-        <ReminderDialog targets={reminderTargets([dialogRow.customer.id])} onClose={() => setDialog(null)} onPrepared={recordReminder} />
+        <ReminderDialog targets={reminderTargets([dialogRow.customer.id])} onClose={() => setDialog(null)} onPrepared={saveReminder} />
       )}
       {dialog?.kind === "bulk" && (
         <ReminderDialog
           bulk
           targets={reminderTargets(sortCustomers(debtors, "due").map((r) => r.customer.id))}
           onClose={() => setDialog(null)}
-          onPrepared={recordReminder}
+          onPrepared={saveReminder}
         />
       )}
     </div>

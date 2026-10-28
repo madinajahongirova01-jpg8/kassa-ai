@@ -110,3 +110,24 @@ export function downloadCsv(content: string, fileName: string) {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+export type DebtRow = { customer: DebtCustomer; balance: number; status: DebtStatus };
+
+export function buildDebtRows(customers: DebtCustomer[], events: DebtEvent[]): DebtRow[] {
+  return customers.map((customer) => {
+    const balance = customerBalance(customer.id, events);
+    return { customer, balance, status: debtStatus(customer, balance) };
+  });
+}
+
+export function debtTotals(rows: DebtRow[]) {
+  const debtors = rows.filter((r) => r.balance > 0);
+  const overdueRows = rows.filter((r) => r.status === "overdue");
+  return {
+    total: debtors.reduce((sum, r) => sum + r.balance, 0),
+    debtorCount: debtors.length,
+    nearCount: rows.filter((r) => r.status === "near").length,
+    overdue: overdueRows.reduce((sum, r) => sum + r.balance, 0),
+    overdueCount: overdueRows.length,
+  };
+}
