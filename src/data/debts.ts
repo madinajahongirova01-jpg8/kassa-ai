@@ -35,8 +35,8 @@ export const debtEvents: DebtEvent[] = [
   { id: "e3", customerId: "c1", type: "debt", note: "Равған 2 қуттӣ, шакар", tag: "Овозӣ", amount: 220, date: "2024-05-20", time: "14:32" },
   { id: "e4", customerId: "c2", type: "debt", note: "Равған 2 л, шакар 3 кг", tag: "Дастӣ", amount: 180, date: "2024-05-12", time: "11:05" },
   { id: "e5", customerId: "c2", type: "payment", note: "Каме баргардонд", tag: "Нақд", amount: -35, date: "2024-05-15", time: "18:20" },
-  { id: "e6", customerId: "c3", type: "debt", note: "Биринҷ ва нахӯд", tag: "Овозӣ", amount: 110, date: "2024-05-21", time: "16:20" },
+  { id: "e6", customerId: "c3", type: "debt", note: "Биринҷ ва нахӯд", tag: "Овозӣ", amount: 110, date: "2024-05-24", time: "15:10" },
   { id: "e7", customerId: "c4", type: "debt", note: "Чой ва қанд", tag: "Дастӣ", amount: 70, date: "2024-05-23", time: "12:40" },
   { id: "e8", customerId: "c5", type: "debt", note: "Орд ва равған", tag: "Овозӣ", amount: 200, date: "2024-05-10", time: "10:00" },
-  { id: "e9", customerId: "c5", type: "payment", note: "Пурра баргардонд", tag: "Нақд", amount: -200, date: "2024-05-22", time: "18:10" },
+  { id: "e9", customerId: "c5", type: "payment", note: "Пурра баргардонд", tag: "Нақд", amount: -200, date: "2024-05-22", time: "17:45" },
 ];

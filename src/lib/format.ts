@@ -20,3 +20,10 @@ export function formatSomoni(value: number, options: FormatOptions = {}) {
   const prefix = value < 0 ? MINUS : sign && value > 0 ? "+" : "";
   return `${prefix}${formatNumber(Math.round(Math.abs(value)))}${unit ? " смн" : ""}`;
 }
+
+const monthNames = ["январ", "феврал", "март", "апрел", "май", "июн", "июл", "август", "сентябр", "октябр", "ноябр", "декабр"];
+
+export function formatDayMonth(date: string) {
+  const [, month, day] = date.split("-").map(Number);
+  return `${day} ${monthNames[month - 1]}`;
+}

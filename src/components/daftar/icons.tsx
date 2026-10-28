@@ -26,6 +26,16 @@ export function TextIcon({ size = 14, className, strokeWidth = 2.2, label }: Ico
   );
 }
 
+export function CameraIcon({ size = 14, className, strokeWidth = 2.2, label }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" className={className} {...a11y(label)}>
+      <rect x="4" y="6" width="16" height="13" rx="2" />
+      <circle cx="12" cy="12.5" r="3.2" />
+      <path d="M9 6l1.5-2h3L15 6" />
+    </svg>
+  );
+}
+
 export function CurvedArrow({ className }: { className?: string }) {
   return (
     <svg width="60" height="40" viewBox="0 0 60 40" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={className} aria-hidden>

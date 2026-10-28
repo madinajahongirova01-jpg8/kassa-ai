@@ -7,8 +7,7 @@ import type { DebtCustomer } from "@/data/debts";
 import { cn } from "@/lib/cn";
 import { buildDebtRows, daysUntil, type DebtRow } from "@/lib/debts";
 import { useDebtState } from "@/lib/debtStore";
-import { formatSomoni } from "@/lib/format";
-import { formatLedgerDate } from "@/lib/ledger";
+import { formatDayMonth, formatSomoni } from "@/lib/format";
 
 const rotations = [
   { rotate: -1.5, tape: 3 },
@@ -26,7 +25,7 @@ function stickerLook(row: DebtRow): { tape: StickerTape; tone: "pen" | "red" | "
   if (row.status === "overdue" && days !== null) return { tape: "red", tone: "red", note: `${Math.abs(days)} рӯз гузашт — занг занед!` };
   if (days === 0) return { tape: "yellow", tone: "pen", note: "мӯҳлат — имрӯз" };
   if (days === 1) return { tape: "yellow", tone: "pen", note: "мӯҳлат — фардо" };
-  if (row.customer.dueDate) return { tape: "blue", tone: "muted", note: `то ${formatLedgerDate(row.customer.dueDate, false).toLowerCase()}` };
+  if (row.customer.dueDate) return { tape: "blue", tone: "muted", note: `то ${formatDayMonth(row.customer.dueDate)}` };
   return { tape: "blue", tone: "muted", note: "бе мӯҳлат" };
 }
 

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { TransactionsView } from "@/components/transactions/TransactionsView";
+import { LedgerView } from "@/components/ledger/LedgerView";
 
 export const metadata: Metadata = {
-  title: "Амалиётҳо — Kassa AI",
+  title: "Дафтар — Kassa AI",
 };
 
 export default function TransactionsPage() {
-  return <TransactionsView />;
+  return <LedgerView />;
 }

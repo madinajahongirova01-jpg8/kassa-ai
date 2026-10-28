@@ -1,5 +1,5 @@
 import { debtsToday, type DebtCustomer, type DebtEvent } from "@/data/debts";
-import { formatLedgerDate } from "@/lib/ledger";
+import { formatDayMonth } from "@/lib/format";
 
 export type DebtStatus = "overdue" | "near" | "active" | "paid";
 export type StatusFilter = "all" | "near" | "overdue" | "paid";
@@ -12,7 +12,7 @@ export function daysUntil(date: string) {
 }
 
 export function dayMonth(date: string) {
-  return date === debtsToday ? "имрӯз" : formatLedgerDate(date, false).toLowerCase();
+  return date === debtsToday ? "имрӯз" : formatDayMonth(date);
 }
 
 export function customerBalance(customerId: string, events: DebtEvent[]) {
