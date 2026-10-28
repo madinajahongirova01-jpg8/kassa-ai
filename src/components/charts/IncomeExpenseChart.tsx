@@ -1,8 +1,9 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { DailyFlow } from "@/data/types";
 import { formatSomoni } from "@/lib/format";
+import { useIsDesktop } from "@/lib/useMediaQuery";
 
 type IncomeExpenseChartProps = {
   data: DailyFlow[];
@@ -42,11 +43,52 @@ function TodayTick({ x, y, payload, data }: TickProps) {
 }
 
 export function IncomeExpenseChart({ data, compact = false }: IncomeExpenseChartProps) {
+  const isDesktop = useIsDesktop();
+  const visible = compact ? !isDesktop : isDesktop;
+
   if (compact) {
     return (
       <div className="h-28 w-full">
+        {visible && (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} barGap={2} margin={{ top: 8, right: 4, bottom: 0, left: 4 }}>
+              <XAxis
+                dataKey="day"
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+                tick={(props) => <TodayTick {...props} data={data} />}
+              />
+              <Bar dataKey="income" fill={colors.income} barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false} />
+              <Bar
+                dataKey="expense"
+                fill={colors.expenseCompact}
+                barSize={10}
+                radius={[2, 2, 0, 0]}
+                isAnimationActive={false}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-64 w-full">
+      {visible && (
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barGap={2} margin={{ top: 8, right: 4, bottom: 0, left: 4 }}>
+          <BarChart data={data} barGap={4} margin={{ top: 24, right: 8, bottom: 0, left: 0 }}>
+            <CartesianGrid vertical={false} stroke={colors.grid} />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              width={64}
+              ticks={[0, 1000, 2000, 3000]}
+              domain={[0, 3000]}
+              tick={{ fontSize: 11, fill: colors.axis, fontWeight: 600 }}
+              tickFormatter={(value: number) => formatSomoni(value)}
+            />
             <XAxis
               dataKey="day"
               axisLine={false}
@@ -54,55 +96,42 @@ export function IncomeExpenseChart({ data, compact = false }: IncomeExpenseChart
               interval={0}
               tick={(props) => <TodayTick {...props} data={data} />}
             />
-            <Bar dataKey="income" fill={colors.income} barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false} />
-            <Bar
-              dataKey="expense"
-              fill={colors.expenseCompact}
-              barSize={10}
-              radius={[2, 2, 0, 0]}
-              isAnimationActive={false}
+            <Tooltip
+              cursor={{ fill: "rgba(164, 242, 214, 0.2)" }}
+              formatter={(value, name) => [formatSomoni(Number(value)), name === "income" ? "Даромад" : "Хароҷот"]}
+              labelFormatter={(label) => `${label} Май`}
+              contentStyle={{ borderRadius: 8, border: "1px solid #e2e3de", fontSize: 12 }}
             />
+            <Bar dataKey="income" fill={colors.income} barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false}>
+              <LabelList
+                dataKey="day"
+                content={({ x, y, value }) =>
+                  data.find((d) => d.day === value)?.today ? (
+                    <g>
+                      <rect x={Number(x) - 14} y={Number(y) - 26} width={42} height={16} rx={4} fill={colors.income} />
+                      <text
+                        x={Number(x) + 7}
+                        y={Number(y) - 14}
+                        textAnchor="middle"
+                        fontSize={11}
+                        fontWeight={600}
+                        fill="#ffffff"
+                      >
+                        Имрӯз
+                      </text>
+                    </g>
+                  ) : null
+                }
+              />
+            </Bar>
+            <Bar dataKey="expense" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false}>
+              {data.map((d) => (
+                <Cell key={d.day} fill={d.today ? colors.expenseToday : colors.expense} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-64 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} barGap={4} margin={{ top: 24, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid vertical={false} stroke={colors.grid} />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            width={64}
-            ticks={[0, 1000, 2000, 3000]}
-            domain={[0, 3000]}
-            tick={{ fontSize: 11, fill: colors.axis, fontWeight: 600 }}
-            tickFormatter={(value: number) => formatSomoni(value)}
-          />
-          <XAxis
-            dataKey="day"
-            axisLine={false}
-            tickLine={false}
-            interval={0}
-            tick={(props) => <TodayTick {...props} data={data} />}
-          />
-          <Tooltip
-            cursor={{ fill: "rgba(164, 242, 214, 0.2)" }}
-            formatter={(value, name) => [formatSomoni(Number(value)), name === "income" ? "Даромад" : "Хароҷот"]}
-            labelFormatter={(label) => `${label} Май`}
-            contentStyle={{ borderRadius: 8, border: "1px solid #e2e3de", fontSize: 12 }}
-          />
-          <Bar dataKey="income" fill={colors.income} barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false} />
-          <Bar dataKey="expense" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false}>
-            {data.map((d) => (
-              <Cell key={d.day} fill={d.today ? colors.expenseToday : colors.expense} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      )}
     </div>
   );
 }
