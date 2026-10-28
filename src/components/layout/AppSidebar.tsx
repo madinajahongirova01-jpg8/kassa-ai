@@ -5,11 +5,7 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { currentBusiness } from "@/data/business";
 import { appSidebarNav } from "@/data/navigation";
-
-function isActive(pathname: string, href: string) {
-  if (href === "/app") return pathname === "/app";
-  return href !== "#" && pathname.startsWith(href);
-}
+import { isNavActive } from "@/lib/nav";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -40,7 +36,7 @@ export function AppSidebar() {
 
         <nav className="space-y-1 px-space-sm">
           {appSidebarNav.map((item) => {
-            const active = isActive(pathname, item.href);
+            const active = isNavActive(pathname, item.href, "/app");
             return (
               <Link
                 key={item.label}

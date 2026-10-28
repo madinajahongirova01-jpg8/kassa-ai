@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { appMobileNav, type NavItem } from "@/data/navigation";
+import { isNavActive } from "@/lib/nav";
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
@@ -25,8 +26,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
 
 export function MobileNav() {
   const pathname = usePathname();
-  const isActive = (href: string) =>
-    href === "/app" ? pathname === "/app" : pathname.startsWith(href);
+  const isActive = (href: string) => isNavActive(pathname, href, "/app");
   const [first, second, third, fourth] = appMobileNav;
 
   return (
