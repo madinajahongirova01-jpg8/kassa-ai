@@ -5,6 +5,7 @@ const tapes = {
   yellow: "bg-[rgba(255,228,92,0.8)]",
   red: "bg-[rgba(214,69,61,0.35)]",
   blue: "bg-[rgba(45,75,216,0.25)]",
+  green: "bg-[rgba(30,158,106,0.28)]",
 };
 
 export type StickerTape = keyof typeof tapes;
@@ -15,15 +16,17 @@ type StickerProps = {
   rotate?: number;
   tapeRotate?: number;
   size?: "lg" | "sm";
+  alert?: boolean;
   className?: string;
 };
 
-export function Sticker({ children, tape = "yellow", rotate = 0, tapeRotate = 0, size = "lg", className }: StickerProps) {
+export function Sticker({ children, tape = "yellow", rotate = 0, tapeRotate = 0, size = "lg", alert = false, className }: StickerProps) {
   return (
     <div
       style={{ transform: `rotate(${rotate}deg)` }}
       className={cn(
-        "relative rounded-xl border-[1.5px] border-ink bg-card",
+        "relative rounded-xl bg-card",
+        alert ? "border-[2.5px] border-red shadow-hard-red" : "border-[1.5px] border-ink",
         size === "lg" ? "px-4 pt-[18px] pb-3.5" : "px-3.5 pt-3.5 pb-2.5",
         className,
       )}

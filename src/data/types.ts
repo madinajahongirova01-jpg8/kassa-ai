@@ -63,15 +63,3 @@ export type Transaction = {
   iconClassName: string;
 };
 
-export type DueDebt = {
-  id: string;
-  name: string;
-  initials: string;
-  phone: string;
-  amount: number;
-  due: string;
-  dueShort: string;
-  avatarClassName: string;
-  dueClassName: string;
-  urgent: boolean;
-};

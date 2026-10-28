@@ -1,16 +1,18 @@
 import { debtsToday, type DebtCustomer, type DebtEvent } from "@/data/debts";
 import { formatLedgerDate } from "@/lib/ledger";
-import { formatNumber } from "@/lib/format";
 
 export type DebtStatus = "overdue" | "near" | "active" | "paid";
-export type StatusFilter = "all" | "active" | "near" | "overdue" | "paid";
-export type DebtSort = "due" | "amount" | "name";
+export type StatusFilter = "all" | "near" | "overdue" | "paid";
 
 const DAY = 24 * 60 * 60 * 1000;
-const NEAR_DAYS = 4;
+const NEAR_DAYS = 2;
 
 export function daysUntil(date: string) {
   return Math.round((Date.parse(date) - Date.parse(debtsToday)) / DAY);
+}
+
+export function dayMonth(date: string) {
+  return date === debtsToday ? "имрӯз" : formatLedgerDate(date, false).toLowerCase();
 }
 
 export function customerBalance(customerId: string, events: DebtEvent[]) {
@@ -25,36 +27,8 @@ export function debtStatus(customer: DebtCustomer, balance: number): DebtStatus 
   return "active";
 }
 
-export function dueLabel(customer: DebtCustomer, balance: number) {
-  const status = debtStatus(customer, balance);
-  if (status === "paid" || !customer.dueDate) return "Пардохт шуд";
-  const days = daysUntil(customer.dueDate);
-  if (days < 0) return `${Math.abs(days)} рӯз гузашт`;
-  if (days === 0) return "Мӯҳлат: Имрӯз";
-  if (days === 1) return "Мӯҳлат: Фардо";
-  return `Мӯҳлат: ${formatLedgerDate(customer.dueDate, false)}`;
-}
-
-export function dueHeadline(customer: DebtCustomer, balance: number) {
-  const status = debtStatus(customer, balance);
-  if (status === "paid" || !customer.dueDate) return "Қарз нест";
-  const days = daysUntil(customer.dueDate);
-  if (days < 0) return `${Math.abs(days)} рӯз гузашт`;
-  if (days === 0) return "Имрӯз пардохт";
-  if (days === 1) return "Фардо пардохт";
-  return `То ${formatLedgerDate(customer.dueDate, false)}`;
-}
-
-export function isUrgent(customer: DebtCustomer, balance: number) {
-  if (!customer.dueDate || balance <= 0) return false;
-  const days = daysUntil(customer.dueDate);
-  return days >= 0 && days <= 1;
-}
-
 export function matchesStatus(status: DebtStatus, filter: StatusFilter) {
-  if (filter === "all") return true;
-  if (filter === "active") return status !== "paid";
-  return status === filter;
+  return filter === "all" || status === filter;
 }
 
 export function matchesQuery(customer: DebtCustomer, query: string) {
@@ -67,57 +41,25 @@ export function matchesQuery(customer: DebtCustomer, query: string) {
   );
 }
 
-const statusOrder: Record<DebtStatus, number> = { overdue: 0, near: 1, active: 2, paid: 3 };
-
-export function sortCustomers<T extends { customer: DebtCustomer; balance: number; status: DebtStatus }>(rows: T[], sort: DebtSort) {
-  return [...rows].sort((a, b) => {
-    if (sort === "amount") return b.balance - a.balance;
-    if (sort === "name") return a.customer.name.localeCompare(b.customer.name, "ru");
-    if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
-    return (a.customer.dueDate ?? "9999").localeCompare(b.customer.dueDate ?? "9999");
-  });
-}
-
-export function paymentsInMonth(events: DebtEvent[], month: string) {
-  return events.filter((e) => e.type === "payment" && e.date.startsWith(month)).reduce((sum, e) => sum - e.amount, 0);
-}
-
-export function reminderText(customer: DebtCustomer, balance: number, business: string) {
-  const firstName = customer.name.split(" ")[0];
-  const due = customer.dueDate ? ` то ${formatLedgerDate(customer.dueDate, false)}` : "";
-  return `Салом ${firstName}, ёдовар мешавем, ки қарзи шумо дар «${business}» ${formatNumber(balance)} смн${due} мебошад. Ташаккур!`;
-}
-
-export function customersToCsv(rows: { customer: DebtCustomer; balance: number; label: string }[]) {
-  const header = ["Ном", "Телефон", "Қарз (смн)", "Ҳолат", "Мӯҳлат", "Лимит (смн)"];
-  const body = rows.map(({ customer, balance, label }) => [
-    customer.name,
-    customer.phone,
-    String(balance),
-    label,
-    customer.dueDate ?? "",
-    String(customer.limit),
-  ]);
-  return [header, ...body].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\r\n");
-}
-
-export function downloadCsv(content: string, fileName: string) {
-  const blob = new Blob(["﻿", content], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-export type DebtRow = { customer: DebtCustomer; balance: number; status: DebtStatus };
+export type DebtRow = {
+  customer: DebtCustomer;
+  balance: number;
+  status: DebtStatus;
+  history: DebtEvent[];
+  originalAmount: number;
+};
 
 export function buildDebtRows(customers: DebtCustomer[], events: DebtEvent[]): DebtRow[] {
   return customers.map((customer) => {
+    const history = events.filter((e) => e.customerId === customer.id).sort((a, b) => a.date.localeCompare(b.date));
     const balance = customerBalance(customer.id, events);
-    return { customer, balance, status: debtStatus(customer, balance) };
+    const lastDebt = history.findLast((e) => e.type === "debt");
+    return { customer, balance, status: debtStatus(customer, balance), history, originalAmount: lastDebt?.amount ?? 0 };
   });
+}
+
+export function lastPayment(row: DebtRow) {
+  return row.history.findLast((e) => e.type === "payment") ?? null;
 }
 
 export function debtTotals(rows: DebtRow[]) {
@@ -126,8 +68,12 @@ export function debtTotals(rows: DebtRow[]) {
   return {
     total: debtors.reduce((sum, r) => sum + r.balance, 0),
     debtorCount: debtors.length,
-    nearCount: rows.filter((r) => r.status === "near").length,
     overdue: overdueRows.reduce((sum, r) => sum + r.balance, 0),
     overdueCount: overdueRows.length,
   };
+}
+
+export function statusCounts(rows: DebtRow[]): Record<StatusFilter, number> {
+  const count = (status: DebtStatus) => rows.filter((r) => r.status === status).length;
+  return { all: rows.length, near: count("near"), overdue: count("overdue"), paid: count("paid") };
 }

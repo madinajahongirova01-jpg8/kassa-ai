@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 const tones = {
   pen: "text-pen",
   red: "text-red",
+  green: "text-green",
   muted: "text-ink-2",
 };
 
