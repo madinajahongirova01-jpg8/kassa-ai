@@ -19,18 +19,20 @@ export function TodayHeadline({ profit, change }: TodayHeadlineProps) {
     <div className="relative pt-1.5">
       <HandNote className="inline-block -rotate-2 text-[32px]">Имрӯз шумо…</HandNote>
       <div className="mt-1.5 font-display leading-none font-extrabold tracking-[-0.03em]">
-        <Marker className="px-1.5 text-[104px]">{formatSomoni(profit, { sign: true, unit: false })}</Marker>
+        <Marker className="px-1.5 text-[76px] xl:text-[104px]">{formatSomoni(profit, { sign: true, unit: false })}</Marker>
         <span className="ml-2.5 text-[32px]">сомонӣ</span>
       </div>
       <div className="mt-2.5 font-display text-[34px] font-bold">{profit >= 0 ? "фоида кардед." : "зарар кардед."}</div>
       {note && (
-        <div className="absolute top-[30px] right-2 flex rotate-6 flex-col items-center text-red">
-          <HandNote tone="red" className="text-[30px] leading-none">
+        <div className="absolute right-0 bottom-[-4px] flex rotate-6 flex-col items-center text-red xl:top-[30px] xl:right-2 xl:bottom-auto">
+          <HandNote tone="red" className="text-[24px] leading-none xl:text-[30px]">
             аз дирӯз
             <br />
             {note}
           </HandNote>
-          <CurvedArrow />
+          <span className="hidden xl:block">
+            <CurvedArrow />
+          </span>
         </div>
       )}
     </div>

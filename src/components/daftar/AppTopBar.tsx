@@ -7,7 +7,7 @@ export function AppTopBar() {
   const { shortName, owner, todayLong, todayShort } = currentBusiness;
   return (
     <>
-      <header className="hidden h-[52px] items-center justify-between gap-5 xl:flex">
+      <header className="hidden h-[52px] items-center justify-between gap-5 lg:flex">
         <div className="flex items-center gap-7">
           <Logo />
           <NavPill />
@@ -21,7 +21,7 @@ export function AppTopBar() {
         </div>
       </header>
 
-      <header className="flex items-center justify-between xl:hidden">
+      <header className="flex items-center justify-between lg:hidden">
         <div className="flex items-center gap-2">
           <LogoMark size="sm" />
           <div>

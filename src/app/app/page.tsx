@@ -13,7 +13,7 @@ export default function ImruzPage() {
 
   return (
     <>
-      <div className="hidden h-[calc(100dvh-116px)] min-h-[744px] grid-cols-[minmax(0,1fr)_350px_268px] gap-[26px] xl:grid">
+      <div className="hidden h-[calc(100dvh-116px)] min-h-[744px] grid-cols-[minmax(0,1fr)_310px_230px] gap-[18px] lg:grid xl:grid-cols-[minmax(0,1fr)_350px_268px] xl:gap-[26px]">
         <section className="flex min-w-0 flex-col gap-[22px]">
           <TodayHeadline profit={summary.profit} change={change} />
           <TodayStats income={summary.income} expense={summary.expense} salesCount={summary.salesCount} expenseHint={expenseHint} />
@@ -29,7 +29,7 @@ export default function ImruzPage() {
         </section>
       </div>
 
-      <div className="flex flex-col gap-4 xl:hidden">
+      <div className="flex flex-col gap-4 lg:hidden">
         <TodayHeadlineMobile profit={summary.profit} change={change} />
         <TodayStatsMobile income={summary.income} expense={summary.expense} />
         <TodayReceiptMobile entries={todayEntries} />
