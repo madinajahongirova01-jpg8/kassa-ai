@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="tg">
+<head>
+<meta charset="utf-8">
+<title>Дафтар — Дафтари катакӣ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Caveat:wght@600;700&display=swap">
+<style>
+body{margin:0}
+a{color:#1B2340;text-decoration:none}a:hover{color:#2D4BD8}
+.mark{background:linear-gradient(transparent 52%,#FFE45C 52%,#FFE45C 92%,transparent 92%)}
+.row{display:grid;grid-template-columns:52px 20px minmax(0,1fr) 120px 90px;align-items:center;gap:10px;height:38px;border-bottom:1px solid #E6EAF5;font-size:14px}
+.pill{justify-self:start;font-size:12px;font-weight:600;border:1.5px solid #1B2340;border-radius:999px;padding:2px 9px;background:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 860px; box-sizing: border-box; padding: 22px 28px; display: flex; flex-direction: column; gap: 18px; background-color: #F6F8FD; background-image: linear-gradient(#E1E7F6 1px, transparent 1px), linear-gradient(90deg, #E1E7F6 1px, transparent 1px); background-size: 24px 24px; color: #1B2340; font-family: Inter, Arial, sans-serif; font-size: 14px; overflow: hidden">
+<header style="display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 52px">
+<div style="display: flex; align-items: center; gap: 28px">
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="width: 38px; height: 38px; border-radius: 10px; background: #1B2340; color: #FFE45C; display: flex; align-items: center; justify-content: center; font-family: Unbounded, Arial, sans-serif; font-weight: 800; font-size: 17px; transform: rotate(-4deg)">K</div>
+<span style="font-family: Unbounded, Arial, sans-serif; font-weight: 800; font-size: 18px">Kassa <span style="color: #2D4BD8">AI</span></span>
+</div>
+<nav style="display: flex; gap: 6px; background: #FFFFFF; border: 1.5px solid #1B2340; border-radius: 999px; padding: 4px">
+<a href="Daftar.dc.html" style="padding: 8px 18px; border-radius: 999px; font-weight: 500">Имрӯз</a>
+<a href="Ledger.dc.html" style="padding: 8px 18px; border-radius: 999px; background: #1B2340; color: #FFFFFF; font-weight: 600">Дафтар</a>
+<a href="Nasiya.dc.html" style="padding: 8px 18px; border-radius: 999px; font-weight: 500">Насия</a>
+<a href="Reports.dc.html" style="padding: 8px 18px; border-radius: 999px; font-weight: 500">Ҳисобот</a>
+</nav>
+</div>
+<div style="display: flex; align-items: center; gap: 14px">
+<div style="text-align: right"><div style="font-weight: 600; font-size: 14px">Чойхонаи Руҳ</div><div style="font-size: 12px; color: #5B6480">маълумоти намунавӣ</div></div>
+<div style="width: 40px; height: 40px; border-radius: 50%; background: #FFE45C; border: 1.5px solid #1B2340; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">ҶР</div>
+</div>
+</header>
+<div style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 30px">
+<section style="display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0">
+<div style="display: flex; justify-content: space-between; align-items: flex-end">
+<div>
+<div style="font-family: Caveat, cursive; font-size: 28px; color: #2D4BD8; transform: rotate(-2deg); display: inline-block">Дафтари май</div>
+<div style="font-family: Unbounded, Arial, sans-serif; font-weight: 800; font-size: 36px; margin-top: 2px">312 сабт</div>
+</div>
+<div style="font-family: Caveat, cursive; font-size: 22px; color: #5B6480; transform: rotate(2deg)">ҳамаашро Kassa AI навишт</div>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+<button type="button" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #1B2340; background: #1B2340; color: #FFFFFF; font: inherit; font-weight: 600">Ҳама</button>
+<button type="button" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #1E9E6A; background: #FFFFFF; color: #1E9E6A; font: inherit; font-weight: 600">+ Даромад</button>
+<button type="button" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #D6453D; background: #FFFFFF; color: #D6453D; font: inherit; font-weight: 600">− Хароҷот</button>
+<button type="button" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #2D4BD8; background: #FFFFFF; color: #2D4BD8; font: inherit; font-weight: 600">Насия</button>
+<button type="button" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #1B2340; background: #FFFFFF; color: #1B2340; font: inherit">Май 2026 ▾</button>
+<label for="ls" style="position: absolute; left: -9999px">Ҷустуҷӯ</label>
+<input id="ls" placeholder="Ҷустуҷӯ: «орд», «такси»…" style="margin-left: auto; width: 230px; height: 36px; border: 1.5px solid #1B2340; border-radius: 999px; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 13px; color: #1B2340; box-sizing: border-box">
+</div>
+<div style="flex: 1; min-height: 0; background: #FFFFFF; border: 1.5px solid #1B2340; border-radius: 18px; padding: 8px 24px 8px 52px; box-shadow: 5px 5px 0 #1B2340; background-image: linear-gradient(90deg, transparent 34px, #F2A6A0 34px, #F2A6A0 35.5px, transparent 35.5px); overflow: hidden; font-family: 'JetBrains Mono', monospace">
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0 4px; font-family: Inter, Arial, sans-serif"><span style="font-family: Caveat, cursive; font-size: 24px; color: #2D4BD8">Имрӯз, 24 май</span><span class="mark" style="font-family: Unbounded, Arial, sans-serif; font-weight: 700; font-size: 14px; padding: 0 4px">+1 020</span></div>
+<div class="row"><span style="color: #8A93AD; font-size: 12px">18:20</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D4BD8" stroke-width="2.2" stroke-linecap="round" aria-label="овоз" role="img"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg><span>Фурӯши бегоҳ</span><span class="pill" style="font-family: Inter, Arial, sans-serif">фурӯш</span><span style="text-align: right; font-weight: 700; color: #1E9E6A">+850</span></div>
+<div class="row"><span style="color: #8A93AD; font-size: 12px">15:10</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D4BD8" stroke-width="2.2" stroke-linecap="round" aria-label="овоз" role="img"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg><span>Рустам — насия</span><span class="pill" style="font-family: Inter, Arial, sans-serif; border-color: #2D4BD8; color: #2D4BD8">насия</span><span style="text-align: right; font-weight: 700; color: #2D4BD8">110</span></div>
+<div class="row"><span style="color: #8A93AD; font-size: 12px">13:30</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D4BD8" stroke-width="2.2" stroke-linecap="round" aria-label="овоз" role="img"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg><span>Фурӯши нисфирӯзӣ</span><span class="pill" style="font-family: Inter, Arial, sans-serif">фурӯш</span><span style="text-align: right; font-weight: 700; color: #1E9E6A">+950</span></div>
+<div class="row"><span style="color: #8A93AD; font-size: 12px">12:05</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A93AD" stroke-width="2.2" stroke-linecap="round" aria-label="матн" role="img"><path d="M4 7h16M4 12h10M4 17h13"></path></svg><span>Музди коргар</span><span class="pill" style="font-family: Inter, Arial, sans-serif">маош</span><span style="text-align: right; font-weight: 700; color: #D6453D">−150</span></div>
+<div class="row"><span style="color: #8A93AD; font-size: 12px">08:10</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D4BD8" stroke-width="2.2" stroke-linecap="round" aria-label="овоз" role="img"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg><span>Орд, 2 халта</span><span class="pill" style="font-family: Inter, Arial, sans-serif">мол</span><span style="text-align: right; font-weight: 700; color: #D6453D">−600</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0 4px; font-family: Inter, Arial, sans-serif"><span style="font-family: Caveat, cursive; font-size: 24px; color: #2D4BD8">Дирӯз, 23 май</span><span style="font-family: Unbounded, Arial, sans-serif; font-weight: 700; font-size: 14px">+1 160</span></div>
+<div class="row"><span style="color: #8A93AD; font-size: 12px">19:05</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D4BD8" stroke-width="2.2" stroke-linecap="round" aria-label="овоз" role="img"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg><span>Фурӯши рӯз</span><span class="pill" style="font-family: Inter, Arial, sans-serif">фурӯш</span><span style="text-align: right; font-weight: 700; color: #1E9E6A">+2 100</span></div>
+<div class="row"><span style="color: #8A93AD; font-size: 12px">10:30</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A93AD" stroke-width="2.2" stroke-linecap="round" aria-label="акси чек" role="img"><rect x="4" y="6" width="16" height="13" rx="2"></rect><circle cx="12" cy="12.5" r="3.2"></circle><path d="M9 6l1.5-2h3L15 6"></path></svg><span>Гӯшт, 5 кг (акси чек)</span><span class="pill" style="font-family: Inter, Arial, sans-serif">мол</span><span style="text-align: right; font-weight: 700; color: #D6453D">−650</span></div>
+<div class="row"><span style="color: #8A93AD; font-size: 12px">09:00</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D4BD8" stroke-width="2.2" stroke-linecap="round" aria-label="овоз" role="img"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg><span>Барқ ва газ</span><span class="pill" style="font-family: Inter, Arial, sans-serif">коммуналӣ</span><span style="text-align: right; font-weight: 700; color: #D6453D">−290</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0 4px; font-family: Inter, Arial, sans-serif"><span style="font-family: Caveat, cursive; font-size: 24px; color: #2D4BD8">22 май</span><span style="font-family: Unbounded, Arial, sans-serif; font-weight: 700; font-size: 14px">+890</span></div>
+<div class="row" style="border-bottom: 0"><span style="color: #8A93AD; font-size: 12px">17:45</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D4BD8" stroke-width="2.2" stroke-linecap="round" aria-label="овоз" role="img"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg><span>Фаррух қарзашро баргардонд</span><span class="pill" style="font-family: Inter, Arial, sans-serif; border-color: #1E9E6A; color: #1E9E6A">насия</span><span style="text-align: right; font-weight: 700; color: #1E9E6A">+200</span></div>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 16px; min-height: 0">
+<div style="background: #FFFFFF; border: 1.5px solid #1B2340; border-radius: 18px; padding: 18px 20px; box-shadow: 4px 4px 0 #1B2340">
+<div style="font-family: Unbounded, Arial, sans-serif; font-weight: 700; font-size: 15px">Моҳи май</div>
+<div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 14px"><span style="color: #5B6480">Пул даромад</span><span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #1E9E6A">+48 600</span></div>
+<div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px"><span style="color: #5B6480">Пул рафт</span><span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #D6453D">−31 200</span></div>
+<div style="border-top: 1.5px dashed #C9D0E3; margin: 12px 0"></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-weight: 700">Фоида</span><span class="mark" style="font-family: Unbounded, Arial, sans-serif; font-weight: 800; font-size: 24px; padding: 0 4px">17 400</span></div>
+</div>
+<div style="flex: 1; min-height: 0; background: #FFFFFF; border: 1.5px solid #1B2340; border-radius: 18px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+<div style="font-family: Unbounded, Arial, sans-serif; font-weight: 700; font-size: 15px">Пул ба куҷо рафт?</div>
+<div><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Мол (орд, гӯшт, шакар)</span><b style="font-family: 'JetBrains Mono', monospace">18 900</b></div><div style="height: 12px; margin-top: 6px; border-radius: 6px; background: #FFE45C; width: 100%"></div></div>
+<div><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Маоши коргарон</span><b style="font-family: 'JetBrains Mono', monospace">9 000</b></div><div style="height: 12px; margin-top: 6px; border-radius: 6px; background: #FFE45C; width: 48%"></div></div>
+<div><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Иҷора</span><b style="font-family: 'JetBrains Mono', monospace">2 500</b></div><div style="height: 12px; margin-top: 6px; border-radius: 6px; background: #FFE45C; width: 14%"></div></div>
+<div><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Роҳкиро</span><b style="font-family: 'JetBrains Mono', monospace">800</b></div><div style="height: 12px; margin-top: 6px; border-radius: 6px; background: #F9D6D3; width: 5%"></div></div>
+<div style="font-family: Caveat, cursive; font-size: 22px; color: #D6453D; transform: rotate(-2deg); margin-top: 2px">роҳкиро аз апрел 2 баробар зиёд шуд</div>
+<div style="flex: 1"></div>
+<div style="display: flex; gap: 10px">
+<button type="button" style="flex: 1; height: 42px; border-radius: 12px; border: 1.5px solid #1B2340; background: #FFFFFF; color: #1B2340; font: inherit; font-weight: 600">Excel</button>
+<button type="button" style="flex: 1; height: 42px; border-radius: 12px; border: 1.5px solid #1B2340; background: #FFFFFF; color: #1B2340; font: inherit; font-weight: 600">PDF</button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
