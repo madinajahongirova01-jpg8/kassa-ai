@@ -89,7 +89,7 @@ jobs:
       - name: Apply migrations to the CI database
         run: npm run prisma:migrate:deploy
 
-      - name: E2E tests (Auth)
+      - name: E2E tests (Auth, customers, debts, payments)
         run: npm run test:e2e
 
       - name: Build

@@ -89,10 +89,10 @@ npm run dev
 ```bash
 cd apps/api
 npm test                        # unit tests, no database needed
-npm run test:e2e                # HTTP + database tests for Auth
+npm run test:e2e                # HTTP + database tests for Auth, customers, debts and payments
 ```
 
-E2E tests use `TEST_DATABASE_URL` only, refuse to run unless the database name ends with `_test`, apply migrations to it and delete all rows from the `users` table between tests. Do not point it at a database with real data.
+E2E tests use `TEST_DATABASE_URL` only, refuse to run unless the database name ends with `_test`, apply migrations to it and delete all rows from the `users` table between tests (customers, debts and payments are removed with their owner). Do not point it at a database with real data.
 
 ### Auth
 
@@ -115,6 +115,58 @@ Errors share one format:
 - `400` invalid input (unknown fields are rejected), `401` wrong credentials or a missing/invalid/expired token, `409` email already registered, `500` internal error with no internal details.
 - Login returns the same `401` message for an unknown email and a wrong password.
 
+### Customers, debts and payments
+
+All endpoints below require `Authorization: Bearer <token>`. Every query is limited to the current user's data on the server: another user's customer, debt or payment is answered with `404`, exactly like a non-existent one. The database also enforces this with composite foreign keys `(customer_id, owner_id)` and `(debt_id, owner_id)`.
+
+**Money.** Amounts are sent and returned in somoni as strings with up to two decimals (`"150"`, `"150.5"`, `"150.50"`; JSON numbers such as `150.5` are also accepted). They are parsed without floating-point arithmetic and stored as integer dirams (1 somoni = 100 dirams). Allowed range: `0.01` – `10000000.00`. Responses always use two decimals, e.g. `"150.50"`.
+
+**Dates.** `occurredOn`, `dueOn` and `paidOn` are calendar dates `YYYY-MM-DD`. `occurredOn` and `paidOn` cannot be in the future (by Asia/Dushanbe time), `dueOn` cannot be earlier than `occurredOn`, and a payment cannot be dated before its debt. `paidOn` defaults to today (Asia/Dushanbe).
+
+**Status** is calculated automatically: `ACTIVE` (nothing paid), `PARTIALLY_PAID`, `PAID` (remaining amount is `0.00`). A payment larger than the remaining amount is rejected with `422`. Payments are registered in a transaction that locks the debt row, so concurrent payments cannot exceed the debt; database CHECK constraints guard the same rules.
+
+| Method | Path | Body / query | Success |
+| --- | --- | --- | --- |
+| `POST` | `/customers` | `{ "name", "phone"?, "note"? }` | `201` customer |
+| `GET` | `/customers` | | `200` customer list (newest first) |
+| `GET` | `/customers/:id` | | `200` customer |
+| `PATCH` | `/customers/:id` | any of `name`, `phone`, `note` (`phone`/`note` can be `null`) | `200` customer |
+| `POST` | `/customers/:customerId/debts` | `{ "amount", "description", "occurredOn", "dueOn"? }` | `201` debt |
+| `GET` | `/customers/:customerId/debts` | | `200` debts of the customer |
+| `GET` | `/debts` | `?status=ACTIVE\|PARTIALLY_PAID\|PAID&customerId=<uuid>` (both optional) | `200` debt list |
+| `GET` | `/debts/:id` | | `200` debt with `payments` |
+| `POST` | `/debts/:id/payments` | `{ "amount", "paidOn"?, "note"? }` | `201` `{ payment, debt }` |
+| `GET` | `/debts/:id/payments` | | `200` payment list |
+
+Customer: `{ id, name, phone, note, balance: { totalAmount, paidAmount, remainingAmount, openDebtsCount }, createdAt, updatedAt }`.
+Debt: `{ id, customerId, amount, paidAmount, remainingAmount, status, description, occurredOn, dueOn, createdAt, updatedAt }`.
+Payment: `{ id, debtId, amount, paidOn, note, createdAt }`.
+
+Errors: `400` invalid input or malformed id, `401` missing/invalid token, `404` not found or belongs to another user, `422` payment exceeds the remaining amount or the debt is already paid (`details` contains `remainingAmount: <amount>`).
+
+Example session (`http://localhost:3001`):
+
+```bash
+TOKEN=$(curl -s -X POST localhost:3001/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"owner@example.com","password":"correct-horse-battery"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).accessToken')
+
+curl -s -X POST localhost:3001/customers -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"name":"Aziz","phone":"+992 90 123 45 67"}'
+# {"id":"<customerId>","name":"Aziz",...,"balance":{"totalAmount":"0.00",...}}
+
+curl -s -X POST localhost:3001/customers/<customerId>/debts -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"amount":"100.00","description":"Flour, 2 bags","occurredOn":"2026-01-10","dueOn":"2026-02-10"}'
+# {"id":"<debtId>","amount":"100.00","paidAmount":"0.00","remainingAmount":"100.00","status":"ACTIVE",...}
+
+curl -s -X POST localhost:3001/debts/<debtId>/payments -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"amount":"25.50","paidOn":"2026-01-11"}'
+# {"payment":{"amount":"25.50",...},"debt":{"paidAmount":"25.50","remainingAmount":"74.50","status":"PARTIALLY_PAID",...}}
+
+curl -s -X POST localhost:3001/debts/<debtId>/payments -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"amount":"80"}'
+# 422 {"statusCode":422,"error":"Unprocessable Entity","message":"Payment exceeds the remaining debt","details":["remainingAmount: 74.50"]}
+```
+
 ### CI
 
 `.github/workflows/ci.yml` runs on every pull request and on pushes to `main`:
@@ -124,7 +176,9 @@ Errors share one format:
 
 ### Current limitations
 
-- Only registration, login and the current-user profile exist. There are no refresh tokens, logout/token revocation, password reset or email verification; emails are not verified.
+- Customers, debts and payments can be created and read; customers can be edited. There is no deletion of customers, debts or payments and no editing of debts or payments yet. Lists are not paginated.
+- Payment requests are not idempotent: retrying a request that already succeeded registers a second payment (it is still limited by the remaining amount).
+- Auth has registration, login and the current-user profile only. There are no refresh tokens, logout/token revocation, password reset or email verification; emails are not verified.
 - Access tokens are valid until they expire (default 1 hour).
 - No rate limiting on login/registration yet; add it before any public deployment.
 - No CORS configuration: the frontend is not connected to the API yet.

@@ -16,5 +16,73 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  customers Customer[]
+  debts     Debt[]
+  payments  Payment[]
+
   @@map("users")
+}
+
+model Customer {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  name      String
+  phone     String?
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  debts Debt[]
+
+  // Target of the composite foreign key that keeps a debt and its customer under the same owner.
+  @@unique([id, ownerId])
+  @@index([ownerId, createdAt])
+  @@map("customers")
+}
+
+enum DebtStatus {
+  ACTIVE
+  PARTIALLY_PAID
+  PAID
+}
+
+// Money is stored as integer dirams (1 somoni = 100 dirams) to avoid floating-point errors.
+model Debt {
+  id           String     @id @default(uuid()) @db.Uuid
+  ownerId      String     @map("owner_id") @db.Uuid
+  customerId   String     @map("customer_id") @db.Uuid
+  amountDirams Int        @map("amount_dirams")
+  paidDirams   Int        @default(0) @map("paid_dirams")
+  status       DebtStatus @default(ACTIVE)
+  description  String
+  occurredOn   DateTime   @map("occurred_on") @db.Date
+  dueOn        DateTime?  @map("due_on") @db.Date
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  customer Customer  @relation(fields: [customerId, ownerId], references: [id, ownerId], onDelete: NoAction)
+  payments Payment[]
+
+  @@unique([id, ownerId])
+  @@index([ownerId, status])
+  @@index([customerId])
+  @@map("debts")
+}
+
+model Payment {
+  id           String   @id @default(uuid()) @db.Uuid
+  ownerId      String   @map("owner_id") @db.Uuid
+  debtId       String   @map("debt_id") @db.Uuid
+  amountDirams Int      @map("amount_dirams")
+  paidOn       DateTime @map("paid_on") @db.Date
+  note         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  debt  Debt @relation(fields: [debtId, ownerId], references: [id, ownerId], onDelete: NoAction)
+
+  @@index([debtId])
+  @@map("payments")
 }
