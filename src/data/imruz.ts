@@ -27,8 +27,6 @@ export const todayEntries: DayEntry[] = [
   { id: "d6", time: "18:20", title: "Фурӯши бегоҳ", shortTitle: "Фурӯши бегоҳ", kind: "income", source: "voice", amount: 850 },
 ];
 
-export const expenseHint = "орд, такси, музд";
-
 export const weekProfit: WeekDay[] = [
   { short: "Пш", name: "панҷшанбе", profit: 620 },
   { short: "Ҷм", name: "ҷумъа", profit: 540 },

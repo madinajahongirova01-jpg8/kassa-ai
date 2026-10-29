@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { buildDebtRows, type DebtRow } from "@/lib/debts";
 import { useDebtState } from "@/lib/debtStore";
 import { formatDayMonth, formatSomoni } from "@/lib/format";
+import { useDebtOverview } from "@/lib/useDebtOverview";
 
 const rotations = [
   { rotate: -1.5, tape: 3 },
@@ -34,55 +35,54 @@ function useDebtorRows() {
   return buildDebtRows(customers, events, today).filter((row) => row.balance > 0);
 }
 
-export function DebtStickers({ limit = 3 }: { limit?: number }) {
-  const rows = useDebtorRows().slice(0, limit);
-  return (
-    <>
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-display text-xl font-bold">Насия</h2>
-        <Link href="/app/debts" className="border-b-[1.5px] border-ink text-[13px] font-semibold text-ink hover:text-pen">
-          ҳама
-        </Link>
-      </div>
-      {rows.map((row, index) => {
-        const look = stickerLook(row);
-        const turn = rotations[index % rotations.length];
-        return (
-          <Sticker key={row.customer.id} tape={look.tape} rotate={turn.rotate} tapeRotate={turn.tape}>
-            <div className="flex items-baseline justify-between">
-              <span className="text-[15px] font-bold">{shortName(row.customer)}</span>
-              <span className={cn("font-display text-xl font-bold", row.status === "overdue" && "text-red")}>
-                {formatSomoni(row.balance, { unit: false })}
-              </span>
-            </div>
-            <HandNote tone={look.tone} className="mt-0.5 block text-[22px] leading-tight">
-              {look.note}
-            </HandNote>
-          </Sticker>
-        );
-      })}
-    </>
-  );
-}
+const plainTones = {
+  pen: "text-pen",
+  red: "text-red",
+  muted: "text-ink-2",
+};
 
-export function UrgentDebtSticker() {
-  const rows = useDebtorRows();
-  const row = rows.find((r) => r.status === "overdue") ?? rows.find((r) => r.status === "near");
-  if (!row) return null;
-  const look = stickerLook(row);
+export function DebtStickers({ limit = 3 }: { limit?: number }) {
+  const { totals } = useDebtOverview();
+  const rows = useDebtorRows().slice(0, limit);
+  const handNoteId = rows.find((row) => row.status === "overdue")?.customer.id;
   return (
-    <Link href="/app/debts" className="block text-ink hover:text-ink">
-      <Sticker tape={look.tape} rotate={-1} tapeRotate={-4} size="sm">
-        <div className="flex items-baseline justify-between">
-          <span className="font-bold">{shortName(row.customer)} · насия</span>
-          <span className={cn("font-display text-[17px] font-bold", row.status === "overdue" && "text-red")}>
-            {formatSomoni(row.balance, { unit: false })}
-          </span>
-        </div>
-        <HandNote tone={look.tone} className="block text-xl leading-tight">
-          {look.note}
-        </HandNote>
-      </Sticker>
-    </Link>
+    <section className="flex flex-col gap-4">
+      <div>
+        <h2 className="font-display text-lg font-bold lg:text-xl">Ба шумо қарздоранд</h2>
+        <div className="mt-1.5 font-display text-[34px] leading-none font-extrabold text-pen">{formatSomoni(totals.total)}</div>
+        <div className="mt-1 text-sm text-ink-2">{totals.debtorCount} нафар</div>
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-ink-2">Ҳоло қарздор нест.</p>
+      ) : (
+        rows.map((row, index) => {
+          const look = stickerLook(row);
+          const turn = rotations[index % rotations.length];
+          return (
+            <Sticker key={row.customer.id} tape={look.tape} rotate={turn.rotate} tapeRotate={turn.tape}>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="truncate text-[15px] font-bold">{shortName(row.customer)}</span>
+                <span className={cn("shrink-0 font-display text-xl font-bold", row.status === "overdue" && "text-red")}>
+                  {formatSomoni(row.balance, { unit: false })}
+                </span>
+              </div>
+              {row.customer.id === handNoteId ? (
+                <HandNote tone={look.tone} className="mt-0.5 block text-[22px] leading-tight">
+                  {look.note}
+                </HandNote>
+              ) : (
+                <span className={cn("mt-1 block text-sm font-medium", plainTones[look.tone])}>{look.note}</span>
+              )}
+            </Sticker>
+          );
+        })
+      )}
+      <Link
+        href="/app/debts"
+        className="mt-1 flex items-center justify-center rounded-full border-[1.5px] border-ink bg-card px-5 py-3 font-display text-base font-bold text-ink shadow-hard-sm hover:text-pen"
+      >
+        Ҳамаи қарзҳо →
+      </Link>
+    </section>
   );
 }

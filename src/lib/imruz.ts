@@ -18,13 +18,6 @@ export function signedAmount(entry: DayEntry) {
   return entry.kind === "expense" ? -entry.amount : entry.amount;
 }
 
-export function changeFromYesterday(week: WeekDay[]) {
-  const todayIndex = week.findIndex((d) => d.today);
-  const yesterday = week[todayIndex - 1];
-  if (!yesterday || yesterday.profit <= 0) return null;
-  return Math.round(((week[todayIndex].profit - yesterday.profit) / yesterday.profit) * 100);
-}
-
 export function bestDay(week: WeekDay[]) {
   return week.filter((d) => !d.today).reduce((best, d) => (d.profit > best.profit ? d : best));
 }

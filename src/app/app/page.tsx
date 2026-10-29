@@ -1,40 +1,23 @@
-import { MicCta } from "@/components/daftar/MicCta";
-import { DebtStickers, UrgentDebtSticker } from "@/components/imruz/DebtStickers";
-import { TodayHeadline, TodayHeadlineMobile } from "@/components/imruz/TodayHeadline";
-import { TodayReceipt, TodayReceiptMobile } from "@/components/imruz/TodayReceipt";
-import { TodayStats, TodayStatsMobile } from "@/components/imruz/TodayStats";
-import { WeekProfitChart } from "@/components/imruz/WeekProfitChart";
-import { expenseHint, todayEntries, weekProfit } from "@/data/imruz";
-import { changeFromYesterday, daySummary } from "@/lib/imruz";
+import { DebtStickers } from "@/components/imruz/DebtStickers";
+import { NewEntryButton } from "@/components/imruz/NewEntryButton";
+import { TodayEntries } from "@/components/imruz/TodayEntries";
+import { TodaySummary } from "@/components/imruz/TodaySummary";
+import { todayEntries } from "@/data/imruz";
+import { daySummary } from "@/lib/imruz";
 
 export default function ImruzPage() {
   const summary = daySummary(todayEntries);
-  const change = changeFromYesterday(weekProfit);
 
   return (
-    <>
-      <div className="hidden h-[calc(100dvh-116px)] min-h-[744px] grid-cols-[minmax(0,1fr)_310px_230px] gap-[18px] lg:grid xl:grid-cols-[minmax(0,1fr)_350px_268px] xl:gap-[26px]">
-        <section className="flex min-w-0 flex-col gap-[22px]">
-          <TodayHeadline profit={summary.profit} change={change} />
-          <TodayStats income={summary.income} expense={summary.expense} salesCount={summary.salesCount} expenseHint={expenseHint} />
-          <WeekProfitChart week={weekProfit} />
-        </section>
-        <section className="flex min-h-0 flex-col">
-          <TodayReceipt entries={todayEntries} />
-        </section>
-        <section className="flex min-h-0 flex-col gap-3.5">
-          <DebtStickers />
-          <div className="flex-1" />
-          <MicCta />
-        </section>
+    <div className="flex flex-col gap-6 lg:gap-9">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+        <TodaySummary income={summary.income} expense={summary.expense} />
+        <NewEntryButton />
       </div>
-
-      <div className="flex flex-col gap-4 lg:hidden">
-        <TodayHeadlineMobile profit={summary.profit} change={change} />
-        <TodayStatsMobile income={summary.income} expense={summary.expense} />
-        <TodayReceiptMobile entries={todayEntries} />
-        <UrgentDebtSticker />
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-9">
+        <TodayEntries entries={todayEntries} />
+        <DebtStickers />
       </div>
-    </>
+    </div>
   );
 }
