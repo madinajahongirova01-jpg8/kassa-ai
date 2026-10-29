@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { apiRequest, type ApiError } from "@/lib/api/server";
+import { apiRequest, nearestForwardedIp, type ApiError } from "@/lib/api/server";
 import { clearSessionCookie, readSessionToken, setSessionCookie } from "@/lib/session";
 
 export type SessionUser = {
   id: string;
   email: string;
   name: string | null;
+  businessName: string | null;
 };
 
 type AuthResult = {
@@ -44,7 +45,16 @@ export async function readJsonObject(request: NextRequest): Promise<Record<strin
 
 export function toSessionUser(user: SessionUser | undefined): SessionUser | null {
   if (typeof user?.id !== "string" || typeof user.email !== "string") return null;
-  return { id: user.id, email: user.email, name: typeof user.name === "string" ? user.name : null };
+  return {
+    id: user.id,
+    email: user.email,
+    name: typeof user.name === "string" ? user.name : null,
+    businessName: typeof user.businessName === "string" ? user.businessName : null,
+  };
+}
+
+export function clientIp(request: NextRequest): string | undefined {
+  return nearestForwardedIp(request.headers.get("x-forwarded-for"));
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -67,7 +77,7 @@ export async function forwardMutation(request: NextRequest, path: string, fields
   if (body === null) return errorResponse({ status: 400, message: "Expected a JSON object" });
 
   const payload = Object.fromEntries(fields.filter((field) => body[field] !== undefined).map((field) => [field, body[field]]));
-  const result = await apiRequest<unknown>(path, { method: "POST", body: payload, token });
+  const result = await apiRequest<unknown>(path, { method: "POST", body: payload, token, clientIp: clientIp(request) });
   if (!result.ok) {
     const response = errorResponse(result.error);
     if (result.error.status === 401) clearSessionCookie(response);
@@ -86,7 +96,7 @@ export async function startSession(request: NextRequest, path: "/auth/login" | "
   if (body === null) return errorResponse({ status: 400, message: "Expected a JSON object" });
 
   const payload = Object.fromEntries(fields.filter((field) => body[field] !== undefined).map((field) => [field, body[field]]));
-  const result = await apiRequest<Partial<AuthResult> | null>(path, { method: "POST", body: payload });
+  const result = await apiRequest<Partial<AuthResult> | null>(path, { method: "POST", body: payload, clientIp: clientIp(request) });
   if (!result.ok) return errorResponse(result.error);
 
   const accessToken = result.data?.accessToken;

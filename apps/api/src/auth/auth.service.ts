@@ -17,6 +17,7 @@ export function toPublicUser(user: User): PublicUser {
     id: user.id,
     email: user.email,
     name: user.name,
+    businessName: user.businessName,
     createdAt: user.createdAt,
   };
 }
@@ -35,7 +36,7 @@ export class AuthService {
     const passwordHash = await hashPassword(dto.password);
     try {
       const user = await this.prisma.user.create({
-        data: { email: dto.email, name: dto.name ?? null, passwordHash },
+        data: { email: dto.email, name: dto.name ?? null, businessName: dto.businessName, passwordHash },
       });
       return await this.issueToken(user);
     } catch (error) {

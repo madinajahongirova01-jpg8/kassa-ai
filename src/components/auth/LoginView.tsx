@@ -8,7 +8,7 @@ import { HandNote } from "@/components/daftar/HandNote";
 import { cn } from "@/lib/cn";
 
 type Mode = "login" | "register";
-type SessionUser = { id: string; email: string; name: string | null };
+type SessionUser = { id: string; email: string; name: string | null; businessName: string | null };
 
 const modes: { id: Mode; label: string }[] = [
   { id: "login", label: "Даромадан" },
@@ -30,8 +30,9 @@ const secondaryClass =
 
 function errorText(status: number, mode: Mode) {
   if (status === 401 && mode === "login") return "Почта ё парол нодуруст аст.";
+  if (status === 429) return "Кӯшишҳо зиёд шуданд. Як дақиқа сабр кунед ва боз кӯшиш кунед.";
   if (status === 409) return "Ин почта аллакай сабт шудааст. Ба ҷои он дароед.";
-  if (status === 400) return mode === "register" ? "Почтаро санҷед. Парол бояд аз 8 то 128 аломат бошад." : "Почта ва паролро санҷед.";
+  if (status === 400) return mode === "register" ? "Почта ва номи тиҷоратро санҷед. Парол бояд аз 8 то 128 аломат бошад." : "Почта ва паролро санҷед.";
   if (status === 403) return "Дархост рад шуд. Саҳифаро нав кунед ва боз кӯшиш кунед.";
   return "Сервер ҳоло ҷавоб намедиҳад. Каме баъд боз кӯшиш кунед.";
 }
@@ -48,6 +49,7 @@ export function LoginView() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -72,7 +74,7 @@ export function LoginView() {
     event.preventDefault();
     setPending(true);
     setError(null);
-    const body = mode === "register" && name.trim() ? { email, password, name } : { email, password };
+    const body = mode === "login" ? { email, password } : { email, password, businessName, ...(name.trim() ? { name } : {}) };
     try {
       const response = await fetch(`/api/auth/${mode}`, {
         method: "POST",
@@ -113,7 +115,7 @@ export function LoginView() {
 
       {user ? (
         <Card className="flex flex-col gap-4 rounded-sheet p-[22px]">
-          <p className="text-[15px] text-ink-2">{user.name ? `${user.name} · ${user.email}` : user.email}</p>
+          <p className="text-[15px] text-ink-2">{(user.businessName ?? user.name) ? `${user.businessName ?? user.name} · ${user.email}` : user.email}</p>
           <div className="flex gap-3">
             <button type="button" onClick={logout} disabled={pending} className={secondaryClass}>
               Баромадан
@@ -146,6 +148,21 @@ export function LoginView() {
           </div>
 
           <form onSubmit={submit} className="flex flex-col gap-4">
+            {mode === "register" && (
+              <label className={labelClass}>
+                Номи тиҷорат
+                <input
+                  type="text"
+                  name="businessName"
+                  autoComplete="organization"
+                  required
+                  maxLength={100}
+                  value={businessName}
+                  onChange={(event) => setBusinessName(event.target.value)}
+                  className={inputClass}
+                />
+              </label>
+            )}
             {mode === "register" && (
               <label className={labelClass}>
                 Ном (ихтиёрӣ)

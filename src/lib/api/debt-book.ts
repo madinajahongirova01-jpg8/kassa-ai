@@ -45,6 +45,10 @@ function toDebtCustomer(customer: ApiCustomer, debts: ApiDebt[]): DebtCustomer {
   };
 }
 
+function displayBusinessName({ user }: ApiMe): string | null {
+  return user.businessName?.trim() || user.name?.trim() || null;
+}
+
 /**
  * Customers with their debts (and, when asked, every payment) of the signed-in user.
  * Balances come from the API, which sums integer dirams in the database.
@@ -58,7 +62,7 @@ export async function loadDebtBook(returnTo: string, { withPayments }: { withPay
   ]);
   return {
     today: businessToday(),
-    businessName: me.user.name?.trim() || null,
+    businessName: displayBusinessName(me),
     customers: customers.map((customer) => toDebtCustomer(customer, debts)),
     events: [...debts.map(toDebtEvent), ...payments.map(toPaymentEvent)],
   };

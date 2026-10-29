@@ -1,4 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import type { AuthResult, PublicUser } from './auth.types';
 import { CurrentUser } from './current-user.decorator';
@@ -11,12 +12,14 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.CREATED)
   register(@Body() dto: RegisterDto): Promise<AuthResult> {
     return this.auth.register(dto);
   }
 
   @Post('login')
+  @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
   login(@Body() dto: LoginDto): Promise<AuthResult> {
     return this.auth.login(dto);

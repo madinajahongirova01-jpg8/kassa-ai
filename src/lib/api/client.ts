@@ -27,6 +27,7 @@ export function requestErrorText(status: number, details: string[] = []) {
     const remaining = details.map((d) => REMAINING.exec(d)?.[1]).find(Boolean);
     return remaining ? `Пардохт аз қарз зиёд аст — боқимонда ${remaining} смн.` : "Ин пардохтро қабул кардан намешавад.";
   }
+  if (status === 429) return "Кӯшишҳо зиёд шуданд. Каме сабр кунед ва боз кӯшиш кунед.";
   if (status === 401) return "Вақти даромадан гузашт. Аз нав дароед.";
   if (status === 404) return "Сабт ёфт нашуд. Саҳифаро нав кунед.";
   if (status === 400) return "Маълумотро санҷед.";

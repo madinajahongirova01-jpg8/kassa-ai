@@ -1,3 +1,5 @@
+import { isIP } from 'node:net';
+
 export type NodeEnv = 'development' | 'test' | 'production';
 
 export interface Env {
@@ -6,11 +8,41 @@ export interface Env {
   DATABASE_URL: string;
   JWT_SECRET: string;
   JWT_EXPIRES_IN_SECONDS: number;
+  AUTH_THROTTLE_LIMIT: number;
+  AUTH_THROTTLE_TTL_SECONDS: number;
+  TRUST_PROXY: string[];
 }
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
 const MIN_JWT_SECRET_LENGTH = 32;
 const PLACEHOLDER_JWT_SECRET = 'replace-with-a-random-string-of-at-least-32-characters';
+const TRUST_PROXY_NAMES: readonly string[] = ['loopback', 'linklocal', 'uniquelocal'];
+
+function isTrustProxyEntry(entry: string): boolean {
+  if (TRUST_PROXY_NAMES.includes(entry)) {
+    return true;
+  }
+  const [address, prefix, ...rest] = entry.split('/');
+  const version = isIP(address);
+  if (version === 0 || rest.length > 0) {
+    return false;
+  }
+  if (prefix === undefined) {
+    return true;
+  }
+  return /^\d{1,3}$/.test(prefix) && Number(prefix) <= (version === 4 ? 32 : 128);
+}
+
+function readTrustProxy(config: Record<string, unknown>, errors: string[]): string[] {
+  const entries = (readString(config, 'TRUST_PROXY') ?? 'loopback')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== '');
+  if (entries.length === 0 || !entries.every(isTrustProxyEntry)) {
+    errors.push(`TRUST_PROXY must be a comma-separated list of IP addresses, CIDR ranges or ${TRUST_PROXY_NAMES.join('/')}`);
+  }
+  return entries;
+}
 
 function readString(config: Record<string, unknown>, key: string): string | undefined {
   const value = config[key];
@@ -70,6 +102,9 @@ export function validateEnv(config: Record<string, unknown>): Env {
   }
 
   const jwtExpiresIn = readPositiveInteger(config, 'JWT_EXPIRES_IN_SECONDS', 3600, errors);
+  const authThrottleLimit = readPositiveInteger(config, 'AUTH_THROTTLE_LIMIT', 10, errors);
+  const authThrottleTtl = readPositiveInteger(config, 'AUTH_THROTTLE_TTL_SECONDS', 60, errors);
+  const trustProxy = readTrustProxy(config, errors);
 
   if (errors.length > 0 || nodeEnv === undefined || databaseUrl === undefined || jwtSecret === undefined) {
     throw new Error(`Invalid environment configuration:\n- ${errors.join('\n- ')}`);
@@ -81,5 +116,8 @@ export function validateEnv(config: Record<string, unknown>): Env {
     DATABASE_URL: databaseUrl,
     JWT_SECRET: jwtSecret,
     JWT_EXPIRES_IN_SECONDS: jwtExpiresIn,
+    AUTH_THROTTLE_LIMIT: authThrottleLimit,
+    AUTH_THROTTLE_TTL_SECONDS: authThrottleTtl,
+    TRUST_PROXY: trustProxy,
   };
 }

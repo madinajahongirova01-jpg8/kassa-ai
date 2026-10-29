@@ -1,7 +1,6 @@
-import { INestApplication } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { ErrorResponse } from '../src/common/error-response';
@@ -64,7 +63,7 @@ const PASSWORD = 'correct-horse-battery';
 const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
 
 describe('Customers, debts and payments (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: NestExpressApplication;
   let prisma: PrismaService;
   let ownerToken: string;
   let otherToken: string;
@@ -74,7 +73,7 @@ describe('Customers, debts and payments (e2e)', () => {
   }
 
   async function registerToken(email: string): Promise<string> {
-    const response = await api().post('/auth/register').send({ email, password: PASSWORD }).expect(201);
+    const response = await api().post('/auth/register').send({ email, password: PASSWORD, businessName: 'Test shop' }).expect(201);
     return (response.body as { accessToken: string }).accessToken;
   }
 
@@ -98,7 +97,7 @@ describe('Customers, debts and payments (e2e)', () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleRef.createNestApplication();
+    app = moduleRef.createNestApplication<NestExpressApplication>();
     app.useLogger(false);
     configureApp(app);
     await app.init();

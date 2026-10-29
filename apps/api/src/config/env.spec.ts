@@ -16,6 +16,9 @@ describe('validateEnv', () => {
       DATABASE_URL: validConfig.DATABASE_URL,
       JWT_SECRET: validConfig.JWT_SECRET,
       JWT_EXPIRES_IN_SECONDS: 900,
+      AUTH_THROTTLE_LIMIT: 10,
+      AUTH_THROTTLE_TTL_SECONDS: 60,
+      TRUST_PROXY: ['loopback'],
     });
   });
 
@@ -27,6 +30,9 @@ describe('validateEnv', () => {
     expect(result.NODE_ENV).toBe('development');
     expect(result.PORT).toBe(3001);
     expect(result.JWT_EXPIRES_IN_SECONDS).toBe(3600);
+    expect(result.AUTH_THROTTLE_LIMIT).toBe(10);
+    expect(result.AUTH_THROTTLE_TTL_SECONDS).toBe(60);
+    expect(result.TRUST_PROXY).toEqual(['loopback']);
   });
 
   it('rejects missing required values', () => {
@@ -59,5 +65,18 @@ describe('validateEnv', () => {
     expect(() =>
       validateEnv({ ...validConfig, DATABASE_URL: 'mysql://localhost/db', PORT: 'abc' }),
     ).toThrow(/PORT must be a positive integer[\s\S]*DATABASE_URL must be a PostgreSQL/);
+  });
+
+  it('parses a list of trusted proxies', () => {
+    expect(validateEnv({ ...validConfig, TRUST_PROXY: ' 10.0.0.5 , 172.16.0.0/12,loopback, ::1 ' }).TRUST_PROXY).toEqual([
+      '10.0.0.5',
+      '172.16.0.0/12',
+      'loopback',
+      '::1',
+    ]);
+  });
+
+  it.each(['true', '*', 'example.com', '10.0.0.0/33', '10.0.0.1/8/1', ' , '])('rejects TRUST_PROXY=%p', (value) => {
+    expect(() => validateEnv({ ...validConfig, TRUST_PROXY: value })).toThrow(/TRUST_PROXY must be/);
   });
 });

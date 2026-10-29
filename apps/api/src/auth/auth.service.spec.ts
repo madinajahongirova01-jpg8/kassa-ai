@@ -10,7 +10,7 @@ import { hashPassword } from './password';
 
 const JWT_SECRET = 'unit-test-secret-that-is-at-least-32-chars';
 
-type CreateArgs = [{ data: Pick<User, 'email' | 'name' | 'passwordHash'> }];
+type CreateArgs = [{ data: Pick<User, 'email' | 'name' | 'businessName' | 'passwordHash'> }];
 type FindUniqueArgs = [{ where: { email?: string; id?: string } }];
 
 interface UserDelegateMock {
@@ -24,6 +24,7 @@ function buildUser(overrides: Partial<User> = {}): User {
     id: '7f9c2c1e-3b0a-4c39-9a51-0d4f3f7d2a10',
     email: 'owner@example.com',
     name: 'Owner',
+    businessName: 'Shop',
     passwordHash: 'not-a-real-hash',
     createdAt: now,
     updatedAt: now,
@@ -54,6 +55,7 @@ describe('AuthService', () => {
       const result = await service.register({
         email: 'owner@example.com',
         password: 'correct-horse-battery',
+        businessName: 'Chaikhona Rukh',
         name: 'Owner',
       });
 
@@ -66,6 +68,7 @@ describe('AuthService', () => {
         id: expect.any(String) as string,
         email: 'owner@example.com',
         name: 'Owner',
+        businessName: 'Chaikhona Rukh',
         createdAt: expect.any(Date) as Date,
       });
       expect(result.user).not.toHaveProperty('passwordHash');
@@ -76,9 +79,10 @@ describe('AuthService', () => {
     it('stores null when name is not provided', async () => {
       users.create.mockImplementation(({ data }) => Promise.resolve(buildUser(data)));
 
-      await service.register({ email: 'owner@example.com', password: 'correct-horse-battery' });
+      await service.register({ email: 'owner@example.com', password: 'correct-horse-battery', businessName: 'Shop' });
 
       expect(users.create.mock.calls[0][0].data.name).toBeNull();
+      expect(users.create.mock.calls[0][0].data.businessName).toBe('Shop');
     });
 
     it('throws ConflictException when the email is already registered', async () => {
@@ -90,7 +94,7 @@ describe('AuthService', () => {
       );
 
       await expect(
-        service.register({ email: 'owner@example.com', password: 'correct-horse-battery' }),
+        service.register({ email: 'owner@example.com', password: 'correct-horse-battery', businessName: 'Shop' }),
       ).rejects.toBeInstanceOf(ConflictException);
     });
 
@@ -99,7 +103,7 @@ describe('AuthService', () => {
       users.create.mockRejectedValue(failure);
 
       await expect(
-        service.register({ email: 'owner@example.com', password: 'correct-horse-battery' }),
+        service.register({ email: 'owner@example.com', password: 'correct-horse-battery', businessName: 'Shop' }),
       ).rejects.toBe(failure);
     });
   });

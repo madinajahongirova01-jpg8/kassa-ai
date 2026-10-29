@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { errorResponse, jsonResponse, toSessionUser, type SessionUser } from "@/lib/api/route-helpers";
+import { clientIp, errorResponse, jsonResponse, toSessionUser, type SessionUser } from "@/lib/api/route-helpers";
 import { apiRequest } from "@/lib/api/server";
 import { clearSessionCookie, readSessionToken } from "@/lib/session";
 
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const token = readSessionToken(request);
   if (!token) return errorResponse({ status: 401, message: "Not signed in" });
 
-  const result = await apiRequest<{ user?: SessionUser } | null>("/auth/me", { token });
+  const result = await apiRequest<{ user?: SessionUser } | null>("/auth/me", { token, clientIp: clientIp(request) });
   if (!result.ok) {
     const response = errorResponse(result.error);
     if (result.error.status === 401) clearSessionCookie(response);

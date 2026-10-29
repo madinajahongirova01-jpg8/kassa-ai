@@ -1,7 +1,7 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { apiRequest } from "@/lib/api/server";
+import { apiRequest, nearestForwardedIp } from "@/lib/api/server";
 import type { ApiPage } from "@/lib/api/types";
 import { SESSION_COOKIE } from "@/lib/session";
 
@@ -26,7 +26,8 @@ export async function sessionGet<T>(path: string, returnTo: string): Promise<T> 
   const login = `/login?next=${encodeURIComponent(returnTo)}`;
   if (!token) redirect(login);
 
-  const result = await apiRequest<T>(path, { token });
+  const clientIp = nearestForwardedIp((await headers()).get("x-forwarded-for"));
+  const result = await apiRequest<T>(path, { token, clientIp });
   if (!result.ok) {
     if (result.error.status === 401) redirect(login);
     throw new ApiLoadError(result.error.status, result.error.message);

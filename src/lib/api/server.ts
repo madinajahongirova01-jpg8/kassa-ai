@@ -1,6 +1,8 @@
 // Server-side client for the NestJS API. Import it only from Route Handlers and proxy code:
 // it reads the server-only KASSA_API_URL and forwards the session token as a Bearer header.
 
+import { isIP } from "node:net";
+
 const REQUEST_TIMEOUT_MS = 10_000;
 
 export type ApiError = {
@@ -15,7 +17,13 @@ type ApiRequest = {
   method?: "GET" | "POST" | "PATCH";
   body?: unknown;
   token?: string;
+  clientIp?: string;
 };
+
+export function nearestForwardedIp(forwardedFor: string | null): string | undefined {
+  const nearest = forwardedFor?.split(",").at(-1)?.trim();
+  return nearest && isIP(nearest) !== 0 ? nearest : undefined;
+}
 
 function apiBaseUrl(): string | null {
   const raw = process.env.KASSA_API_URL?.trim();
@@ -43,7 +51,7 @@ function readError(status: number, body: unknown): ApiError {
   return { status, message: "Request failed" };
 }
 
-export async function apiRequest<T>(path: string, { method = "GET", body, token }: ApiRequest = {}): Promise<ApiResult<T>> {
+export async function apiRequest<T>(path: string, { method = "GET", body, token, clientIp }: ApiRequest = {}): Promise<ApiResult<T>> {
   const baseUrl = apiBaseUrl();
   if (baseUrl === null) {
     console.error("KASSA_API_URL is missing or is not an http(s) URL");
@@ -53,6 +61,7 @@ export async function apiRequest<T>(path: string, { method = "GET", body, token 
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (token) headers.Authorization = `Bearer ${token}`;
+  if (clientIp) headers["X-Forwarded-For"] = clientIp;
 
   let response: Response;
   try {

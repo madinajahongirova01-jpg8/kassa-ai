@@ -13,6 +13,11 @@ export class RegisterDto {
   @Length(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)
   password!: string;
 
+  @Transform(({ value }: { value: unknown }) => trimString(value))
+  @IsString()
+  @Length(1, 100)
+  businessName!: string;
+
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => trimString(value))
   @IsString()

@@ -1,7 +1,7 @@
 // Response shapes of the NestJS API (apps/api). Amounts are somoni strings such as "150.50".
 
 export type ApiMe = {
-  user: { id: string; email: string; name: string | null };
+  user: { id: string; email: string; name: string | null; businessName: string | null };
 };
 
 export type ApiCustomer = {

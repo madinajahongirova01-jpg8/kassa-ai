@@ -9,6 +9,7 @@ const USER: PublicUser = {
   id: '7f9c2c1e-3b0a-4c39-9a51-0d4f3f7d2a10',
   email: 'owner@example.com',
   name: null,
+  businessName: null,
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
 };
 

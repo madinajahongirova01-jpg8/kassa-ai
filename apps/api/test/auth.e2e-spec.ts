@@ -1,8 +1,7 @@
-import { INestApplication } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { ErrorResponse } from '../src/common/error-response';
@@ -12,6 +11,7 @@ interface PublicUserBody {
   id: string;
   email: string;
   name: string | null;
+  businessName: string | null;
   createdAt: string;
 }
 
@@ -23,10 +23,11 @@ interface AuthBody {
 }
 
 const PASSWORD = 'correct-horse-battery';
+const BUSINESS = 'Chaikhona Rukh';
 const JWT_SECRET = process.env.JWT_SECRET ?? '';
 
 describe('Auth (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: NestExpressApplication;
   let prisma: PrismaService;
 
   function register(body: object): request.Test {
@@ -51,7 +52,7 @@ describe('Auth (e2e)', () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleRef.createNestApplication();
+    app = moduleRef.createNestApplication<NestExpressApplication>();
     app.useLogger(false);
     configureApp(app);
     await app.init();
@@ -69,7 +70,7 @@ describe('Auth (e2e)', () => {
 
   describe('POST /auth/register', () => {
     it('creates a user, hashes the password and returns a token', async () => {
-      const response = await register({ email: '  Owner@Example.COM ', password: PASSWORD, name: ' Madina ' }).expect(201);
+      const response = await register({ email: '  Owner@Example.COM ', password: PASSWORD, businessName: '  Chaikhona Rukh ', name: ' Madina ' }).expect(201);
       const body = response.body as AuthBody;
 
       expect(body.tokenType).toBe('Bearer');
@@ -79,29 +80,35 @@ describe('Auth (e2e)', () => {
         id: expect.any(String) as string,
         email: 'owner@example.com',
         name: 'Madina',
+        businessName: BUSINESS,
         createdAt: expect.any(String) as string,
       });
       expectNoSensitiveData(body);
 
       const stored = await prisma.user.findUniqueOrThrow({ where: { email: 'owner@example.com' } });
+      expect(stored.businessName).toBe(BUSINESS);
       expect(stored.passwordHash).toMatch(/^\$argon2id\$/);
       expect(stored.passwordHash).not.toBe(PASSWORD);
     });
 
     it('allows registration without a name', async () => {
-      const response = await register({ email: 'noname@example.com', password: PASSWORD }).expect(201);
+      const response = await register({ email: 'noname@example.com', password: PASSWORD, businessName: BUSINESS }).expect(201);
 
       expect((response.body as AuthBody).user.name).toBeNull();
     });
 
     it.each([
-      ['an invalid email', { email: 'not-an-email', password: PASSWORD }],
-      ['a short password', { email: 'owner@example.com', password: 'short' }],
-      ['a too long password', { email: 'owner@example.com', password: 'x'.repeat(129) }],
-      ['a missing password', { email: 'owner@example.com' }],
-      ['a non-string password', { email: 'owner@example.com', password: 12345678 }],
-      ['an empty name', { email: 'owner@example.com', password: PASSWORD, name: '   ' }],
-      ['an unknown field', { email: 'owner@example.com', password: PASSWORD, role: 'admin' }],
+      ['an invalid email', { email: 'not-an-email', password: PASSWORD, businessName: BUSINESS }],
+      ['a short password', { email: 'owner@example.com', password: 'short', businessName: BUSINESS }],
+      ['a too long password', { email: 'owner@example.com', password: 'x'.repeat(129), businessName: BUSINESS }],
+      ['a missing password', { email: 'owner@example.com', businessName: BUSINESS }],
+      ['a non-string password', { email: 'owner@example.com', password: 12345678, businessName: BUSINESS }],
+      ['a missing businessName', { email: 'owner@example.com', password: PASSWORD }],
+      ['a blank businessName', { email: 'owner@example.com', password: PASSWORD, businessName: '   ' }],
+      ['a too long businessName', { email: 'owner@example.com', password: PASSWORD, businessName: 'x'.repeat(101) }],
+      ['a non-string businessName', { email: 'owner@example.com', password: PASSWORD, businessName: 42 }],
+      ['an empty name', { email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS, name: '   ' }],
+      ['an unknown field', { email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS, role: 'admin' }],
     ])('rejects %s with 400', async (_case, payload) => {
       const response = await register(payload).expect(400);
       const body = response.body as ErrorResponse;
@@ -112,9 +119,9 @@ describe('Auth (e2e)', () => {
     });
 
     it('rejects a duplicate email regardless of case with 409', async () => {
-      await register({ email: 'owner@example.com', password: PASSWORD }).expect(201);
+      await register({ email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS }).expect(201);
 
-      const response = await register({ email: 'OWNER@example.com', password: 'another-password' }).expect(409);
+      const response = await register({ email: 'OWNER@example.com', password: 'another-password', businessName: BUSINESS }).expect(409);
 
       expect(response.body).toEqual({
         statusCode: 409,
@@ -137,7 +144,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('rejects an oversized body with 413 without internal details', async () => {
-      const response = await register({ email: 'owner@example.com', password: PASSWORD, name: 'x'.repeat(200_000) }).expect(
+      const response = await register({ email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS, name: 'x'.repeat(200_000) }).expect(
         413,
       );
 
@@ -147,7 +154,7 @@ describe('Auth (e2e)', () => {
 
   describe('POST /auth/login', () => {
     beforeEach(async () => {
-      await register({ email: 'owner@example.com', password: PASSWORD }).expect(201);
+      await register({ email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS }).expect(201);
     });
 
     it('returns a token for valid credentials', async () => {
@@ -190,13 +197,25 @@ describe('Auth (e2e)', () => {
 
   describe('GET /auth/me', () => {
     it('returns the current user for a valid token', async () => {
-      const registered = (await register({ email: 'owner@example.com', password: PASSWORD, name: 'Owner' }).expect(201))
+      const registered = (await register({ email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS, name: 'Owner' }).expect(201))
         .body as AuthBody;
 
       const response = await me(`Bearer ${registered.accessToken}`).expect(200);
 
       expect(response.body).toEqual({ user: registered.user });
+      expect(registered.user.businessName).toBe(BUSINESS);
       expectNoSensitiveData(response.body);
+    });
+
+    it('returns a null businessName for a user created before the field existed', async () => {
+      const legacy = await prisma.user.create({
+        data: { email: 'legacy@example.com', name: 'Legacy', passwordHash: 'not-a-real-hash' },
+      });
+      const token = await new JwtService({ secret: JWT_SECRET }).signAsync({ sub: legacy.id });
+
+      const response = await me(`Bearer ${token}`).expect(200);
+
+      expect((response.body as { user: PublicUserBody }).user).toMatchObject({ name: 'Legacy', businessName: null });
     });
 
     it('rejects a request without a token', async () => {
@@ -220,7 +239,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('rejects a token signed with another secret', async () => {
-      const registered = (await register({ email: 'owner@example.com', password: PASSWORD }).expect(201)).body as AuthBody;
+      const registered = (await register({ email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS }).expect(201)).body as AuthBody;
       const forged = await new JwtService({ secret: 'attacker-secret-that-is-32-characters-long' }).signAsync({
         sub: registered.user.id,
       });
@@ -229,7 +248,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('rejects an expired token', async () => {
-      const registered = (await register({ email: 'owner@example.com', password: PASSWORD }).expect(201)).body as AuthBody;
+      const registered = (await register({ email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS }).expect(201)).body as AuthBody;
       const expired = await new JwtService({ secret: JWT_SECRET }).signAsync({
         sub: registered.user.id,
         exp: Math.floor(Date.now() / 1000) - 60,
@@ -239,7 +258,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('rejects a valid token of a deleted user', async () => {
-      const registered = (await register({ email: 'owner@example.com', password: PASSWORD }).expect(201)).body as AuthBody;
+      const registered = (await register({ email: 'owner@example.com', password: PASSWORD, businessName: BUSINESS }).expect(201)).body as AuthBody;
       await prisma.user.delete({ where: { id: registered.user.id } });
 
       await me(`Bearer ${registered.accessToken}`).expect(401);
