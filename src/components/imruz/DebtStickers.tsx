@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { HandNote } from "@/components/daftar/HandNote";
 import { Sticker, type StickerTape } from "@/components/daftar/Sticker";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 import type { DebtCustomer } from "@/data/debts";
 import { cn } from "@/lib/cn";
 import { buildDebtRows, type DebtRow } from "@/lib/debts";
@@ -48,7 +49,10 @@ export function DebtStickers({ limit = 3 }: { limit?: number }) {
   return (
     <section className="flex flex-col gap-4">
       <div>
-        <h2 className="font-display text-lg font-bold lg:text-xl">Ба шумо қарздоранд</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-display text-lg font-bold lg:text-xl">Ба шумо қарздоранд</h2>
+          <DemoBadge />
+        </div>
         <div className="mt-1.5 font-display text-[34px] leading-none font-extrabold text-pen">{formatSomoni(totals.total)}</div>
         <div className="mt-1 text-sm text-ink-2">{totals.debtorCount} нафар</div>
       </div>
