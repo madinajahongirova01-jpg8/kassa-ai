@@ -16,9 +16,10 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  customers Customer[]
-  debts     Debt[]
-  payments  Payment[]
+  customers   Customer[]
+  debts       Debt[]
+  payments    Payment[]
+  cashEntries CashEntry[]
 
   @@map("users")
 }
@@ -85,4 +86,44 @@ model Payment {
 
   @@index([debtId])
   @@map("payments")
+}
+
+enum CashEntryKind {
+  INCOME
+  EXPENSE
+}
+
+enum CashCategory {
+  SALE
+  GOODS
+  SALARY
+  UTILITIES
+  TRANSPORT
+  RENT
+  OTHER
+}
+
+enum EntrySource {
+  VOICE
+  TEXT
+  PHOTO
+}
+
+// Money that came in or went out of the shop (sales, goods, salaries…), stored as integer dirams.
+// Debts and debt payments are not cash entries: they live in their own tables.
+model CashEntry {
+  id           String        @id @default(uuid()) @db.Uuid
+  ownerId      String        @map("owner_id") @db.Uuid
+  kind         CashEntryKind
+  category     CashCategory
+  amountDirams Int           @map("amount_dirams")
+  title        String
+  occurredOn   DateTime      @map("occurred_on") @db.Date
+  source       EntrySource
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, occurredOn])
+  @@map("cash_entries")
 }

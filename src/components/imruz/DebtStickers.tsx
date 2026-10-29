@@ -5,7 +5,7 @@ import { HandNote } from "@/components/daftar/HandNote";
 import { Sticker, type StickerTape } from "@/components/daftar/Sticker";
 import type { DebtCustomer } from "@/data/debts";
 import { cn } from "@/lib/cn";
-import { buildDebtRows, daysUntil, type DebtRow } from "@/lib/debts";
+import { buildDebtRows, type DebtRow } from "@/lib/debts";
 import { useDebtState } from "@/lib/debtStore";
 import { formatDayMonth, formatSomoni } from "@/lib/format";
 
@@ -21,7 +21,7 @@ function shortName(customer: DebtCustomer) {
 }
 
 function stickerLook(row: DebtRow): { tape: StickerTape; tone: "pen" | "red" | "muted"; note: string } {
-  const days = row.customer.dueDate ? daysUntil(row.customer.dueDate) : null;
+  const days = row.daysLeft;
   if (row.status === "overdue" && days !== null) return { tape: "red", tone: "red", note: `${Math.abs(days)} рӯз гузашт — занг занед!` };
   if (days === 0) return { tape: "yellow", tone: "pen", note: "мӯҳлат — имрӯз" };
   if (days === 1) return { tape: "yellow", tone: "pen", note: "мӯҳлат — фардо" };
@@ -30,8 +30,8 @@ function stickerLook(row: DebtRow): { tape: StickerTape; tone: "pen" | "red" | "
 }
 
 function useDebtorRows() {
-  const { customers, events } = useDebtState();
-  return buildDebtRows(customers, events).filter((row) => row.balance > 0);
+  const { today, customers, events } = useDebtState();
+  return buildDebtRows(customers, events, today).filter((row) => row.balance > 0);
 }
 
 export function DebtStickers({ limit = 3 }: { limit?: number }) {

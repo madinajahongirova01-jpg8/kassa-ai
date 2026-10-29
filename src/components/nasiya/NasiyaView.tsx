@@ -5,12 +5,13 @@ import { NasiyaFilters } from "@/components/nasiya/NasiyaFilters";
 import { NasiyaHeadline } from "@/components/nasiya/NasiyaHeadline";
 import { NasiyaSheet } from "@/components/nasiya/NasiyaSheet";
 import { NasiyaStickers } from "@/components/nasiya/NasiyaStickers";
+import type { DebtBook } from "@/data/debts";
 import { buildDebtRows, debtTotals, matchesQuery, matchesStatus, statusCounts, type StatusFilter } from "@/lib/debts";
-import { useDebtState } from "@/lib/debtStore";
 
-export function NasiyaView() {
-  const { customers, events } = useDebtState();
-  const rows = useMemo(() => buildDebtRows(customers, events), [customers, events]);
+// The book is loaded on the server from the API; after a payment router.refresh() brings a new one.
+export function NasiyaView({ book }: { book: DebtBook }) {
+  const { today, businessName, customers, events } = book;
+  const rows = useMemo(() => buildDebtRows(customers, events, today), [customers, events, today]);
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(() => (rows.find((r) => r.status === "overdue") ?? rows[0])?.customer.id);
@@ -30,9 +31,9 @@ export function NasiyaView() {
       <section className="flex min-w-0 flex-col gap-4 lg:gap-[18px]">
         <NasiyaHeadline total={totals.total} overdueCount={totals.overdueCount} />
         <NasiyaFilters counts={statusCounts(rows)} filter={filter} onFilter={setFilter} query={query} onQuery={setQuery} />
-        <NasiyaStickers rows={visible} selectedId={selected?.customer.id} onSelect={select} />
+        <NasiyaStickers rows={visible} empty={rows.length === 0} today={today} selectedId={selected?.customer.id} onSelect={select} />
       </section>
-      {selected && <NasiyaSheet ref={sheetRef} row={selected} />}
+      {selected && <NasiyaSheet ref={sheetRef} row={selected} today={today} businessName={businessName} />}
     </div>
   );
 }

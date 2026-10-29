@@ -1,27 +1,25 @@
-import { debtsToday, type DebtCustomer, type DebtEvent } from "@/data/debts";
+import type { DebtCustomer, DebtEvent } from "@/data/debts";
+import { daysBetween } from "@/lib/dates";
 import { formatDayMonth } from "@/lib/format";
 
 export type DebtStatus = "overdue" | "near" | "active" | "paid";
 export type StatusFilter = "all" | "near" | "overdue" | "paid";
 
-const DAY = 24 * 60 * 60 * 1000;
 const NEAR_DAYS = 2;
 
-export function daysUntil(date: string) {
-  return Math.round((Date.parse(date) - Date.parse(debtsToday)) / DAY);
+/** Whole days from `today` to `date`; negative once the date has passed. */
+export function daysUntil(date: string, today: string) {
+  return daysBetween(today, date);
 }
 
-export function dayMonth(date: string) {
-  return date === debtsToday ? "имрӯз" : formatDayMonth(date);
+export function dayMonth(date: string, today: string) {
+  return date === today ? "имрӯз" : formatDayMonth(date);
 }
 
-export function customerBalance(customerId: string, events: DebtEvent[]) {
-  return events.filter((e) => e.customerId === customerId).reduce((sum, e) => sum + e.amount, 0);
-}
-
-export function debtStatus(customer: DebtCustomer, balance: number): DebtStatus {
-  if (balance <= 0 || !customer.dueDate) return "paid";
-  const days = daysUntil(customer.dueDate);
+export function debtStatus(customer: DebtCustomer, today: string): DebtStatus {
+  if (customer.balance <= 0) return "paid";
+  if (!customer.dueDate) return "active";
+  const days = daysUntil(customer.dueDate, today);
   if (days < 0) return "overdue";
   if (days <= NEAR_DAYS) return "near";
   return "active";
@@ -47,14 +45,23 @@ export type DebtRow = {
   status: DebtStatus;
   history: DebtEvent[];
   originalAmount: number;
+  /** Days left until the due date (negative when overdue), null without a due date. */
+  daysLeft: number | null;
 };
 
-export function buildDebtRows(customers: DebtCustomer[], events: DebtEvent[]): DebtRow[] {
+export function buildDebtRows(customers: DebtCustomer[], events: DebtEvent[], today: string): DebtRow[] {
   return customers.map((customer) => {
-    const history = events.filter((e) => e.customerId === customer.id).sort((a, b) => a.date.localeCompare(b.date));
-    const balance = customerBalance(customer.id, events);
-    const lastDebt = history.findLast((e) => e.type === "debt");
-    return { customer, balance, status: debtStatus(customer, balance), history, originalAmount: lastDebt?.amount ?? 0 };
+    const history = events
+      .filter((e) => e.customerId === customer.id)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+    return {
+      customer,
+      balance: customer.balance,
+      status: debtStatus(customer, today),
+      history,
+      originalAmount: customer.lastDebtAmount,
+      daysLeft: customer.balance > 0 && customer.dueDate ? daysUntil(customer.dueDate, today) : null,
+    };
   });
 }
 

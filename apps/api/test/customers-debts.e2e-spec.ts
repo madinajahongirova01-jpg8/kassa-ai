@@ -39,6 +39,22 @@ interface DebtBody {
   payments?: PaymentBody[];
 }
 
+interface PaymentListItemBody extends PaymentBody {
+  debt: { id: string; description: string; occurredOn: string };
+  customer: { id: string; name: string };
+}
+
+interface PaymentPageBody {
+  items: PaymentListItemBody[];
+  nextCursor: string | null;
+}
+
+interface CustomerPaymentBody {
+  amount: string;
+  payments: PaymentBody[];
+  debts: DebtBody[];
+}
+
 interface PaymentResultBody {
   payment: PaymentBody;
   debt: DebtBody;
@@ -113,6 +129,8 @@ describe('Customers, debts and payments (e2e)', () => {
       ['GET', `/debts/${UNKNOWN_ID}`],
       ['POST', `/debts/${UNKNOWN_ID}/payments`],
       ['GET', `/debts/${UNKNOWN_ID}/payments`],
+      ['POST', `/customers/${UNKNOWN_ID}/payments`],
+      ['GET', '/payments'],
     ])('%s %s requires a valid token', async (method, path) => {
       const withoutToken = await api()[method.toLowerCase() as 'get' | 'post' | 'patch'](path).send({}).expect(401);
       expect((withoutToken.body as ErrorResponse).message).toBe('Missing or invalid access token');
@@ -414,6 +432,196 @@ describe('Customers, debts and payments (e2e)', () => {
           },
         }),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('payment list', () => {
+    function listPayments(token: string, query: Record<string, string | number> = {}): request.Test {
+      return api().get('/payments').query(query).auth(token, { type: 'bearer' });
+    }
+
+    it('returns an empty page when there are no payments', async () => {
+      const response = await listPayments(ownerToken).expect(200);
+
+      expect(response.body).toEqual({ items: [], nextCursor: null });
+    });
+
+    it('lists payments newest first with their debt and customer', async () => {
+      const customer = await createCustomer(ownerToken, { name: 'Aziz' });
+      const debt = await createDebt(ownerToken, customer.id, { amount: '100.00', description: 'Flour' });
+      await pay(ownerToken, debt.id, { amount: '10.10', paidOn: '2026-01-11' }).expect(201);
+      await pay(ownerToken, debt.id, { amount: '20.20', paidOn: '2026-01-12', note: 'cash' }).expect(201);
+
+      const response = await listPayments(ownerToken).expect(200);
+      const body = response.body as PaymentPageBody;
+
+      expect(body.nextCursor).toBeNull();
+      expect(body.items.map((item) => [item.amount, item.paidOn, item.note])).toEqual([
+        ['20.20', '2026-01-12', 'cash'],
+        ['10.10', '2026-01-11', null],
+      ]);
+      expect(body.items[0]).toMatchObject({
+        debtId: debt.id,
+        debt: { id: debt.id, description: 'Flour', occurredOn: '2026-01-10' },
+        customer: { id: customer.id, name: 'Aziz' },
+      });
+      expect(JSON.stringify(body)).not.toContain('ownerId');
+    });
+
+    it('filters by an inclusive date range', async () => {
+      const customer = await createCustomer(ownerToken);
+      const debt = await createDebt(ownerToken, customer.id);
+      for (const paidOn of ['2026-01-11', '2026-01-12', '2026-01-13', '2026-01-14']) {
+        await pay(ownerToken, debt.id, { amount: '1', paidOn }).expect(201);
+      }
+
+      const dates = async (query: Record<string, string>): Promise<string[]> =>
+        ((await listPayments(ownerToken, query).expect(200)).body as PaymentPageBody).items.map((item) => item.paidOn);
+
+      expect(await dates({ from: '2026-01-12', to: '2026-01-13' })).toEqual(['2026-01-13', '2026-01-12']);
+      expect(await dates({ from: '2026-01-14' })).toEqual(['2026-01-14']);
+      expect(await dates({ to: '2026-01-11' })).toEqual(['2026-01-11']);
+      expect(await dates({ from: '2026-02-01' })).toEqual([]);
+    });
+
+    it.each([
+      ['from after to', { from: '2026-01-13', to: '2026-01-12' }],
+      ['an invalid date', { from: '2026-02-30' }],
+      ['a zero limit', { limit: 0 }],
+      ['a too large limit', { limit: 201 }],
+      ['a malformed cursor', { cursor: 'nope' }],
+      ['an unknown parameter', { status: 'PAID' }],
+    ])('rejects %s with 400', async (_case, query) => {
+      await listPayments(ownerToken, query).expect(400);
+    });
+
+    it('pages through payments that share a date without gaps or repeats', async () => {
+      const customer = await createCustomer(ownerToken);
+      const debt = await createDebt(ownerToken, customer.id);
+      for (let i = 1; i <= 5; i += 1) {
+        await pay(ownerToken, debt.id, { amount: String(i), paidOn: '2026-01-11' }).expect(201);
+      }
+
+      const seen: string[] = [];
+      let cursor: string | null = null;
+      let pages = 0;
+      do {
+        const query: Record<string, string | number> = cursor === null ? { limit: 2 } : { limit: 2, cursor };
+        const page = (await listPayments(ownerToken, query).expect(200)).body as PaymentPageBody;
+        seen.push(...page.items.map((item) => item.id));
+        cursor = page.nextCursor;
+        pages += 1;
+      } while (cursor !== null);
+
+      expect(pages).toBe(3);
+      expect(new Set(seen).size).toBe(5);
+      expect(seen).toEqual((await prisma.payment.findMany({ orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] })).map((p) => p.id));
+    });
+
+    it('never returns another user payments', async () => {
+      const customer = await createCustomer(ownerToken);
+      const debt = await createDebt(ownerToken, customer.id);
+      await pay(ownerToken, debt.id, { amount: '5', paidOn: '2026-01-11' }).expect(201);
+
+      const response = await listPayments(otherToken).expect(200);
+
+      expect(response.body).toEqual({ items: [], nextCursor: null });
+    });
+  });
+
+  describe('customer payments', () => {
+    function payCustomer(token: string, customerId: string, body: object): request.Test {
+      return api().post(`/customers/${customerId}/payments`).auth(token, { type: 'bearer' }).send(body);
+    }
+
+    it('splits one payment across open debts, oldest first, in exact amounts', async () => {
+      const customer = await createCustomer(ownerToken);
+      const older = await createDebt(ownerToken, customer.id, { amount: '100.10', occurredOn: '2026-01-05' });
+      const newer = await createDebt(ownerToken, customer.id, { amount: '50.20', occurredOn: '2026-01-10' });
+
+      const response = await payCustomer(ownerToken, customer.id, { amount: '120.20', paidOn: '2026-01-12' }).expect(201);
+      const body = response.body as CustomerPaymentBody;
+
+      expect(body.amount).toBe('120.20');
+      expect(body.payments.map((payment) => [payment.debtId, payment.amount])).toEqual([
+        [older.id, '100.10'],
+        [newer.id, '20.10'],
+      ]);
+      expect(body.debts.map((debt) => [debt.id, debt.remainingAmount, debt.status])).toEqual([
+        [older.id, '0.00', 'PAID'],
+        [newer.id, '30.10', 'PARTIALLY_PAID'],
+      ]);
+
+      const balance = await api().get(`/customers/${customer.id}`).auth(ownerToken, { type: 'bearer' }).expect(200);
+      expect((balance.body as CustomerBody).balance).toEqual({
+        totalAmount: '150.30',
+        paidAmount: '120.20',
+        remainingAmount: '30.10',
+        openDebtsCount: 1,
+      });
+    });
+
+    it('pays off everything with the exact remaining total', async () => {
+      const customer = await createCustomer(ownerToken);
+      await createDebt(ownerToken, customer.id, { amount: '0.10' });
+      await createDebt(ownerToken, customer.id, { amount: '0.20' });
+
+      await payCustomer(ownerToken, customer.id, { amount: '0.30', paidOn: '2026-01-12' }).expect(201);
+
+      const debts = await api().get(`/customers/${customer.id}/debts`).auth(ownerToken, { type: 'bearer' }).expect(200);
+      expect((debts.body as DebtBody[]).every((debt) => debt.status === 'PAID')).toBe(true);
+    });
+
+    it('refuses an overpayment with 422 and saves nothing', async () => {
+      const customer = await createCustomer(ownerToken);
+      await createDebt(ownerToken, customer.id, { amount: '100.00' });
+      await createDebt(ownerToken, customer.id, { amount: '50.00' });
+
+      const response = await payCustomer(ownerToken, customer.id, { amount: '150.01', paidOn: '2026-01-12' }).expect(422);
+
+      expect((response.body as ErrorResponse).details).toEqual(['remainingAmount: 150.00']);
+      expect(await prisma.payment.count()).toBe(0);
+      expect(await prisma.debt.aggregate({ _sum: { paidDirams: true } })).toEqual({ _sum: { paidDirams: 0 } });
+    });
+
+    it('refuses a payment when the customer owes nothing', async () => {
+      const customer = await createCustomer(ownerToken);
+
+      await payCustomer(ownerToken, customer.id, { amount: '1' }).expect(422);
+    });
+
+    it('only covers debts that existed on the payment date', async () => {
+      const customer = await createCustomer(ownerToken);
+      await createDebt(ownerToken, customer.id, { amount: '10.00', occurredOn: '2026-01-05' });
+      await createDebt(ownerToken, customer.id, { amount: '10.00', occurredOn: '2026-01-20' });
+
+      const tooMuch = await payCustomer(ownerToken, customer.id, { amount: '15', paidOn: '2026-01-10' }).expect(422);
+      expect((tooMuch.body as ErrorResponse).details).toEqual(['remainingAmount: 10.00']);
+
+      await payCustomer(ownerToken, customer.id, { amount: '1', paidOn: '2026-01-01' }).expect(400);
+    });
+
+    it('never lets concurrent customer payments exceed the debts', async () => {
+      const customer = await createCustomer(ownerToken);
+      await createDebt(ownerToken, customer.id, { amount: '60.00' });
+      await createDebt(ownerToken, customer.id, { amount: '40.00' });
+
+      const results = await Promise.all(
+        Array.from({ length: 5 }, () => payCustomer(ownerToken, customer.id, { amount: '30', paidOn: '2026-01-12' })),
+      );
+
+      expect(results.map((result) => result.status).sort()).toEqual([201, 201, 201, 422, 422]);
+      const paid = await prisma.debt.aggregate({ _sum: { paidDirams: true } });
+      expect(paid._sum.paidDirams).toBe(9_000);
+    });
+
+    it('answers 404 for another user customer and changes nothing', async () => {
+      const customer = await createCustomer(ownerToken);
+      await createDebt(ownerToken, customer.id);
+
+      await payCustomer(otherToken, customer.id, { amount: '1', paidOn: '2026-01-12' }).expect(404);
+
+      expect(await prisma.payment.count()).toBe(0);
     });
   });
 });

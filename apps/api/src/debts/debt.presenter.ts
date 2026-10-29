@@ -37,6 +37,32 @@ export interface PaymentResultResponse {
   debt: DebtResponse;
 }
 
+/** One payment split across the customer's debts: one payment row per debt it touched. */
+export interface CustomerPaymentResultResponse {
+  amount: string;
+  payments: PaymentResponse[];
+  debts: DebtResponse[];
+}
+
+/** A payment in the owner-wide list, with the debt and customer it belongs to. */
+export interface PaymentListItemResponse extends PaymentResponse {
+  debt: { id: string; description: string; occurredOn: string };
+  customer: { id: string; name: string };
+}
+
+type PaymentWithDebt = Payment & {
+  debt: Pick<Debt, 'id' | 'description' | 'occurredOn'> & { customer: { id: string; name: string } };
+};
+
+export function toPaymentListItemResponse(payment: PaymentWithDebt): PaymentListItemResponse {
+  const { debt } = payment;
+  return {
+    ...toPaymentResponse(payment),
+    debt: { id: debt.id, description: debt.description, occurredOn: formatCalendarDate(debt.occurredOn) },
+    customer: { id: debt.customer.id, name: debt.customer.name },
+  };
+}
+
 export function toPaymentResponse(payment: Payment): PaymentResponse {
   return {
     id: payment.id,

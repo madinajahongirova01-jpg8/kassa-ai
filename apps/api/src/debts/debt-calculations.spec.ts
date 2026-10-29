@@ -1,5 +1,5 @@
 import { DebtStatus } from '../generated/prisma/enums';
-import { applyPayment, debtStatusFor, remainingDirams } from './debt-calculations';
+import { allocatePayment, applyPayment, debtStatusFor, remainingDirams } from './debt-calculations';
 
 describe('debt calculations', () => {
   describe('debtStatusFor', () => {
@@ -63,6 +63,51 @@ describe('debt calculations', () => {
 
     it.each([0, -100, 1.5, Number.NaN])('throws for an invalid payment amount %p', (amount) => {
       expect(() => applyPayment({ amountDirams: 10_000, paidDirams: 0 }, amount)).toThrow(RangeError);
+    });
+  });
+
+  describe('allocatePayment', () => {
+    const debts = [
+      { id: 'a', amountDirams: 10_000, paidDirams: 2_500 },
+      { id: 'b', amountDirams: 5_050, paidDirams: 0 },
+      { id: 'c', amountDirams: 1_000, paidDirams: 1_000 },
+      { id: 'd', amountDirams: 2_000, paidDirams: 0 },
+    ];
+
+    it('fills debts oldest first and skips paid ones', () => {
+      expect(allocatePayment(debts, 10_000)).toEqual({
+        ok: true,
+        parts: [
+          { debtId: 'a', amountDirams: 7_500, paidDirams: 10_000, status: DebtStatus.PAID },
+          { debtId: 'b', amountDirams: 2_500, paidDirams: 2_500, status: DebtStatus.PARTIALLY_PAID },
+        ],
+      });
+    });
+
+    it('pays off every debt with the exact total', () => {
+      const outcome = allocatePayment(debts, 14_550);
+
+      expect(outcome.ok && outcome.parts.map((part) => [part.debtId, part.amountDirams, part.status])).toEqual([
+        ['a', 7_500, DebtStatus.PAID],
+        ['b', 5_050, DebtStatus.PAID],
+        ['d', 2_000, DebtStatus.PAID],
+      ]);
+    });
+
+    it('refuses more than the total remaining amount', () => {
+      expect(allocatePayment(debts, 14_551)).toEqual({ ok: false, reason: 'exceeds-remaining', remainingDirams: 14_550 });
+    });
+
+    it('refuses a payment when nothing is owed', () => {
+      expect(allocatePayment([{ id: 'c', amountDirams: 1_000, paidDirams: 1_000 }], 1)).toEqual({
+        ok: false,
+        reason: 'nothing-owed',
+        remainingDirams: 0,
+      });
+    });
+
+    it.each([0, -1, 0.5])('throws for an invalid payment amount %p', (amount) => {
+      expect(() => allocatePayment(debts, amount)).toThrow(RangeError);
     });
   });
 });

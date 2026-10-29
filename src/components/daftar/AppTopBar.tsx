@@ -1,6 +1,6 @@
 import { Logo } from "@/components/daftar/Logo";
 import { NavPill } from "@/components/daftar/NavPill";
-import { DemoBadge } from "@/components/ui/DemoBadge";
+import { SampleDataBadge } from "@/components/daftar/SampleDataBadge";
 
 export function AppTopBar() {
   return (
@@ -8,12 +8,12 @@ export function AppTopBar() {
       <header className="hidden h-13 items-center gap-7 lg:flex">
         <Logo />
         <NavPill />
-        <DemoBadge />
+        <SampleDataBadge />
       </header>
 
       <header className="flex items-center justify-between gap-3 lg:hidden">
         <Logo />
-        <DemoBadge />
+        <SampleDataBadge />
       </header>
     </>
   );

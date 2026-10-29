@@ -1,15 +1,21 @@
 import { BadRequestException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { formatCalendarDate, parseCalendarDate, todayInBusinessTimeZone } from '../common/dates';
+import { calendarDateFilter, DateRangePageQueryDto } from '../common/date-range.dto';
 import { formatDirams } from '../common/money';
-import { CustomersService } from '../customers/customers.service';
+import { decodeCursor, DEFAULT_PAGE_SIZE, Page, toPage } from '../common/pagination';
+import { CUSTOMER_NOT_FOUND_MESSAGE, CustomersService } from '../customers/customers.service';
+import { DebtStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
-import { applyPayment } from './debt-calculations';
+import { allocatePayment, applyPayment } from './debt-calculations';
 import {
+  CustomerPaymentResultResponse,
   DebtResponse,
   DebtWithPaymentsResponse,
+  PaymentListItemResponse,
   PaymentResponse,
   PaymentResultResponse,
   toDebtResponse,
+  toPaymentListItemResponse,
   toPaymentResponse,
 } from './debt.presenter';
 import { CreateDebtDto } from './dto/create-debt.dto';
@@ -124,6 +130,114 @@ export class DebtsService {
         data: { paidDirams: outcome.paidDirams, status: outcome.status },
       });
       return { payment: toPaymentResponse(payment), debt: toDebtResponse(updated) };
+    });
+  }
+
+  /** All payments of the owner, newest first, optionally limited to an inclusive paidOn range. */
+  async listAllPayments(ownerId: string, query: DateRangePageQueryDto): Promise<Page<PaymentListItemResponse>> {
+    const paidOn = calendarDateFilter(query.from, query.to);
+    const limit = query.limit ?? DEFAULT_PAGE_SIZE;
+    const cursor = query.cursor === undefined ? undefined : decodeCursor(query.cursor);
+    const cursorDate = cursor === undefined ? undefined : parseCalendarDate(cursor.date);
+
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        ownerId,
+        paidOn,
+        OR:
+          cursor === undefined || cursorDate === undefined
+            ? undefined
+            : [
+                { paidOn: { lt: cursorDate } },
+                { paidOn: cursorDate, createdAt: { lt: cursor.createdAt } },
+                { paidOn: cursorDate, createdAt: cursor.createdAt, id: { lt: cursor.id } },
+              ],
+      },
+      include: {
+        debt: { select: { id: true, description: true, occurredOn: true, customer: { select: { id: true, name: true } } } },
+      },
+      orderBy: [{ paidOn: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+    });
+    return toPage(
+      payments,
+      limit,
+      (payment) => ({ date: formatCalendarDate(payment.paidOn), createdAt: payment.createdAt, id: payment.id }),
+      toPaymentListItemResponse,
+    );
+  }
+
+  /**
+   * Registers one customer payment split across their open debts, oldest first, in a single
+   * transaction. All open debts are locked in a fixed order, so concurrent payments cannot overpay,
+   * and either every part is saved or none is.
+   */
+  async addCustomerPayment(
+    ownerId: string,
+    customerId: string,
+    dto: CreatePaymentDto,
+  ): Promise<CustomerPaymentResultResponse> {
+    const paidOn = dto.paidOn ?? todayInBusinessTimeZone();
+    if (paidOn > todayInBusinessTimeZone()) {
+      throw invalidInput('paidOn must not be in the future');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const customer = await tx.customer.findFirst({ where: { id: customerId, ownerId }, select: { id: true } });
+      if (customer === null) {
+        throw new NotFoundException(CUSTOMER_NOT_FOUND_MESSAGE);
+      }
+
+      await tx.$queryRaw`
+        SELECT "id" FROM "debts"
+        WHERE "customer_id" = ${customerId}::uuid AND "owner_id" = ${ownerId}::uuid AND "paid_dirams" < "amount_dirams"
+        ORDER BY "occurred_on", "created_at", "id"
+        FOR UPDATE`;
+      const open = await tx.debt.findMany({
+        where: { customerId, ownerId, status: { not: DebtStatus.PAID } },
+        orderBy: [{ occurredOn: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+      });
+      if (open.length === 0) {
+        throw new UnprocessableEntityException({
+          message: 'Customer has no open debts',
+          details: ['remainingAmount: 0.00'],
+        });
+      }
+
+      // A payment can only cover debts that already existed on its date.
+      const eligible = open.filter((debt) => formatCalendarDate(debt.occurredOn) <= paidOn);
+      if (eligible.length === 0) {
+        throw invalidInput('paidOn must not be earlier than the debt occurredOn date');
+      }
+
+      const outcome = allocatePayment(eligible, dto.amount);
+      if (!outcome.ok) {
+        throw new UnprocessableEntityException({
+          message: 'Payment exceeds the remaining debt',
+          details: [`remainingAmount: ${formatDirams(outcome.remainingDirams)}`],
+        });
+      }
+
+      const payments: PaymentResponse[] = [];
+      const debts: DebtResponse[] = [];
+      for (const part of outcome.parts) {
+        const payment = await tx.payment.create({
+          data: {
+            ownerId,
+            debtId: part.debtId,
+            amountDirams: part.amountDirams,
+            paidOn: parseCalendarDate(paidOn),
+            note: dto.note ?? null,
+          },
+        });
+        const updated = await tx.debt.update({
+          where: { id: part.debtId },
+          data: { paidDirams: part.paidDirams, status: part.status },
+        });
+        payments.push(toPaymentResponse(payment));
+        debts.push(toDebtResponse(updated));
+      }
+      return { amount: formatDirams(dto.amount), payments, debts };
     });
   }
 }

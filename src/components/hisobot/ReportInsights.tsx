@@ -2,7 +2,6 @@ import Link from "next/link";
 import { tipTones, type ReportTipTone } from "@/data/hisobot";
 import { cn } from "@/lib/cn";
 import type { DebtRow } from "@/lib/debts";
-import { daysUntil } from "@/lib/debts";
 import { formatSomoni } from "@/lib/format";
 import { extremeDays, weekdayDate } from "@/lib/hisobot";
 
@@ -62,7 +61,7 @@ export function ReportInsights({ debtReturn, overdue }: ReportInsightsProps) {
       ? [
           {
             tone: "red" as const,
-            title: `${overdue.customer.name.split(" ")[0]} ${Math.abs(daysUntil(overdue.customer.dueDate))} рӯз дер кард.`,
+            title: `${overdue.customer.name.split(" ")[0]} ${Math.abs(overdue.daysLeft ?? 0)} рӯз дер кард.`,
             body: "Ёдраскунии мулоим фиристед — бо як тугма.",
             href: "/app/debts",
           },

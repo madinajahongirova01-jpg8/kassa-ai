@@ -1,5 +1,5 @@
 import { daftarCategories, ledgerStart, type DaftarEntry } from "@/data/daftar";
-import type { DebtCustomer, DebtEvent } from "@/data/debts";
+import { debtsToday, type DebtCustomer, type DebtEvent } from "@/data/debts";
 import { daysUntil } from "@/lib/debts";
 import { formatDayMonth, formatSomoni } from "@/lib/format";
 
@@ -50,7 +50,7 @@ export function entryAmountText(entry: DaftarEntry) {
 }
 
 export function dayLabel(date: string) {
-  const offset = daysUntil(date);
+  const offset = daysUntil(date, debtsToday);
   if (offset === 0) return `Имрӯз, ${formatDayMonth(date)}`;
   if (offset === -1) return `Дирӯз, ${formatDayMonth(date)}`;
   return formatDayMonth(date);

@@ -2,7 +2,16 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post
 import type { PublicUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { DebtResponse, DebtWithPaymentsResponse, PaymentResponse, PaymentResultResponse } from './debt.presenter';
+import { DateRangePageQueryDto } from '../common/date-range.dto';
+import { Page } from '../common/pagination';
+import {
+  CustomerPaymentResultResponse,
+  DebtResponse,
+  DebtWithPaymentsResponse,
+  PaymentListItemResponse,
+  PaymentResponse,
+  PaymentResultResponse,
+} from './debt.presenter';
 import { DebtsService } from './debts.service';
 import { CreateDebtDto } from './dto/create-debt.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -21,6 +30,24 @@ export class DebtsController {
     @Body() dto: CreateDebtDto,
   ): Promise<DebtResponse> {
     return this.debts.create(user.id, customerId, dto);
+  }
+
+  @Post('customers/:customerId/payments')
+  @HttpCode(HttpStatus.CREATED)
+  addCustomerPayment(
+    @CurrentUser() user: PublicUser,
+    @Param('customerId', ParseUUIDPipe) customerId: string,
+    @Body() dto: CreatePaymentDto,
+  ): Promise<CustomerPaymentResultResponse> {
+    return this.debts.addCustomerPayment(user.id, customerId, dto);
+  }
+
+  @Get('payments')
+  listAllPayments(
+    @CurrentUser() user: PublicUser,
+    @Query() query: DateRangePageQueryDto,
+  ): Promise<Page<PaymentListItemResponse>> {
+    return this.debts.listAllPayments(user.id, query);
   }
 
   @Get('customers/:customerId/debts')

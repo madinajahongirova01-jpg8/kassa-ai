@@ -2,6 +2,7 @@ import { HandNote } from "@/components/daftar/HandNote";
 import { CameraIcon, MicIcon, TextIcon } from "@/components/daftar/icons";
 import { Marker } from "@/components/daftar/Marker";
 import { daftarCategories, type DaftarEntry, type DaftarKind, type DaftarSource } from "@/data/daftar";
+import { debtsToday } from "@/data/debts";
 import { cn } from "@/lib/cn";
 import { dayLabel, entryAmountText, type DaftarDay } from "@/lib/daftar";
 import { daysUntil } from "@/lib/debts";
@@ -61,7 +62,7 @@ export function LedgerDays({ days }: { days: DaftarDay[] }) {
           <section key={day.date} aria-label={dayLabel(day.date)}>
             <div className="flex items-baseline justify-between pt-3.5 pb-1 first:pt-2.5">
               <HandNote className="text-2xl">{dayLabel(day.date)}</HandNote>
-              <span className="font-display text-sm font-bold">{daysUntil(day.date) === 0 ? <Marker className="px-1">{total}</Marker> : total}</span>
+              <span className="font-display text-sm font-bold">{daysUntil(day.date, debtsToday) === 0 ? <Marker className="px-1">{total}</Marker> : total}</span>
             </div>
             <ul className="font-mono text-sm">
               {day.entries.map((entry) => (

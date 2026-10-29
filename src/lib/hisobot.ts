@@ -1,5 +1,5 @@
 import { cashEntries } from "@/data/daftar";
-import type { DebtEvent } from "@/data/debts";
+import { debtsToday, type DebtEvent } from "@/data/debts";
 import { monthlyProfit, weeklyProfit, type ReportBar, type ReportPeriod } from "@/data/hisobot";
 import { weekProfit } from "@/data/imruz";
 import { groupByDay } from "@/lib/daftar";
@@ -11,7 +11,7 @@ const weekdays = ["Якшанбе", "Душанбе", "Сешанбе", "Чор�
 const TODAY_WEEKDAY = 3; // the demo "today", 24 May, is a Wednesday (Чоршанбе)
 
 export function weekdayDate(date: string) {
-  const index = (((TODAY_WEEKDAY + daysUntil(date)) % 7) + 7) % 7;
+  const index = (((TODAY_WEEKDAY + daysUntil(date, debtsToday)) % 7) + 7) % 7;
   return `${weekdays[index]}, ${formatDayMonth(date)}`;
 }
 

@@ -15,10 +15,10 @@ import { debtReturn, downloadReportCsv, periodReport } from "@/lib/hisobot";
 const exportClass = "h-[38px] rounded-xl border-[1.5px] border-ink bg-card px-3.5 font-semibold text-ink hover:text-pen";
 
 export function ReportView() {
-  const { customers, events } = useDebtState();
+  const { today, customers, events } = useDebtState();
   const [period, setPeriod] = useState<ReportPeriod>("month");
   const report = periodReport(period);
-  const overdue = buildDebtRows(customers, events).find((row) => row.status === "overdue");
+  const overdue = buildDebtRows(customers, events, today).find((row) => row.status === "overdue");
 
   return (
     <div className="flex flex-col gap-5 lg:h-[calc(100dvh-116px)] lg:min-h-[680px]">

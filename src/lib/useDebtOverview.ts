@@ -5,6 +5,6 @@ import { buildDebtRows, debtTotals } from "@/lib/debts";
 import { useDebtState } from "@/lib/debtStore";
 
 export function useDebtOverview() {
-  const { customers, events } = useDebtState();
-  return useMemo(() => ({ totals: debtTotals(buildDebtRows(customers, events)) }), [customers, events]);
+  const { today, customers, events } = useDebtState();
+  return useMemo(() => ({ totals: debtTotals(buildDebtRows(customers, events, today)) }), [today, customers, events]);
 }

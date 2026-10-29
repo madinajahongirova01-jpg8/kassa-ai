@@ -48,3 +48,51 @@ export function applyPayment(balance: DebtBalance, paymentDirams: number): Payme
   const next = { amountDirams: balance.amountDirams, paidDirams: balance.paidDirams + paymentDirams };
   return { ok: true, paidDirams: next.paidDirams, remainingDirams: remaining - paymentDirams, status: debtStatusFor(next) };
 }
+
+export interface AllocationPart {
+  debtId: string;
+  amountDirams: number;
+  paidDirams: number;
+  status: DebtStatus;
+}
+
+export type AllocationOutcome =
+  | { ok: true; parts: AllocationPart[] }
+  | { ok: false; reason: 'nothing-owed' | 'exceeds-remaining'; remainingDirams: number };
+
+/**
+ * Splits one customer payment across debts in the given order (oldest first), filling each debt
+ * before moving to the next. The whole payment is refused if it exceeds the total still owed.
+ */
+export function allocatePayment(debts: (DebtBalance & { id: string })[], paymentDirams: number): AllocationOutcome {
+  if (!Number.isSafeInteger(paymentDirams) || paymentDirams <= 0) {
+    throw new RangeError('Payment amount must be a positive integer number of dirams');
+  }
+
+  const totalRemaining = debts.reduce((sum, debt) => sum + remainingDirams(debt), 0);
+  if (totalRemaining === 0) {
+    return { ok: false, reason: 'nothing-owed', remainingDirams: 0 };
+  }
+  if (paymentDirams > totalRemaining) {
+    return { ok: false, reason: 'exceeds-remaining', remainingDirams: totalRemaining };
+  }
+
+  const parts: AllocationPart[] = [];
+  let left = paymentDirams;
+  for (const debt of debts) {
+    const share = Math.min(left, remainingDirams(debt));
+    if (share === 0) {
+      continue;
+    }
+    const outcome = applyPayment(debt, share);
+    if (!outcome.ok) {
+      throw new Error('Allocation produced an invalid payment');
+    }
+    parts.push({ debtId: debt.id, amountDirams: share, paidDirams: outcome.paidDirams, status: outcome.status });
+    left -= share;
+    if (left === 0) {
+      break;
+    }
+  }
+  return { ok: true, parts };
+}
