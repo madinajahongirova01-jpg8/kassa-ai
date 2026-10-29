@@ -40,6 +40,8 @@ function errorText(status: number, mode: Mode) {
   return "Сервер ҳоло ҷавоб намедиҳад. Каме баъд боз кӯшиш кунед.";
 }
 
+const sessionLostText = "Браузер сессияро нигоҳ надошт. Cookie-ҳоро иҷозат диҳед ва сайтро аз ҳамон суроға (масалан http://localhost:3000) кушоед.";
+
 // Only internal /app paths are allowed after login, so ?next= can't send the user to another site.
 function nextPath() {
   const next = new URLSearchParams(window.location.search).get("next");
@@ -88,13 +90,18 @@ export function LoginView() {
       });
       if (!response.ok) {
         setError(errorText(response.status, mode));
+        setPending(false);
         return;
       }
-      setPassword("");
+      const session = await fetch("/api/auth/me", { cache: "no-store" });
+      if (!session.ok) {
+        setError(sessionLostText);
+        setPending(false);
+        return;
+      }
       router.replace(nextPath());
     } catch {
       setError(errorText(0, mode));
-    } finally {
       setPending(false);
     }
   }
