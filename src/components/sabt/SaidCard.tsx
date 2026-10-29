@@ -34,11 +34,12 @@ type SaidCardProps = {
   entries: SabtEntry[];
   demo: boolean;
   listening: boolean;
+  locked: boolean;
   onText: (text: string) => void;
   textRef: Ref<HTMLTextAreaElement>;
 };
 
-export function SaidCard({ mode, text, entries, demo, listening, onText, textRef }: SaidCardProps) {
+export function SaidCard({ mode, text, entries, demo, listening, locked, onText, textRef }: SaidCardProps) {
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3">
@@ -57,6 +58,7 @@ export function SaidCard({ mode, text, entries, demo, listening, onText, textRef
               id="sabt-text"
               ref={textRef}
               value={text}
+              readOnly={locked}
               onChange={(event) => onText(event.target.value)}
               rows={3}
               className="block w-full resize-none bg-transparent font-display text-lg leading-[1.6] font-medium text-ink outline-none lg:text-[22px]"
