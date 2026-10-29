@@ -10,6 +10,7 @@ import { SaidCard } from "@/components/sabt/SaidCard";
 import { sabtDemo, sabtModes, type SabtMode } from "@/data/sabt";
 import { cn } from "@/lib/cn";
 import { parseSabt, sabtProfit } from "@/lib/sabt";
+import { useSpeechRecognition } from "@/lib/useSpeechRecognition";
 
 function PhotoDrop({ fileName, onFile }: { fileName: string | null; onFile: (name: string) => void }) {
   return (
@@ -24,27 +25,30 @@ function PhotoDrop({ fileName, onFile }: { fileName: string | null; onFile: (nam
 export function SabtView() {
   const [mode, setMode] = useState<SabtMode>("voice");
   const [text, setText] = useState(sabtDemo.transcript);
-  const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(sabtDemo.seconds);
   const [confirmed, setConfirmed] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const speech = useSpeechRecognition("tg-TJ", changeText);
+  const recording = speech.listening;
 
   const entries = useMemo(() => parseSabt(text), [text]);
   const profit = sabtProfit(entries);
 
   useEffect(() => {
     if (!recording) return;
-    const timer = window.setInterval(() => setSeconds((s) => Math.min(s + 1, 59)), 1000);
+    const timer = window.setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => window.clearInterval(timer);
   }, [recording]);
 
   function toggleRecording() {
-    if (!recording) {
-      setSeconds(0);
-      setConfirmed(false);
+    if (recording) {
+      speech.stop();
+      return;
     }
-    setRecording(!recording);
+    setSeconds(0);
+    setConfirmed(false);
+    speech.start();
   }
 
   function edit() {
@@ -92,9 +96,35 @@ export function SabtView() {
         {mode === "photo" ? (
           <PhotoDrop fileName={photo} onFile={setPhoto} />
         ) : (
-          <SaidCard mode={mode} text={text} entries={entries} onText={changeText} textRef={textRef} />
+          <SaidCard
+            mode={mode}
+            text={text}
+            entries={entries}
+            demo={text === sabtDemo.transcript}
+            listening={recording}
+            onText={changeText}
+            textRef={textRef}
+          />
         )}
-        {mode === "voice" && <Recorder recording={recording} seconds={seconds} onToggle={toggleRecording} />}
+        {mode === "voice" &&
+          (speech.supported ? (
+            <Recorder recording={recording} seconds={seconds} onToggle={toggleRecording} />
+          ) : (
+            <p role="status" className="rounded-[20px] border-[1.5px] border-dashed border-ink-3 bg-card px-4 py-4 text-sm text-ink-2">
+              Ин браузер шинохтани овозро дастгирӣ намекунад. Матнро дастӣ нависед.{" "}
+              <button type="button" onClick={edit} className="font-semibold text-pen underline">
+                Ба матн гузаштан
+              </button>
+            </p>
+          ))}
+        {mode === "voice" && speech.error && (
+          <p role="alert" className="text-sm font-medium text-red">
+            {speech.error}{" "}
+            <button type="button" onClick={edit} className="font-semibold text-pen underline">
+              Дастӣ навиштан
+            </button>
+          </p>
+        )}
         <SabtSteps steps={steps} />
       </section>
 

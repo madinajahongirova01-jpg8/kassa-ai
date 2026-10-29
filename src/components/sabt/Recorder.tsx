@@ -43,7 +43,7 @@ export function Recorder({ recording, seconds, onToggle }: RecorderProps) {
             )}
           />
         ))}
-        <span className="ml-3.5 font-mono text-[13px] text-ink-2">0:{String(seconds).padStart(2, "0")}</span>
+        <span className="ml-3.5 font-mono text-[13px] text-ink-2">{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}</span>
       </div>
       <div className="hidden text-right sm:block">
         <div className="font-display text-sm font-bold">{recording ? "Гӯш мекунам…" : "Боз гап занед"}</div>
