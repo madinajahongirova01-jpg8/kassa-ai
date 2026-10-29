@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Typecheck
+        run: npx next typegen && npx tsc --noEmit
+
       - name: Build (includes TypeScript type checking)
         run: npm run build
 
