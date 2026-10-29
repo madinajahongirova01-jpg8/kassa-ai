@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent } from "react";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
+import { PasswordInput } from "@/components/daftar/PasswordInput";
 import { cn } from "@/lib/cn";
 
 type Mode = "login" | "register";
@@ -20,8 +21,10 @@ const copy: Record<Mode, { note: string; title: string; submit: string }> = {
   register: { note: "дафтари нав", title: "Ҳисоб кушоед", submit: "Сабт шудан →" },
 };
 
-const inputClass =
-  "h-11 w-full rounded-full border-[1.5px] border-ink bg-card px-4 text-[15px] text-ink outline-none placeholder:text-ink-3 focus:border-pen";
+const fieldClass =
+  "h-11 w-full rounded-full border-[1.5px] border-ink bg-card text-[15px] text-ink outline-none placeholder:text-ink-3 focus:border-pen";
+const inputClass = `${fieldClass} px-4`;
+const passwordClass = `${fieldClass} pl-4 pr-12`;
 const labelClass = "flex flex-col gap-1.5 text-[13px] font-semibold text-ink";
 const submitClass =
   "h-[54px] w-full rounded-card border-[1.5px] border-ink bg-pen font-display text-[15px] font-bold text-card shadow-hard active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm disabled:bg-pen-pale disabled:shadow-none";
@@ -45,6 +48,8 @@ function nextPath() {
 
 export function LoginView() {
   const router = useRouter();
+  const passwordId = useId();
+  const passwordHintId = useId();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -182,10 +187,10 @@ export function LoginView() {
                 className={inputClass}
               />
             </label>
-            <label className={labelClass}>
-              Парол
-              <input
-                type="password"
+            <div className={labelClass}>
+              <label htmlFor={passwordId}>Парол</label>
+              <PasswordInput
+                id={passwordId}
                 name="password"
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 required
@@ -193,10 +198,15 @@ export function LoginView() {
                 maxLength={128}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className={inputClass}
+                aria-describedby={mode === "register" ? passwordHintId : undefined}
+                className={passwordClass}
               />
-              {mode === "register" && <span className="text-xs font-normal text-ink-2">камаш 8 аломат</span>}
-            </label>
+              {mode === "register" && (
+                <span id={passwordHintId} className="text-xs font-normal text-ink-2">
+                  камаш 8 аломат
+                </span>
+              )}
+            </div>
 
             {error && (
               <p role="alert" className="text-sm font-semibold text-red">
