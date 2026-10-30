@@ -1,4 +1,6 @@
 import { formatMoney } from "@/lib/format";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { createT } from "@/lib/i18n/translate";
 
 const TJ_COUNTRY = "992";
 const TJ_NATIONAL_DIGITS = 9;
@@ -22,10 +24,8 @@ export function normalizePhone(raw: string | null | undefined): PhoneCheck {
   return INTERNATIONAL.test(plus) ? { ok: true, phone: plus } : { ok: false, reason: "invalid" };
 }
 
-export function phoneProblemText(reason: "missing" | "invalid"): string {
-  return reason === "missing"
-    ? "Рақами телефони ин муштарӣ сабт нашудааст."
-    : "Рақами телефони ин муштарӣ нодуруст аст. Онро санҷед, масалан +992 90 123 45 67.";
+export function phoneProblemText(reason: "missing" | "invalid", locale: Locale = DEFAULT_LOCALE): string {
+  return createT(locale)(reason === "missing" ? "nasiya.phone.missing" : "nasiya.phone.invalid");
 }
 
 export function telHref(phone: string): string {
@@ -36,9 +36,25 @@ export function smsHref(phone: string, body: string): string {
   return `sms:${phone}?&body=${encodeURIComponent(body)}`;
 }
 
-export function reminderText({ name, businessName, balance }: { name: string; businessName: string | null; balance: number }): string {
+/** The amount as the reminder writes it: "120.50 сомонӣ". */
+export function reminderAmount(balance: number, locale: Locale = DEFAULT_LOCALE): string {
+  return `${formatMoney(balance, { unit: false, locale })} ${createT(locale)("nasiya.currency")}`;
+}
+
+// The message the owner sends goes out in the language they chose; the preview on the sheet uses the same texts.
+export function reminderText({
+  name,
+  businessName,
+  balance,
+  locale = DEFAULT_LOCALE,
+}: {
+  name: string;
+  businessName: string | null;
+  balance: number;
+  locale?: Locale;
+}): string {
+  const t = createT(locale);
   const firstName = name.trim().split(/\s+/)[0] ?? "";
-  const from = businessName ? ` Аз ${businessName}.` : "";
-  const amount = `${formatMoney(balance, { unit: false })} сомонӣ`;
-  return `Салом, ${firstName}!${from} Қарзи шумо ${amount} аст. Агар имкон бошад, то охири ҳафта баргардонед. Ташаккур!`;
+  const from = businessName ? ` ${t("nasiya.reminder.fromBefore")}${businessName}${t("nasiya.reminder.fromAfter")}` : "";
+  return `${t("nasiya.reminder.hello", { name: firstName })}${from} ${t("nasiya.reminder.debtBefore")}${reminderAmount(balance, locale)}${t("nasiya.reminder.debtAfter")}`;
 }

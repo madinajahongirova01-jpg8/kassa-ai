@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { MessageKey } from "@/lib/i18n/translate";
 
 type RecognitionResultEvent = Event & {
   readonly results: SpeechRecognitionResultList;
@@ -29,17 +30,22 @@ type SpeechWindow = Window & {
   webkitSpeechRecognition?: RecognitionConstructor;
 };
 
-const errorMessages: Record<string, string> = {
-  "not-allowed": "Иҷозати микрофон дода нашуд. Дар танзимоти браузер микрофонро иҷозат диҳед.",
-  "service-not-allowed": "Браузер шинохтани овозро манъ кард. Матнро дастӣ нависед.",
-  "audio-capture": "Микрофон ёфт нашуд. Онро пайваст карда, боз кӯшиш кунед.",
-  network: "Барои шинохтани овоз интернет лозим аст. Пайвастро санҷед.",
-  "language-not-supported": "Ин браузер забони тоҷикиро барои овоз дастгирӣ намекунад. Матнро дастӣ нависед.",
-  "language-unavailable": "Ин браузер забони тоҷикиро барои овоз дастгирӣ намекунад. Матнро дастӣ нависед.",
-  "no-speech": "Овоз шунида нашуд. Наздиктар ба микрофон боз гап занед.",
+// The hook reports the browser's error code; the screen turns it into text in the chosen language.
+const errorKeys: Record<string, MessageKey> = {
+  "not-allowed": "sabt.speech.notAllowed",
+  "service-not-allowed": "sabt.speech.serviceNotAllowed",
+  "audio-capture": "sabt.speech.audioCapture",
+  network: "sabt.speech.network",
+  "language-not-supported": "sabt.speech.languageNotSupported",
+  "language-unavailable": "sabt.speech.languageNotSupported",
+  "no-speech": "sabt.speech.noSpeech",
 };
 
-const fallbackError = "Шинохтани овоз қатъ шуд. Боз кӯшиш кунед ё матнро дастӣ нависед.";
+const FAILED = "failed";
+
+export function speechErrorKey(code: string): MessageKey {
+  return errorKeys[code] ?? "sabt.speech.failed";
+}
 
 function getRecognition() {
   const scope = window as SpeechWindow;
@@ -81,7 +87,7 @@ export function useSpeechRecognition(lang: string, onText: (text: string) => voi
     };
     recognition.onerror = (event) => {
       if (event.error === "aborted") return;
-      setError(errorMessages[event.error] ?? fallbackError);
+      setError(event.error);
     };
     recognition.onend = () => {
       if (recognitionRef.current === recognition) recognitionRef.current = null;
@@ -94,7 +100,7 @@ export function useSpeechRecognition(lang: string, onText: (text: string) => voi
       recognitionRef.current = recognition;
       setListening(true);
     } catch {
-      setError(fallbackError);
+      setError(FAILED);
     }
   }, [lang]);
 

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { MicIcon } from "@/components/daftar/icons";
+import { getT } from "@/lib/i18n/server";
 
-export function NewEntryButton() {
+export async function NewEntryButton() {
+  const t = await getT();
   return (
     <Link
       href="/app/new"
@@ -11,9 +13,9 @@ export function NewEntryButton() {
         <MicIcon size={26} strokeWidth={2} />
       </span>
       <span>
-        <span className="block font-display text-2xl font-bold lg:text-[28px]">+ Сабти нав</span>
+        <span className="block font-display text-2xl font-bold lg:text-[28px]">+ {t("nav.newEntry")}</span>
         <span className="block text-sm text-pen-soft lg:text-base">
-          Нависед <span className="ml-1 text-xs opacity-80">· Овоз — ба наздикӣ</span>
+          {t("today.newEntry.write")} <span className="ml-1 text-xs opacity-80">· {t("today.newEntry.voiceSoon")}</span>
         </span>
       </span>
     </Link>

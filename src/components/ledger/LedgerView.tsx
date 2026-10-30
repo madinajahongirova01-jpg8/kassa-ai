@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
+import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
 import { LedgerDays } from "@/components/ledger/LedgerDays";
 import { MonthPanel } from "@/components/ledger/MonthPanel";
 import { cn } from "@/lib/cn";
+import type { MessageKey } from "@/lib/i18n/translate";
 import {
   expensesByCategory,
   groupLedgerByDay,
@@ -19,11 +21,11 @@ import {
   type LedgerMonth,
 } from "@/lib/ledger";
 
-const chips: { id: LedgerFilter; label: string; idle: string; active: string }[] = [
-  { id: "all", label: "Ҳама", idle: "border-ink text-ink", active: "border-ink bg-ink text-card" },
-  { id: "income", label: "+ Даромад", idle: "border-green text-green", active: "border-green bg-green text-card" },
-  { id: "expense", label: "− Хароҷот", idle: "border-red text-red", active: "border-red bg-red text-card" },
-  { id: "debt", label: "Насия", idle: "border-pen text-pen", active: "border-pen bg-pen text-card" },
+const chips: { id: LedgerFilter; labelKey: MessageKey; idle: string; active: string }[] = [
+  { id: "all", labelKey: "ledger.filters.all", idle: "border-ink text-ink", active: "border-ink bg-ink text-card" },
+  { id: "income", labelKey: "ledger.filters.income", idle: "border-green text-green", active: "border-green bg-green text-card" },
+  { id: "expense", labelKey: "ledger.filters.expense", idle: "border-red text-red", active: "border-red bg-red text-card" },
+  { id: "debt", labelKey: "ledger.filters.debt", idle: "border-pen text-pen", active: "border-pen bg-pen text-card" },
 ];
 
 function downloadCsv(csv: string, fileName: string) {
@@ -41,9 +43,12 @@ export function LedgerView({ ledger }: { ledger: LedgerMonth }) {
   const [loading, startLoading] = useTransition();
   const [filter, setFilter] = useState<LedgerFilter>("all");
   const [query, setQuery] = useState("");
+  const t = useT();
+  const plural = usePlural();
+  const locale = useLocale();
 
-  const visible = entries.filter((entry) => matchesFilter(entry, filter) && matchesQuery(entry, query));
-  const emptyText = entries.length === 0 ? "дар ин моҳ ҳоло сабт нест" : "ҳеҷ сабт ёфт нашуд";
+  const visible = entries.filter((entry) => matchesFilter(entry, filter) && matchesQuery(entry, query, locale));
+  const emptyText = entries.length === 0 ? t("ledger.emptyMonth") : t("ledger.noMatches");
 
   function changeMonth(next: string) {
     startLoading(() => router.push(`/app/transactions?month=${next}`));
@@ -54,8 +59,8 @@ export function LedgerView({ ledger }: { ledger: LedgerMonth }) {
       <section className="flex min-w-0 flex-col gap-3.5 lg:min-h-0">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <HandNote className="inline-block -rotate-2 text-[26px] lg:text-[28px]">Дафтари {monthName(month)}</HandNote>
-            <h1 className="mt-0.5 font-display text-[30px] font-extrabold lg:text-4xl">{entries.length} сабт</h1>
+            <HandNote className="inline-block -rotate-2 text-[26px] lg:text-[28px]">{t("ledger.heading", { month: monthName(month, locale) })}</HandNote>
+            <h1 className="mt-0.5 font-display text-[30px] font-extrabold lg:text-4xl">{plural("ledger.count", entries.length)}</h1>
           </div>
         </div>
 
@@ -69,11 +74,11 @@ export function LedgerView({ ledger }: { ledger: LedgerMonth }) {
                 onClick={() => setFilter(chip.id)}
                 className={cn("h-9 shrink-0 rounded-full border-[1.5px] px-3.5 font-semibold whitespace-nowrap", filter === chip.id ? chip.active : cn("bg-card", chip.idle))}
               >
-                {chip.label}
+                {t(chip.labelKey)}
               </button>
             ))}
             <label className="relative shrink-0">
-              <span className="sr-only">Моҳ</span>
+              <span className="sr-only">{t("ledger.month")}</span>
               <select
                 value={month}
                 disabled={loading}
@@ -82,19 +87,19 @@ export function LedgerView({ ledger }: { ledger: LedgerMonth }) {
               >
                 {months.map((item) => (
                   <option key={item} value={item}>
-                    {monthTitle(item)} ▾
+                    {monthTitle(item, locale)} ▾
                   </option>
                 ))}
               </select>
             </label>
           </div>
           <label className="lg:ml-auto">
-            <span className="sr-only">Ҷустуҷӯ</span>
+            <span className="sr-only">{t("ledger.search")}</span>
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Ҷустуҷӯ: «орд», «такси»…"
+              placeholder={t("ledger.searchPlaceholder")}
               className="h-9 w-full rounded-full border-[1.5px] border-ink bg-card px-3.5 text-[13px] text-ink outline-none placeholder:text-ink-3 focus:border-pen lg:w-[200px] xl:w-[230px]"
             />
           </label>
@@ -112,11 +117,11 @@ export function LedgerView({ ledger }: { ledger: LedgerMonth }) {
       </section>
 
       <MonthPanel
-        monthLabel={monthName(month)}
+        monthLabel={monthName(month, locale)}
         totals={monthTotals(entries)}
-        expenses={expensesByCategory(entries)}
+        expenses={expensesByCategory(entries, locale)}
         canExport={visible.length > 0}
-        onExcel={() => downloadCsv(ledgerCsv(visible), `kassa-daftar-${month}.csv`)}
+        onExcel={() => downloadCsv(ledgerCsv(visible, locale), `kassa-daftar-${month}.csv`)}
       />
     </div>
   );

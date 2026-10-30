@@ -3,14 +3,17 @@ import { Suspense } from "react";
 import { PageLoading } from "@/components/daftar/PageState";
 import { NasiyaView } from "@/components/nasiya/NasiyaView";
 import { loadDebtBook } from "@/lib/api/debt-book";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Насия — Kassa AI",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: `${t("nav.debts")} — Kassa AI` };
+}
 
-export default function DebtsPage() {
+export default async function DebtsPage() {
+  const t = await getT();
   return (
-    <Suspense fallback={<PageLoading text="варақҳои насия кушода мешаванд…" />}>
+    <Suspense fallback={<PageLoading text={t("nasiya.loading")} />}>
       <Debts />
     </Suspense>
   );

@@ -2,7 +2,9 @@
 
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
+import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import type { DebtCustomer } from "@/data/debts";
+import { patchJson, postJson } from "@/lib/api/client";
 import type { ApiCustomer } from "@/lib/api/types";
 import { cn } from "@/lib/cn";
 import {
@@ -48,6 +50,7 @@ function FormShell({ title, onSubmit, onClose, pending, submitText, error, child
   error: string | null;
   children: ReactNode;
 }) {
+  const t = useT();
   return (
     <form
       noValidate
@@ -58,7 +61,7 @@ function FormShell({ title, onSubmit, onClose, pending, submitText, error, child
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-[19px] font-bold">{title}</h2>
         <button type="button" onClick={onClose} disabled={pending} className="text-sm font-semibold text-ink-2 hover:text-pen disabled:text-ink-3">
-          ✕ Пӯшидан
+          ✕ {t("common.close")}
         </button>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
@@ -72,7 +75,7 @@ function FormShell({ title, onSubmit, onClose, pending, submitText, error, child
         disabled={pending}
         className="h-[46px] rounded-tile border-[1.5px] border-ink bg-pen px-5 font-display text-sm font-bold text-card shadow-hard-sm active:translate-x-px active:translate-y-px active:shadow-none disabled:border-line-strong disabled:bg-line disabled:text-ink-3 disabled:shadow-none sm:self-start"
       >
-        {pending ? "Сабт мешавад…" : submitText}
+        {pending ? t("nasiya.saving") : submitText}
       </button>
     </form>
   );
@@ -106,6 +109,8 @@ type CustomerFormProps = {
 };
 
 function CustomerForm({ title, submitText, idPrefix, initial, save, onSaved, onClose }: CustomerFormProps) {
+  const t = useT();
+  const locale = useLocale();
   const [name, setName] = useState(initial.name);
   const [phone, setPhone] = useState(initial.phone);
   const [errors, setErrors] = useState<CustomerErrors>({});
@@ -117,7 +122,7 @@ function CustomerForm({ title, submitText, idPrefix, initial, save, onSaved, onC
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = { name, phone };
-    const found = validateCustomer(form);
+    const found = validateCustomer(form, locale);
     setErrors(found);
     setError(null);
     if (found.name || found.phone) return;
@@ -133,7 +138,7 @@ function CustomerForm({ title, submitText, idPrefix, initial, save, onSaved, onC
 
   return (
     <FormShell title={title} onSubmit={submit} onClose={onClose} pending={pending} submitText={submitText} error={error}>
-      <Field id={nameId} label="Номи муштарӣ" error={errors.name}>
+      <Field id={nameId} label={t("nasiya.forms.customerName")} error={errors.name}>
         <input
           id={nameId}
           value={name}
@@ -146,7 +151,7 @@ function CustomerForm({ title, submitText, idPrefix, initial, save, onSaved, onC
           className={fieldClass}
         />
       </Field>
-      <Field id={phoneId} label="Телефон" hint="ихтиёрӣ" error={errors.phone}>
+      <Field id={phoneId} label={t("nasiya.forms.phone")} hint={t("nasiya.forms.optional")} error={errors.phone}>
         <input
           id={phoneId}
           type="tel"
@@ -165,13 +170,15 @@ function CustomerForm({ title, submitText, idPrefix, initial, save, onSaved, onC
 }
 
 export function NewCustomerForm({ onCreated, onClose }: { onCreated: (id: string) => void; onClose: () => void }) {
+  const t = useT();
+  const locale = useLocale();
   return (
     <CustomerForm
-      title="Муштарии нав"
-      submitText="Муштариро илова кунед"
+      title={t("nasiya.forms.newCustomer")}
+      submitText={t("nasiya.forms.addCustomer")}
       idPrefix="customer"
       initial={{ name: "", phone: "" }}
-      save={(form) => createCustomer(form)}
+      save={(form) => createCustomer(form, postJson, locale)}
       onSaved={onCreated}
       onClose={onClose}
     />
@@ -179,13 +186,15 @@ export function NewCustomerForm({ onCreated, onClose }: { onCreated: (id: string
 }
 
 export function EditCustomerForm({ customer, onSaved, onClose }: { customer: DebtCustomer; onSaved: (id: string) => void; onClose: () => void }) {
+  const t = useT();
+  const locale = useLocale();
   return (
     <CustomerForm
-      title="Таҳрири муштарӣ"
-      submitText="Тағйиротро нигоҳ доред"
+      title={t("nasiya.forms.editCustomer")}
+      submitText={t("nasiya.forms.saveChanges")}
       idPrefix="edit-customer"
       initial={{ name: customer.name, phone: customer.phone }}
-      save={(form) => updateCustomer(customer.id, form)}
+      save={(form) => updateCustomer(customer.id, form, patchJson, locale)}
       onSaved={onSaved}
       onClose={onClose}
     />
@@ -201,6 +210,8 @@ type NewDebtFormProps = {
 };
 
 export function NewDebtForm({ customers, initialCustomerId, today, onCreated, onClose }: NewDebtFormProps) {
+  const t = useT();
+  const locale = useLocale();
   const [customerId, setCustomerId] = useState(initialCustomerId ?? "");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -214,12 +225,12 @@ export function NewDebtForm({ customers, initialCustomerId, today, onCreated, on
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = { customerId, amount, note, dueOn };
-    const found = validateDebt(form, ids, today);
+    const found = validateDebt(form, ids, today, locale);
     setErrors(found);
     setError(null);
     if (Object.keys(found).length > 0) return;
     void run(async () => {
-      const result = await createDebt(form, ids, today);
+      const result = await createDebt(form, ids, today, postJson, locale);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -232,18 +243,25 @@ export function NewDebtForm({ customers, initialCustomerId, today, onCreated, on
     return (
       <div role="status" className="flex items-center justify-between gap-3 rounded-sheet border-[1.5px] border-ink bg-card px-[18px] py-4 shadow-hard">
         <HandNote tone="muted" className="text-xl leading-tight">
-          барои қарз аввал муштарии нав илова кунед
+          {t("nasiya.forms.needCustomer")}
         </HandNote>
         <button type="button" onClick={onClose} className="shrink-0 text-sm font-semibold text-ink-2 hover:text-pen">
-          ✕ Пӯшидан
+          ✕ {t("common.close")}
         </button>
       </div>
     );
   }
 
   return (
-    <FormShell title="Қарзи нав" onSubmit={submit} onClose={onClose} pending={pending} submitText="Қарзро сабт кунед" error={error}>
-      <Field id="debt-customer" label="Муштарӣ" error={errors.customerId}>
+    <FormShell
+      title={t("nasiya.forms.newDebt")}
+      onSubmit={submit}
+      onClose={onClose}
+      pending={pending}
+      submitText={t("nasiya.forms.recordDebt")}
+      error={error}
+    >
+      <Field id="debt-customer" label={t("nasiya.forms.customer")} error={errors.customerId}>
         <select
           id="debt-customer"
           value={customerId}
@@ -252,7 +270,7 @@ export function NewDebtForm({ customers, initialCustomerId, today, onCreated, on
           aria-describedby={errors.customerId ? "debt-customer-error" : undefined}
           className={cn(fieldClass, !customerId && "text-ink-3")}
         >
-          <option value="">— интихоб кунед —</option>
+          <option value="">{t("nasiya.forms.choose")}</option>
           {sorted.map((customer) => (
             <option key={customer.id} value={customer.id} className="text-ink">
               {customer.phone ? `${customer.name} · ${customer.phone}` : customer.name}
@@ -260,7 +278,7 @@ export function NewDebtForm({ customers, initialCustomerId, today, onCreated, on
           ))}
         </select>
       </Field>
-      <Field id="debt-amount" label="Маблағ" hint="сомонӣ" error={errors.amount}>
+      <Field id="debt-amount" label={t("nasiya.forms.amount")} hint={t("nasiya.currency")} error={errors.amount}>
         <input
           id="debt-amount"
           inputMode="numeric"
@@ -273,20 +291,20 @@ export function NewDebtForm({ customers, initialCustomerId, today, onCreated, on
           className={fieldClass}
         />
       </Field>
-      <Field id="debt-note" label="Шарҳ" hint="ихтиёрӣ" error={errors.note}>
+      <Field id="debt-note" label={t("nasiya.forms.note")} hint={t("nasiya.forms.optional")} error={errors.note}>
         <input
           id="debt-note"
           value={note}
           onChange={(event) => setNote(event.target.value)}
           maxLength={MAX_DEBT_NOTE}
-          placeholder="масалан: орд, 1 халта"
+          placeholder={t("nasiya.forms.notePlaceholder")}
           autoComplete="off"
           aria-invalid={Boolean(errors.note)}
           aria-describedby={errors.note ? "debt-note-error" : undefined}
           className={fieldClass}
         />
       </Field>
-      <Field id="debt-due" label="Санаи баргардонидан" hint="ихтиёрӣ" error={errors.dueOn}>
+      <Field id="debt-due" label={t("nasiya.forms.dueDate")} hint={t("nasiya.forms.optional")} error={errors.dueOn}>
         <input
           id="debt-due"
           type="date"

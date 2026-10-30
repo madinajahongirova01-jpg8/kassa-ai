@@ -1,23 +1,19 @@
+import type { MessageKey } from "@/lib/i18n/translate";
+
+// Plan names, prices and descriptions are in the dictionaries under pricing.plans.<id>.
+export type PlanId = "ogoz" | "tijorat" | "pro" | "shabaka";
+
 export type Plan = {
-  id: string;
-  name: string;
-  price: string;
-  period: string;
-  audience: string;
+  id: PlanId;
   main?: boolean;
 };
 
-export const plans: Plan[] = [
-  { id: "ogoz", name: "Оғоз", price: "Ройгон", period: "7 рӯз", audience: "Барои санҷиш ва шинос шудан бо барнома" },
-  { id: "tijorat", name: "Тиҷорат", price: "69", period: "смн / моҳ", audience: "Барои дӯконҳо ва нуқтаҳои савдо дар бозор", main: true },
-  { id: "pro", name: "Pro", price: "149", period: "смн / моҳ", audience: "Барои қаҳвахонаҳо ва супермаркетҳои маҳаллӣ" },
-  { id: "shabaka", name: "Шабака", price: "Бо созиш", period: "нарх бо шартнома", audience: "Барои шабакаи мағозаҳо ва яклухтфурӯшон" },
-];
+export const plans: Plan[] = [{ id: "ogoz" }, { id: "tijorat", main: true }, { id: "pro" }, { id: "shabaka" }];
 
-export const appFeatures = [
-  { title: "Сабти нав", note: "даромад ва хароҷот бо матн", href: "/app/new" },
-  { title: "Имрӯз", note: "фоидаи рӯз дар як ҷумла", href: "/app" },
-  { title: "Дафтар", note: "ҳамаи сабтҳо рӯз ба рӯз", href: "/app/transactions" },
-  { title: "Насия", note: "кӣ ба шумо чӣ қадар қарздор аст", href: "/app/debts" },
-  { title: "Ҳисобот", note: "ҳафта ва моҳ дар як нигоҳ", href: "/app/reports" },
+export const appFeatures: { titleKey: MessageKey; noteKey: MessageKey; href: string }[] = [
+  { titleKey: "nav.newEntry", noteKey: "pricing.appFeatures.newEntry", href: "/app/new" },
+  { titleKey: "nav.today", noteKey: "pricing.appFeatures.today", href: "/app" },
+  { titleKey: "nav.ledger", noteKey: "pricing.appFeatures.ledger", href: "/app/transactions" },
+  { titleKey: "nav.debts", noteKey: "pricing.appFeatures.debts", href: "/app/debts" },
+  { titleKey: "nav.reports", noteKey: "pricing.appFeatures.reports", href: "/app/reports" },
 ];

@@ -1,3 +1,6 @@
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { createT } from "@/lib/i18n/translate";
+
 // Browser-side calls to our own Route Handlers (/api/...). The session token stays in the httpOnly
 // cookie: the browser sends it, but JavaScript never reads it.
 
@@ -30,15 +33,16 @@ async function sendJson<T>(method: "POST" | "PATCH", url: string, body: unknown)
 
 const REMAINING = /^remainingAmount: (\d+\.\d{2})$/;
 
-export function requestErrorText(status: number, details: string[] = []) {
+export function requestErrorText(status: number, details: string[] = [], locale: Locale = DEFAULT_LOCALE) {
+  const t = createT(locale);
   if (status === 422) {
     const remaining = details.map((d) => REMAINING.exec(d)?.[1]).find(Boolean);
-    return remaining ? `Пардохт аз қарз зиёд аст — боқимонда ${remaining} смн.` : "Ин пардохтро қабул кардан намешавад.";
+    return remaining ? t("nasiya.errors.overpaid", { remaining }) : t("nasiya.errors.paymentRefused");
   }
-  if (status === 429) return "Кӯшишҳо зиёд шуданд. Каме сабр кунед ва боз кӯшиш кунед.";
-  if (status === 401) return "Вақти даромадан гузашт. Аз нав дароед.";
-  if (status === 404) return "Сабт ёфт нашуд. Саҳифаро нав кунед.";
-  if (status === 400) return "Маълумотро санҷед.";
-  if (status === 403) return "Дархост рад шуд. Саҳифаро нав кунед ва боз кӯшиш кунед.";
-  return "Сервер ҳоло ҷавоб намедиҳад. Каме баъд боз кӯшиш кунед.";
+  if (status === 429) return t("nasiya.errors.tooMany");
+  if (status === 401) return t("nasiya.errors.session");
+  if (status === 404) return t("nasiya.errors.recordNotFound");
+  if (status === 400) return t("nasiya.errors.checkData");
+  if (status === 403) return t("nasiya.errors.forbidden");
+  return t("nasiya.errors.server");
 }

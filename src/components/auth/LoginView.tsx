@@ -6,20 +6,13 @@ import { useEffect, useId, useState, type FormEvent } from "react";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
 import { PasswordInput } from "@/components/daftar/PasswordInput";
+import { useT } from "@/components/i18n/I18nProvider";
+import { authErrorKey, type AuthMode as Mode } from "@/lib/authText";
 import { cn } from "@/lib/cn";
 
-type Mode = "login" | "register";
 type SessionUser = { id: string; email: string; name: string | null; businessName: string | null };
 
-const modes: { id: Mode; label: string }[] = [
-  { id: "login", label: "Даромадан" },
-  { id: "register", label: "Бақайдгирӣ" },
-];
-
-const copy: Record<Mode, { note: string; title: string; submit: string }> = {
-  login: { note: "хуш омадед!", title: "Ба дафтар дароед", submit: "Даромадан →" },
-  register: { note: "дафтари нав", title: "Ҳисоб кушоед", submit: "Сабт шудан →" },
-};
+const modes: Mode[] = ["login", "register"];
 
 const fieldClass =
   "h-11 w-full rounded-full border-[1.5px] border-ink bg-card text-[15px] text-ink outline-none placeholder:text-ink-3 focus:border-pen";
@@ -31,17 +24,6 @@ const submitClass =
 const secondaryClass =
   "flex h-[54px] flex-1 items-center justify-center rounded-card border-[1.5px] border-ink bg-card text-[15px] font-semibold text-ink hover:text-pen";
 
-function errorText(status: number, mode: Mode) {
-  if (status === 401 && mode === "login") return "Почта ё парол нодуруст аст.";
-  if (status === 429) return "Кӯшишҳо зиёд шуданд. Як дақиқа сабр кунед ва боз кӯшиш кунед.";
-  if (status === 409) return "Ин почта аллакай сабт шудааст. Ба ҷои он дароед.";
-  if (status === 400) return mode === "register" ? "Почта ва номи тиҷоратро санҷед. Парол бояд аз 8 то 128 аломат бошад." : "Почта ва паролро санҷед.";
-  if (status === 403) return "Дархост рад шуд. Саҳифаро нав кунед ва боз кӯшиш кунед.";
-  return "Сервер ҳоло ҷавоб намедиҳад. Каме баъд боз кӯшиш кунед.";
-}
-
-const sessionLostText = "Браузер сессияро нигоҳ надошт. Cookie-ҳоро иҷозат диҳед ва сайтро аз ҳамон суроға (масалан http://localhost:3000) кушоед.";
-
 // Only internal /app paths are allowed after login, so ?next= can't send the user to another site.
 function nextPath() {
   const next = new URLSearchParams(window.location.search).get("next");
@@ -50,6 +32,7 @@ function nextPath() {
 
 export function LoginView() {
   const router = useRouter();
+  const t = useT();
   const passwordId = useId();
   const passwordHintId = useId();
   const [mode, setMode] = useState<Mode>("login");
@@ -89,19 +72,19 @@ export function LoginView() {
         body: JSON.stringify(body),
       });
       if (!response.ok) {
-        setError(errorText(response.status, mode));
+        setError(t(authErrorKey(response.status, mode)));
         setPending(false);
         return;
       }
       const session = await fetch("/api/auth/me", { cache: "no-store" });
       if (!session.ok) {
-        setError(sessionLostText);
+        setError(t("auth.errors.sessionLost"));
         setPending(false);
         return;
       }
       router.replace(nextPath());
     } catch {
-      setError(errorText(0, mode));
+      setError(t(authErrorKey(0, mode)));
       setPending(false);
     }
   }
@@ -116,13 +99,11 @@ export function LoginView() {
     }
   }
 
-  const text = copy[mode];
-
   return (
     <section className="flex flex-col gap-5">
       <div>
-        <HandNote className="inline-block -rotate-2 text-[26px] lg:text-[30px]">{user ? "салом!" : text.note}</HandNote>
-        <h1 className="mt-0.5 font-display text-[30px] font-extrabold lg:text-4xl">{user ? "Шумо дохил шудаед" : text.title}</h1>
+        <HandNote className="inline-block -rotate-2 text-[26px] lg:text-[30px]">{user ? t("auth.signedIn.note") : t(`auth.${mode}.note`)}</HandNote>
+        <h1 className="mt-0.5 font-display text-[30px] font-extrabold lg:text-4xl">{user ? t("auth.signedIn.title") : t(`auth.${mode}.title`)}</h1>
       </div>
 
       {user ? (
@@ -130,31 +111,31 @@ export function LoginView() {
           <p className="text-[15px] text-ink-2">{(user.businessName ?? user.name) ? `${user.businessName ?? user.name} · ${user.email}` : user.email}</p>
           <div className="flex gap-3">
             <button type="button" onClick={logout} disabled={pending} className={secondaryClass}>
-              Баромадан
+              {t("auth.signedIn.logout")}
             </button>
             <Link
               href="/app"
               className="flex h-[54px] flex-2 items-center justify-center rounded-card border-[1.5px] border-ink bg-pen font-display text-[15px] font-bold text-card shadow-hard hover:text-card"
             >
-              Ба дафтар →
+              {t("auth.signedIn.toBook")}
             </Link>
           </div>
         </Card>
       ) : (
         <Card className="flex flex-col gap-5 rounded-sheet p-[22px]">
           <div className="flex gap-2">
-            {modes.map((item) => (
+            {modes.map((id) => (
               <button
-                key={item.id}
+                key={id}
                 type="button"
-                aria-pressed={mode === item.id}
-                onClick={() => switchMode(item.id)}
+                aria-pressed={mode === id}
+                onClick={() => switchMode(id)}
                 className={cn(
                   "h-[38px] rounded-full border-[1.5px] border-ink px-4",
-                  mode === item.id ? "bg-ink font-semibold text-card" : "bg-card font-medium text-ink hover:text-pen",
+                  mode === id ? "bg-ink font-semibold text-card" : "bg-card font-medium text-ink hover:text-pen",
                 )}
               >
-                {item.label}
+                {t(`auth.modes.${id}`)}
               </button>
             ))}
           </div>
@@ -162,7 +143,7 @@ export function LoginView() {
           <form onSubmit={submit} className="flex flex-col gap-4">
             {mode === "register" && (
               <label className={labelClass}>
-                Номи тиҷорат
+                {t("auth.fields.businessName")}
                 <input
                   type="text"
                   name="businessName"
@@ -177,12 +158,12 @@ export function LoginView() {
             )}
             {mode === "register" && (
               <label className={labelClass}>
-                Ном (ихтиёрӣ)
+                {t("auth.fields.name")}
                 <input type="text" name="name" autoComplete="name" maxLength={100} value={name} onChange={(event) => setName(event.target.value)} className={inputClass} />
               </label>
             )}
             <label className={labelClass}>
-              Почтаи электронӣ
+              {t("auth.fields.email")}
               <input
                 type="email"
                 name="email"
@@ -195,7 +176,7 @@ export function LoginView() {
               />
             </label>
             <div className={labelClass}>
-              <label htmlFor={passwordId}>Парол</label>
+              <label htmlFor={passwordId}>{t("auth.fields.password")}</label>
               <PasswordInput
                 id={passwordId}
                 name="password"
@@ -210,7 +191,7 @@ export function LoginView() {
               />
               {mode === "register" && (
                 <span id={passwordHintId} className="text-xs font-normal text-ink-2">
-                  камаш 8 аломат
+                  {t("auth.fields.passwordHint")}
                 </span>
               )}
             </div>
@@ -222,7 +203,7 @@ export function LoginView() {
             )}
 
             <button type="submit" disabled={pending} className={submitClass}>
-              {pending ? "Интизор шавед…" : text.submit}
+              {pending ? t("auth.wait") : t(`auth.${mode}.submit`)}
             </button>
           </form>
         </Card>

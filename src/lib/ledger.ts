@@ -1,6 +1,8 @@
 import type { ApiCashCategory, ApiCashEntry, ApiCustomer, ApiDebt, ApiPaymentListItem } from "@/lib/api/types";
 import { businessTime, daysBetween, isMonthKey, monthEnd, monthKey, monthStart } from "@/lib/dates";
-import { formatDayMonth, formatMoney, monthNames } from "@/lib/format";
+import { formatDayMonth, formatMoney, monthName as localMonthName } from "@/lib/format";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { createT } from "@/lib/i18n/translate";
 import { toDirams } from "@/lib/money";
 
 export type LedgerKind = "income" | "expense" | "debtGiven" | "debtPaid";
@@ -33,16 +35,9 @@ export type LedgerApiData = {
   customers: ApiCustomer[];
 };
 
-export const ledgerCategories: Record<LedgerCategory, string> = {
-  sale: "фурӯш",
-  goods: "мол",
-  salary: "маош",
-  utilities: "коммуналӣ",
-  transport: "роҳкиро",
-  rent: "иҷора",
-  other: "дигар",
-  debt: "насия",
-};
+export function categoryLabel(category: LedgerCategory, locale: Locale = DEFAULT_LOCALE) {
+  return createT(locale)(`ledger.categories.${category}`);
+}
 
 const apiCategories: Record<ApiCashCategory, LedgerCategory> = {
   SALE: "sale",
@@ -70,12 +65,12 @@ export function monthRange(month: string): { from: string; to: string } {
   return { from, to: monthEnd(from) };
 }
 
-export function monthName(month: string): string {
-  return monthNames[Number(month.slice(5, 7)) - 1] ?? month;
+export function monthName(month: string, locale: Locale = DEFAULT_LOCALE): string {
+  return localMonthName(Number(month.slice(5, 7)) - 1, locale) ?? month;
 }
 
-export function monthTitle(month: string): string {
-  const name = monthName(month);
+export function monthTitle(month: string, locale: Locale = DEFAULT_LOCALE): string {
+  const name = monthName(month, locale);
   return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${month.slice(0, 4)}`;
 }
 
@@ -92,13 +87,15 @@ export function cashToLedger(item: ApiCashEntry): LedgerEntry {
   };
 }
 
-export function debtToLedger(debt: ApiDebt, names: Map<string, string>): LedgerEntry {
-  const name = names.get(debt.customerId) ?? "Муштарӣ";
+// The customer's name and the debt description are user data; only the words around them are translated.
+export function debtToLedger(debt: ApiDebt, names: Map<string, string>, locale: Locale = DEFAULT_LOCALE): LedgerEntry {
+  const t = createT(locale);
+  const name = names.get(debt.customerId) ?? t("ledger.unknownCustomer");
   return {
     id: `debt-${debt.id}`,
     date: debt.occurredOn,
     time: businessTime(debt.createdAt),
-    title: `${name} насия гирифт: ${debt.description}`,
+    title: t("ledger.debtTaken", { name, description: debt.description }),
     category: "debt",
     source: null,
     kind: "debtGiven",
@@ -106,12 +103,12 @@ export function debtToLedger(debt: ApiDebt, names: Map<string, string>): LedgerE
   };
 }
 
-export function paymentToLedger(payment: ApiPaymentListItem): LedgerEntry {
+export function paymentToLedger(payment: ApiPaymentListItem, locale: Locale = DEFAULT_LOCALE): LedgerEntry {
   return {
     id: `payment-${payment.id}`,
     date: payment.paidOn,
     time: businessTime(payment.createdAt),
-    title: `${payment.customer.name} қарзашро баргардонд`,
+    title: createT(locale)("ledger.debtRepaid", { name: payment.customer.name }),
     category: "debt",
     source: null,
     kind: "debtPaid",
@@ -119,13 +116,13 @@ export function paymentToLedger(payment: ApiPaymentListItem): LedgerEntry {
   };
 }
 
-export function buildLedgerEntries(data: LedgerApiData, month: string): LedgerEntry[] {
+export function buildLedgerEntries(data: LedgerApiData, month: string, locale: Locale = DEFAULT_LOCALE): LedgerEntry[] {
   const inMonth = (date: string) => monthKey(date) === month;
   const names = new Map(data.customers.map((customer) => [customer.id, customer.name]));
   return [
     ...data.cashEntries.filter((item) => inMonth(item.occurredOn)).map(cashToLedger),
-    ...data.debts.filter((debt) => inMonth(debt.occurredOn)).map((debt) => debtToLedger(debt, names)),
-    ...data.payments.filter((payment) => inMonth(payment.paidOn)).map(paymentToLedger),
+    ...data.debts.filter((debt) => inMonth(debt.occurredOn)).map((debt) => debtToLedger(debt, names, locale)),
+    ...data.payments.filter((payment) => inMonth(payment.paidOn)).map((payment) => paymentToLedger(payment, locale)),
   ];
 }
 
@@ -139,10 +136,11 @@ export function matchesFilter(entry: LedgerEntry, filter: LedgerFilter) {
   return entry.kind === filter;
 }
 
-export function matchesQuery(entry: LedgerEntry, query: string) {
+// Searches what the row shows: the title, the category and the amount in the chosen language.
+export function matchesQuery(entry: LedgerEntry, query: string, locale: Locale = DEFAULT_LOCALE) {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  return `${entry.title} ${ledgerCategories[entry.category]} ${formatMoney(entry.amount, { unit: false })}`.toLowerCase().includes(q);
+  return `${entry.title} ${categoryLabel(entry.category, locale)} ${formatMoney(entry.amount, { unit: false, locale })}`.toLowerCase().includes(q);
 }
 
 export function entryProfit(entry: LedgerEntry) {
@@ -160,27 +158,28 @@ export function monthTotals(entries: LedgerEntry[]) {
 
 export type ExpenseGroup = { category: LedgerCategory; label: string; amount: number };
 
-export function expensesByCategory(entries: LedgerEntry[]): ExpenseGroup[] {
+export function expensesByCategory(entries: LedgerEntry[], locale: Locale = DEFAULT_LOCALE): ExpenseGroup[] {
   const totals = new Map<LedgerCategory, number>();
   for (const entry of entries) {
     if (entry.kind === "expense") totals.set(entry.category, (totals.get(entry.category) ?? 0) + entry.amount);
   }
   return [...totals.entries()]
-    .map(([category, amount]) => ({ category, label: ledgerCategories[category], amount }))
+    .map(([category, amount]) => ({ category, label: categoryLabel(category, locale), amount }))
     .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
 }
 
-export function entryAmountText(entry: LedgerEntry) {
-  if (entry.kind === "debtGiven") return formatMoney(entry.amount, { unit: false });
+export function entryAmountText(entry: LedgerEntry, locale: Locale = DEFAULT_LOCALE) {
+  if (entry.kind === "debtGiven") return formatMoney(entry.amount, { unit: false, locale });
   const sign = entry.kind === "expense" ? -1 : 1;
-  return formatMoney(sign * entry.amount, { sign: true, unit: false });
+  return formatMoney(sign * entry.amount, { sign: true, unit: false, locale });
 }
 
-export function dayLabel(date: string, today: string) {
+export function dayLabel(date: string, today: string, locale: Locale = DEFAULT_LOCALE) {
   const offset = daysBetween(today, date);
-  if (offset === 0) return `Имрӯз, ${formatDayMonth(date)}`;
-  if (offset === -1) return `Дирӯз, ${formatDayMonth(date)}`;
-  return formatDayMonth(date);
+  const day = formatDayMonth(date, locale);
+  if (offset === 0) return createT(locale)("ledger.today", { date: day });
+  if (offset === -1) return createT(locale)("ledger.yesterday", { date: day });
+  return day;
 }
 
 export type LedgerDay = { date: string; entries: LedgerEntry[]; total: number };
@@ -197,19 +196,20 @@ export function groupLedgerByDay(entries: LedgerEntry[], allEntries: LedgerEntry
     }));
 }
 
-const kindLabels: Record<LedgerKind, string> = {
-  income: "даромад",
-  expense: "хароҷот",
-  debtGiven: "насия дода шуд",
-  debtPaid: "қарз баргардонда шуд",
-};
-
-export function ledgerCsv(entries: LedgerEntry[]): string {
+export function ledgerCsv(entries: LedgerEntry[], locale: Locale = DEFAULT_LOCALE): string {
+  const t = createT(locale);
   const rows = [
-    ["Сана", "Вақт", "Сабт", "Навъ", "Категория", "Маблағ"],
+    [t("ledger.csv.date"), t("ledger.csv.time"), t("ledger.csv.entry"), t("ledger.csv.kind"), t("ledger.csv.category"), t("ledger.csv.amount")],
     ...[...entries]
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
-      .map((entry) => [entry.date, entry.time, entry.title, kindLabels[entry.kind], ledgerCategories[entry.category], entryAmountText(entry)]),
+      .map((entry) => [
+        entry.date,
+        entry.time,
+        entry.title,
+        t(`ledger.kinds.${entry.kind}`),
+        categoryLabel(entry.category, locale),
+        entryAmountText(entry, locale),
+      ]),
   ];
   return rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\r\n");
 }

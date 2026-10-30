@@ -3,34 +3,33 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
+import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
 import { Recorder } from "@/components/sabt/Recorder";
 import { NewReceipt } from "@/components/sabt/NewReceipt";
 import { SabtSteps } from "@/components/sabt/SabtSteps";
 import { SaidCard } from "@/components/sabt/SaidCard";
 import { sabtDemo, sabtModes, type SabtMode } from "@/data/sabt";
 import { cn } from "@/lib/cn";
+import { formatNumber } from "@/lib/format";
 import { canSaveSabt, cashSabtEntries, MAX_SABT_AMOUNT, parseSabt, sabtProfit, toCashEntriesPayload } from "@/lib/sabt";
-import { useSpeechRecognition } from "@/lib/useSpeechRecognition";
+import { saveErrorKey } from "@/lib/sabtText";
+import { speechErrorKey, useSpeechRecognition } from "@/lib/useSpeechRecognition";
 
 function PhotoDrop({ fileName, onFile }: { fileName: string | null; onFile: (name: string) => void }) {
+  const t = useT();
   return (
     <label className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-ink-3 bg-card/60 px-4 text-center text-ink-2 hover:border-pen">
       <input type="file" accept="image/*" className="sr-only" onChange={(event) => event.target.files?.[0] && onFile(event.target.files[0].name)} />
-      <span className="font-display text-base font-bold text-ink">{fileName ?? "Акси чекро интихоб кунед"}</span>
-      <HandNote className="text-xl">{fileName ? "акс қабул шуд — дар намуна чек аз матн сохта мешавад" : "ё ба ин ҷо кашед"}</HandNote>
+      <span className="font-display text-base font-bold text-ink">{fileName ?? t("sabt.photo.choose")}</span>
+      <HandNote className="text-xl">{fileName ? t("sabt.photo.accepted") : t("sabt.photo.drop")}</HandNote>
     </label>
   );
 }
 
-function saveErrorText(status: number) {
-  if (status === 400) return "Маълумотро санҷед: ҳар сабт бояд ном ва маблағ дошта бошад.";
-  if (status === 401) return "Сессия тамом шуд. Дубора дароед ва боз сабт кунед.";
-  if (status === 403) return "Дархост рад шуд. Саҳифаро нав кунед ва боз кӯшиш кунед.";
-  if (status === 429) return "Кӯшишҳо зиёд шуданд. Каме сабр карда, боз кӯшиш кунед.";
-  return "Сервер ҳоло ҷавоб намедиҳад. Сабт нигоҳ дошта нашуд, боз кӯшиш кунед.";
-}
-
 export function SabtView() {
+  const t = useT();
+  const plural = usePlural();
+  const locale = useLocale();
   const [mode, setMode] = useState<SabtMode>("text");
   const [text, setText] = useState(sabtDemo.transcript);
   const [seconds, setSeconds] = useState(0);
@@ -84,7 +83,7 @@ export function SabtView() {
   async function save() {
     if (saving) return;
     if (!canSaveSabt(entries)) {
-      setSaveError({ status: 400, message: `Маблағ бояд аз 1 то ${MAX_SABT_AMOUNT.toLocaleString("ru-RU")} сомонӣ бошад.` });
+      setSaveError({ status: 400, message: t("sabt.errors.amount", { max: formatNumber(MAX_SABT_AMOUNT, 0, locale) }) });
       return;
     }
     setSaving(true);
@@ -96,21 +95,34 @@ export function SabtView() {
         body: JSON.stringify(toCashEntriesPayload(entries, mode === "voice" ? "VOICE" : "TEXT")),
       });
       if (!response.ok) {
-        setSaveError({ status: response.status, message: saveErrorText(response.status) });
+        setSaveError({ status: response.status, message: t(saveErrorKey(response.status)) });
         return;
       }
       setConfirmed(true);
     } catch {
-      setSaveError({ status: 0, message: saveErrorText(0) });
+      setSaveError({ status: 0, message: t(saveErrorKey(0)) });
     } finally {
       setSaving(false);
     }
   }
 
   const steps = [
-    { title: mode === "text" ? "Шумо навиштед" : "Шумо гуфтед", note: mode === "text" ? `${text.length} аломат` : `${seconds} сония`, done: !recording },
-    { title: "Ҳисоб шуд", note: `${cashCount} сабт, ${profit >= 0 ? "1 фоида" : "1 зарар"}`, done: cashCount > 0 && !recording },
-    { title: confirmed ? "Тасдиқ шуд" : "Шумо тасдиқ кунед", note: confirmed ? "дар база нигоҳ дошта шуд" : "чекро бинед →", done: confirmed, active: !confirmed },
+    {
+      title: mode === "text" ? t("sabt.steps.wrote") : t("sabt.steps.said"),
+      note: mode === "text" ? plural("sabt.steps.characters", text.length) : plural("sabt.steps.seconds", seconds),
+      done: !recording,
+    },
+    {
+      title: t("sabt.steps.counted"),
+      note: `${plural("sabt.steps.entries", cashCount)}, ${profit >= 0 ? t("sabt.steps.oneProfit") : t("sabt.steps.oneLoss")}`,
+      done: cashCount > 0 && !recording,
+    },
+    {
+      title: confirmed ? t("sabt.steps.confirmed") : t("sabt.steps.confirm"),
+      note: confirmed ? t("sabt.steps.saved") : t("sabt.steps.seeReceipt"),
+      done: confirmed,
+      active: !confirmed,
+    },
   ];
 
   return (
@@ -130,13 +142,13 @@ export function SabtView() {
                   mode === item.id ? "bg-ink font-semibold text-card" : "bg-card font-medium text-ink hover:text-pen",
                 )}
               >
-                {item.label}
-                {item.tag && <span className={cn("text-[11px] font-semibold", mode === item.id ? "text-card/70" : "text-ink-3")}>{item.tag}</span>}
+                {t(item.labelKey)}
+                {item.tagKey && <span className={cn("text-[11px] font-semibold", mode === item.id ? "text-card/70" : "text-ink-3")}>{t(item.tagKey)}</span>}
               </button>
             ))}
           </div>
           <Link href="/app" className="hidden h-[38px] items-center rounded-full border-[1.5px] border-ink bg-card px-4 font-semibold text-ink hover:text-pen sm:flex">
-            ✕ Пӯшидан
+            ✕ {t("sabt.close")}
           </Link>
         </div>
 
@@ -159,17 +171,17 @@ export function SabtView() {
             <Recorder recording={recording} seconds={seconds} onToggle={toggleRecording} />
           ) : (
             <p role="status" className="rounded-[20px] border-[1.5px] border-dashed border-ink-3 bg-card px-4 py-4 text-sm text-ink-2">
-              Ин браузер шинохтани овозро дастгирӣ намекунад. Матнро дастӣ нависед.{" "}
+              {t("sabt.voice.unsupported")}{" "}
               <button type="button" onClick={edit} className="font-semibold text-pen underline">
-                Ба матн гузаштан
+                {t("sabt.voice.toText")}
               </button>
             </p>
           ))}
         {mode === "voice" && speech.error && (
           <p role="alert" className="text-sm font-medium text-red">
-            {speech.error}{" "}
+            {t(speechErrorKey(speech.error))}{" "}
             <button type="button" onClick={edit} className="font-semibold text-pen underline">
-              Дастӣ навиштан
+              {t("sabt.voice.typeManually")}
             </button>
           </p>
         )}
@@ -185,7 +197,7 @@ export function SabtView() {
             disabled={confirmed || saving}
             className="h-[54px] flex-1 rounded-card border-[1.5px] border-ink bg-card text-[15px] font-semibold text-ink hover:text-pen disabled:text-ink-3"
           >
-            Ислоҳ
+            {t("sabt.actions.edit")}
           </button>
           {confirmed ? (
             <button
@@ -193,7 +205,7 @@ export function SabtView() {
               onClick={startNew}
               className="flex h-[54px] flex-2 items-center justify-center rounded-card border-[1.5px] border-ink bg-green font-display text-[15px] font-bold text-card shadow-hard hover:text-card"
             >
-              Сабт шуд ✓ · Сабти нав +
+              {t("sabt.actions.savedNew")}
             </button>
           ) : (
             <button
@@ -202,7 +214,7 @@ export function SabtView() {
               onClick={save}
               className="h-[54px] flex-2 rounded-card border-[1.5px] border-ink bg-pen font-display text-[15px] font-bold text-card shadow-hard active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm disabled:bg-pen-pale disabled:shadow-none"
             >
-              {saving ? "Сабт мешавад…" : "Тасдиқ ✓"}
+              {saving ? t("sabt.actions.saving") : t("sabt.actions.confirm")}
             </button>
           )}
         </div>
@@ -213,7 +225,7 @@ export function SabtView() {
               <>
                 {" "}
                 <Link href="/login?next=%2Fapp%2Fnew" className="text-pen underline">
-                  Даромадан
+                  {t("sabt.errors.signIn")}
                 </Link>
               </>
             )}
@@ -221,10 +233,10 @@ export function SabtView() {
         )}
         <p role="status" className="mt-3 text-center text-xs text-ink-2">
           {confirmed
-            ? "Сабт дар базаи маълумоти ҳисоби шумо нигоҳ дошта шуд."
+            ? t("sabt.status.saved")
             : isDemo
-              ? "Ин матни намунавӣ аст — барои сабт маълумоти худро нависед."
-              : "Пас аз тасдиқ дар базаи маълумоти ҳисоби шумо нигоҳ дошта мешавад."}
+              ? t("sabt.status.demo")
+              : t("sabt.status.afterConfirm")}
         </p>
       </section>
     </div>

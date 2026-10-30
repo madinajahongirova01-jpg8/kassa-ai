@@ -5,11 +5,13 @@ import { NewEntryButton } from "@/components/imruz/NewEntryButton";
 import { TodayEntries } from "@/components/imruz/TodayEntries";
 import { TodaySummary } from "@/components/imruz/TodaySummary";
 import { loadTodayCashEntries } from "@/lib/api/cash-book";
+import { getT } from "@/lib/i18n/server";
 import { cashDaySummary } from "@/lib/todayCash";
 
-export default function ImruzPage() {
+export default async function ImruzPage() {
+  const t = await getT();
   return (
-    <Suspense fallback={<PageLoading text="дафтари имрӯз кушода мешавад…" />}>
+    <Suspense fallback={<PageLoading text={t("today.loading")} />}>
       <Imruz />
     </Suspense>
   );

@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { HandNote } from "@/components/daftar/HandNote";
 import { Sticker, type StickerTape } from "@/components/daftar/Sticker";
+import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
 import { DemoBadge } from "@/components/ui/DemoBadge";
 import type { DebtCustomer } from "@/data/debts";
 import { cn } from "@/lib/cn";
 import { buildDebtRows, type DebtRow } from "@/lib/debts";
 import { useDebtState } from "@/lib/debtStore";
 import { formatDayMonth, formatSomoni } from "@/lib/format";
+import type { Locale } from "@/lib/i18n/config";
+import type { Plural, Translate } from "@/lib/i18n/translate";
 import { useDebtOverview } from "@/lib/useDebtOverview";
 
 const rotations = [
@@ -22,13 +25,15 @@ function shortName(customer: DebtCustomer) {
   return last ? `${first} ${last[0]}.` : first;
 }
 
-function stickerLook(row: DebtRow): { tape: StickerTape; tone: "pen" | "red" | "muted"; note: string } {
+type StickerText = { t: Translate; plural: Plural; locale: Locale };
+
+function stickerLook(row: DebtRow, { t, plural, locale }: StickerText): { tape: StickerTape; tone: "pen" | "red" | "muted"; note: string } {
   const days = row.daysLeft;
-  if (row.status === "overdue" && days !== null) return { tape: "red", tone: "red", note: `${Math.abs(days)} рӯз гузашт — занг занед!` };
-  if (days === 0) return { tape: "yellow", tone: "pen", note: "мӯҳлат — имрӯз" };
-  if (days === 1) return { tape: "yellow", tone: "pen", note: "мӯҳлат — фардо" };
-  if (row.customer.dueDate) return { tape: "blue", tone: "muted", note: `то ${formatDayMonth(row.customer.dueDate)}` };
-  return { tape: "blue", tone: "muted", note: "бе мӯҳлат" };
+  if (row.status === "overdue" && days !== null) return { tape: "red", tone: "red", note: plural("today.debts.overdue", Math.abs(days)) };
+  if (days === 0) return { tape: "yellow", tone: "pen", note: t("today.debts.dueToday") };
+  if (days === 1) return { tape: "yellow", tone: "pen", note: t("today.debts.dueTomorrow") };
+  if (row.customer.dueDate) return { tape: "blue", tone: "muted", note: t("today.debts.dueBy", { date: formatDayMonth(row.customer.dueDate, locale) }) };
+  return { tape: "blue", tone: "muted", note: t("today.debts.noDue") };
 }
 
 function useDebtorRows() {
@@ -46,28 +51,31 @@ export function DebtStickers({ limit = 3 }: { limit?: number }) {
   const { totals } = useDebtOverview();
   const rows = useDebtorRows().slice(0, limit);
   const handNoteId = rows.find((row) => row.status === "overdue")?.customer.id;
+  const t = useT();
+  const plural = usePlural();
+  const locale = useLocale();
   return (
     <section className="flex flex-col gap-4">
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-display text-lg font-bold lg:text-xl">Ба шумо қарздоранд</h2>
+          <h2 className="font-display text-lg font-bold lg:text-xl">{t("today.debts.title")}</h2>
           <DemoBadge />
         </div>
-        <div className="mt-1.5 font-display text-[34px] leading-none font-extrabold text-pen">{formatSomoni(totals.total)}</div>
-        <div className="mt-1 text-sm text-ink-2">{totals.debtorCount} нафар</div>
+        <div className="mt-1.5 font-display text-[34px] leading-none font-extrabold text-pen">{formatSomoni(totals.total, { locale })}</div>
+        <div className="mt-1 text-sm text-ink-2">{plural("today.debts.people", totals.debtorCount)}</div>
       </div>
       {rows.length === 0 ? (
-        <p className="text-ink-2">Ҳоло қарздор нест.</p>
+        <p className="text-ink-2">{t("today.debts.empty")}</p>
       ) : (
         rows.map((row, index) => {
-          const look = stickerLook(row);
+          const look = stickerLook(row, { t, plural, locale });
           const turn = rotations[index % rotations.length];
           return (
             <Sticker key={row.customer.id} tape={look.tape} rotate={turn.rotate} tapeRotate={turn.tape}>
               <div className="flex items-baseline justify-between gap-3">
                 <span className="truncate text-[15px] font-bold">{shortName(row.customer)}</span>
                 <span className={cn("shrink-0 font-display text-xl font-bold", row.status === "overdue" && "text-red")}>
-                  {formatSomoni(row.balance, { unit: false })}
+                  {formatSomoni(row.balance, { unit: false, locale })}
                 </span>
               </div>
               {row.customer.id === handNoteId ? (
@@ -85,7 +93,7 @@ export function DebtStickers({ limit = 3 }: { limit?: number }) {
         href="/app/debts"
         className="mt-1 flex items-center justify-center rounded-full border-[1.5px] border-ink bg-card px-5 py-3 font-display text-base font-bold text-ink shadow-hard-sm hover:text-pen"
       >
-        Ҳамаи қарзҳо →
+        {t("today.debts.all")}
       </Link>
     </section>
   );

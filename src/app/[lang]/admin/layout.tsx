@@ -2,7 +2,7 @@ import { AdminHeader } from "@/components/layout/AdminHeader";
 import { AdminMobileNav } from "@/components/layout/AdminMobileNav";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 
-export default function AdminLayout({ children }: LayoutProps<"/admin">) {
+export default function AdminLayout({ children }: LayoutProps<"/[lang]/admin">) {
   return (
     <div className="min-h-screen bg-surface lg:pl-72">
       <AdminSidebar />

@@ -1,7 +1,9 @@
 import type { ReportBar, ReportPeriod } from "@/data/hisobot";
 import type { ApiReportSummary } from "@/lib/api/types";
 import { addDays, monthKey, monthStart, weekdayIndex } from "@/lib/dates";
-import { formatDayMonth, formatMoney, monthNames } from "@/lib/format";
+import { formatDayMonth, formatMoney, monthName, weekdayName } from "@/lib/format";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { createPlural, createT } from "@/lib/i18n/translate";
 import { DIRAMS_PER_SOMONI, toDirams } from "@/lib/money";
 
 export type ReportDay = {
@@ -42,8 +44,6 @@ export type PeriodReport = {
 
 const MONTHS_BACK = 11;
 const CHART_MONTHS = 6;
-const weekdayNames = ["якшанбе", "душанбе", "сешанбе", "чоршанбе", "панҷшанбе", "ҷумъа", "шанбе"];
-const weekdayShort = ["Яш", "Дш", "Сш", "Чш", "Пш", "Ҷм", "Шн"];
 
 export function reportRange(today: string): { from: string; to: string } {
   return { from: monthStart(today, -MONTHS_BACK), to: today };
@@ -98,30 +98,30 @@ export function extremeDays(days: ReportDay[]): { best: DayStat | null; worst: D
   };
 }
 
-export function shortMonth(month: string) {
-  const name = monthNames[Number(month.slice(5, 7)) - 1] ?? month;
+export function shortMonth(month: string, locale: Locale = DEFAULT_LOCALE) {
+  const name = monthWord(month, locale);
   return `${name.charAt(0).toUpperCase()}${name.slice(1, 3)}`;
 }
 
-export function weekdayDate(date: string) {
-  const name = weekdayNames[weekdayIndex(date)];
-  return `${name.charAt(0).toUpperCase()}${name.slice(1)}, ${formatDayMonth(date)}`;
+export function weekdayDate(date: string, locale: Locale = DEFAULT_LOCALE) {
+  const name = weekdayName(weekdayIndex(date), locale);
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)}, ${formatDayMonth(date, locale)}`;
 }
 
-export function weekBars(days: ReportDay[], today: string): ReportBar[] {
+export function weekBars(days: ReportDay[], today: string, locale: Locale = DEFAULT_LOCALE): ReportBar[] {
   return Array.from({ length: 7 }, (_, index) => {
     const date = addDays(today, index - 6);
     const profit = days.filter((day) => day.date === date).reduce((total, day) => total + day.profit, 0);
-    return { label: weekdayShort[weekdayIndex(date)], value: profit, current: date === today };
+    return { label: weekdayName(weekdayIndex(date), locale, "short"), value: profit, current: date === today };
   });
 }
 
-export function monthBars(days: ReportDay[], months: string[]): ReportBar[] {
+export function monthBars(days: ReportDay[], months: string[], locale: Locale = DEFAULT_LOCALE): ReportBar[] {
   const current = months[months.length - 1];
   const withCash = months.filter((month) => days.some((day) => day.hasCash && monthKey(day.date) === month));
   if (withCash.length === 0) return [];
   return months.slice(months.indexOf(withCash[0])).map((month) => ({
-    label: shortMonth(month),
+    label: shortMonth(month, locale),
     value: periodTotals(days.filter((day) => monthKey(day.date) === month)).profit,
     current: month === current,
   }));
@@ -135,21 +135,27 @@ function monthsOfYear(today: string) {
   return monthsBack(today, Number(today.slice(5, 7)));
 }
 
-function monthWord(month: string) {
-  return monthNames[Number(month.slice(5, 7)) - 1] ?? month;
+function monthWord(month: string, locale: Locale) {
+  return monthName(Number(month.slice(5, 7)) - 1, locale) ?? month;
 }
 
-function monthNote(days: ReportDay[], today: string, profit: number): string | null {
+function monthNote(days: ReportDay[], today: string, profit: number, locale: Locale): string | null {
+  const t = createT(locale);
   const previous = monthKey(monthStart(today, -1));
   const previousDays = days.filter((day) => monthKey(day.date) === previous);
   if (!previousDays.some((day) => day.hasCash)) return null;
   const diff = profit - periodTotals(previousDays).profit;
-  if (diff === 0) return `мисли ${monthWord(previous)}`;
-  return `аз ${monthWord(previous)} ${formatMoney(Math.abs(diff), { unit: false })} ${diff > 0 ? "зиёд" : "кам"}`;
+  const month = monthWord(previous, locale);
+  if (diff === 0) return t("report.compare.same", { month });
+  const amount = formatMoney(Math.abs(diff), { unit: false, locale });
+  return t(diff > 0 ? "report.compare.more" : "report.compare.less", { month, amount });
 }
 
-export function buildPeriodReport(data: ReportData, period: ReportPeriod): PeriodReport {
+export function buildPeriodReport(data: ReportData, period: ReportPeriod, locale: Locale = DEFAULT_LOCALE): PeriodReport {
+  const t = createT(locale);
+  const plural = createPlural(locale);
   const { today } = data;
+  const year = today.slice(0, 4);
   const range = periodRange(period, today);
   const days = data.days.filter((day) => day.date >= range.from && day.date <= range.to);
   const totals = periodTotals(days);
@@ -170,46 +176,54 @@ export function buildPeriodReport(data: ReportData, period: ReportPeriod): Perio
   if (period === "week") {
     return {
       ...common,
-      lead: "Дар 7 рӯзи охир шумо…",
+      lead: t("report.lead.week"),
       note: null,
-      chartTitle: "Фоида рӯз ба рӯз",
-      chartNote: best ? `${weekdayDate(best.date).split(",")[0].toLowerCase()} беҳтарин рӯз буд` : "7 рӯзи охир",
-      bars: hasCash ? weekBars(days, today) : [],
+      chartTitle: t("report.chart.daily"),
+      chartNote: best ? t("report.chart.bestDay", { day: weekdayName(weekdayIndex(best.date), locale) }) : t("report.chart.lastWeek"),
+      bars: hasCash ? weekBars(days, today, locale) : [],
     };
   }
 
   if (period === "year") {
-    const bars = monthBars(data.days, monthsOfYear(today));
+    const bars = monthBars(data.days, monthsOfYear(today), locale);
     return {
       ...common,
-      lead: `Дар соли ${today.slice(0, 4)} шумо…`,
+      lead: t("report.lead.year", { year }),
       note: null,
-      chartTitle: "Фоида моҳ ба моҳ",
-      chartNote: bars.length > 0 ? `${bars.length} моҳи сол` : `соли ${today.slice(0, 4)}`,
+      chartTitle: t("report.chart.monthly"),
+      chartNote: bars.length > 0 ? plural("report.chart.yearMonths", bars.length) : t("report.chart.year", { year }),
       bars,
     };
   }
 
-  const bars = monthBars(data.days, monthsBack(today, CHART_MONTHS));
+  const bars = monthBars(data.days, monthsBack(today, CHART_MONTHS), locale);
   return {
     ...common,
-    lead: `Дар ${monthWord(monthKey(today))} шумо…`,
-    note: hasCash ? monthNote(data.days, today, totals.profit) : null,
-    chartTitle: "Фоида моҳ ба моҳ",
-    chartNote: bars.length > 0 ? `${bars.length} моҳи охир` : "моҳҳои охир",
+    lead: t("report.lead.month", { month: monthWord(monthKey(today), locale) }),
+    note: hasCash ? monthNote(data.days, today, totals.profit, locale) : null,
+    chartTitle: t("report.chart.monthly"),
+    chartNote: bars.length > 0 ? plural("report.chart.lastMonths", bars.length) : t("report.chart.recentMonths"),
     bars,
   };
 }
 
-export function reportCsv(report: PeriodReport): string {
+export function reportCsv(report: PeriodReport, locale: Locale = DEFAULT_LOCALE): string {
+  const t = createT(locale);
   const money = (dirams: number) => {
     const absolute = Math.abs(dirams);
     return `${dirams < 0 ? "-" : ""}${Math.floor(absolute / DIRAMS_PER_SOMONI)}.${String(absolute % DIRAMS_PER_SOMONI).padStart(2, "0")}`;
   };
   const rows = [
-    ["Сана", "Даромад", "Хароҷот", "Фоида", "Насия дода шуд", "Насия баргашт"],
+    [
+      t("report.csv.date"),
+      t("report.csv.income"),
+      t("report.csv.expense"),
+      t("report.csv.profit"),
+      t("report.csv.debtGiven"),
+      t("report.csv.debtReturned"),
+    ],
     ...report.days.map((day) => [day.date, money(day.income), money(day.expense), money(day.profit), money(day.debtGiven), money(day.debtReturned)]),
-    ["Ҳамагӣ", money(report.income), money(report.expense), money(report.profit), money(report.debtGiven), money(report.debtReturned)],
+    [t("report.csv.total"), money(report.income), money(report.expense), money(report.profit), money(report.debtGiven), money(report.debtReturned)],
   ];
   return rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(";")).join("\r\n");
 }

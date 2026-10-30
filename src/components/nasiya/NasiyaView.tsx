@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
+import { useT } from "@/components/i18n/I18nProvider";
 import { NasiyaCalculator } from "@/components/nasiya/NasiyaCalculator";
 import { NasiyaFilters } from "@/components/nasiya/NasiyaFilters";
 import { EditCustomerForm, NewCustomerForm, NewDebtForm } from "@/components/nasiya/NasiyaForms";
@@ -14,6 +15,7 @@ import { buildDebtRows, debtTotals, matchesQuery, matchesStatus, statusCounts, t
 
 export function NasiyaView({ book }: { book: DebtBook }) {
   const router = useRouter();
+  const t = useT();
   const { today, businessName, customers, events } = book;
   const rows = useMemo(() => buildDebtRows(customers, events, today), [customers, events, today]);
   const [filter, setFilter] = useState<StatusFilter>("all");
@@ -61,13 +63,13 @@ export function NasiyaView({ book }: { book: DebtBook }) {
       <section className="flex min-w-0 flex-col gap-4 lg:gap-[18px]">
         <NasiyaHeadline total={totals.total} overdueCount={totals.overdueCount} openForm={openForm} onOpenForm={toggleForm} />
         <NasiyaCalculator />
-        {openForm === "customer" && <NewCustomerForm onCreated={(id) => saved(id, "Муштарӣ илова шуд.")} onClose={() => setOpenForm(null)} />}
+        {openForm === "customer" && <NewCustomerForm onCreated={(id) => saved(id, t("nasiya.notices.customerAdded"))} onClose={() => setOpenForm(null)} />}
         {openForm === "debt" && (
           <NewDebtForm
             customers={customers}
             initialCustomerId={selected?.customer.id}
             today={today}
-            onCreated={(id) => saved(id, "Қарз сабт шуд.")}
+            onCreated={(id) => saved(id, t("nasiya.notices.debtAdded"))}
             onClose={() => setOpenForm(null)}
           />
         )}
@@ -75,7 +77,7 @@ export function NasiyaView({ book }: { book: DebtBook }) {
           <EditCustomerForm
             key={editing.id}
             customer={editing}
-            onSaved={(id) => saved(id, "Маълумоти муштарӣ нигоҳ дошта шуд.")}
+            onSaved={(id) => saved(id, t("nasiya.notices.customerSaved"))}
             onClose={() => setEditingId(null)}
           />
         )}

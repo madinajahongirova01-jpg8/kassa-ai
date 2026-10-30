@@ -1,5 +1,6 @@
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
+import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import type { ReportBar } from "@/data/hisobot";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
@@ -11,6 +12,8 @@ type ReportChartProps = {
 };
 
 export function ReportChart({ title, note, bars }: ReportChartProps) {
+  const t = useT();
+  const locale = useLocale();
   const max = Math.max(0, ...bars.map((b) => Math.abs(b.value)));
   return (
     <Card shadow="lg" className="flex min-h-[300px] flex-col gap-2.5 rounded-sheet px-4 pt-[18px] pb-3.5 lg:min-h-0 lg:px-[22px]">
@@ -21,7 +24,7 @@ export function ReportChart({ title, note, bars }: ReportChartProps) {
       {bars.length === 0 ? (
         <div role="status" className="flex flex-1 items-center justify-center">
           <HandNote tone="muted" className="text-center text-2xl">
-            ҳоло маълумот нест — даромад ва хароҷотро сабт кунед
+            {t("report.chart.empty")}
           </HandNote>
         </div>
       ) : (
@@ -30,7 +33,7 @@ export function ReportChart({ title, note, bars }: ReportChartProps) {
             {bars.map((bar) => (
               <div key={bar.label} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
                 <span className={cn("font-mono text-[11px] sm:text-xs", bar.current ? "font-bold text-ink" : bar.value < 0 ? "text-red" : "text-ink-2")}>
-                  {formatMoney(bar.value, { unit: false })}
+                  {formatMoney(bar.value, { unit: false, locale })}
                 </span>
                 <div
                   style={{ height: `${max > 0 ? Math.max((Math.abs(bar.value) / max) * 88, 3) : 3}%` }}

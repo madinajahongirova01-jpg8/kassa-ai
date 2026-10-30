@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useT } from "@/components/i18n/I18nProvider";
 import { Icon } from "@/components/ui/Icon";
 import { systemStatus } from "@/data/admin";
 import { adminSidebarNav } from "@/data/navigation";
 import { cn } from "@/lib/cn";
 import { isNavActive } from "@/lib/nav";
+import { usePagePathname } from "@/lib/usePagePathname";
 
 export function AdminSidebar() {
-  const pathname = usePathname();
+  const pathname = usePagePathname();
+  const t = useT();
 
   return (
     <aside className="fixed top-0 left-0 z-50 hidden h-full w-72 flex-col justify-between bg-surface-container-low px-4 py-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)] lg:flex">
@@ -21,7 +23,7 @@ export function AdminSidebar() {
           <div className="flex flex-col">
             <span className="font-headline-sm text-headline-sm tracking-tight text-on-surface">Kassa AI</span>
             <span className="font-label-caps text-label-caps tracking-wider text-on-surface-variant uppercase">
-              Панели идоракунӣ
+              {t("admin.panel")}
             </span>
           </div>
         </Link>
@@ -44,7 +46,7 @@ export function AdminSidebar() {
                 )}
               >
                 <Icon name={item.icon} className="text-[20px]" />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -54,17 +56,17 @@ export function AdminSidebar() {
       <div className="flex flex-col gap-4 px-3">
         <div className="flex flex-col gap-2 rounded-xl bg-surface-container-high/60 p-3.5">
           <div className="flex items-center justify-between">
-            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Система</span>
+            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">{t("admin.system")}</span>
             <span className="inline-block h-2 w-2 rounded-full bg-primary" />
           </div>
           <div className="flex items-center justify-between font-body-sm text-body-sm">
-            <span className="text-on-surface-variant">Нусхаи нармафзор</span>
+            <span className="text-on-surface-variant">{t("admin.version")}</span>
             <span className="font-tabular-ledger text-tabular-ledger text-on-surface">{systemStatus.version}</span>
           </div>
         </div>
         <div className="flex items-center justify-between px-1 font-body-sm text-body-sm text-on-surface-variant">
           <span className="flex items-center gap-1.5">
-            <Icon name="lock" className="text-[16px]" /> Сервер
+            <Icon name="lock" className="text-[16px]" /> {t("admin.server")}
           </span>
           <span className="font-label-caps text-label-caps text-on-surface-variant">{systemStatus.region}</span>
         </div>

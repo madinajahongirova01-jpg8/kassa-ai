@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { MicIcon } from "@/components/daftar/icons";
+import { useT } from "@/components/i18n/I18nProvider";
 import { appNav } from "@/data/navigation";
 import { cn } from "@/lib/cn";
 import { isNavActive } from "@/lib/nav";
+import { usePagePathname } from "@/lib/usePagePathname";
 
 export function BottomNav() {
-  const pathname = usePathname();
+  const pathname = usePagePathname();
+  const t = useT();
   const tabs = appNav.map((item) => {
     const active = isNavActive(pathname, item.href, "/app");
     return (
@@ -19,14 +21,14 @@ export function BottomNav() {
         className={cn("flex flex-col items-center gap-1", active ? "text-ink" : "text-ink-2 hover:text-pen")}
       >
         <span className={cn("h-1 w-[22px] rounded-[2px]", active ? "bg-ink" : "bg-transparent")} />
-        {item.label}
+        {t(item.labelKey)}
       </Link>
     );
   });
 
   return (
     <nav
-      aria-label="Менюи асосӣ"
+      aria-label={t("nav.main")}
       className="fixed inset-x-0 bottom-0 z-40 border-t-[1.5px] border-ink bg-card pb-[env(safe-area-inset-bottom)] lg:hidden print:hidden"
     >
       <div className="relative mx-auto flex h-[92px] max-w-[600px] items-center justify-around px-2 text-[11px] font-semibold">
@@ -35,7 +37,7 @@ export function BottomNav() {
         {tabs.slice(2)}
         <Link
           href="/app/new"
-          aria-label="Сабти нав"
+          aria-label={t("nav.newEntry")}
           className="absolute top-[-34px] left-1/2 -ml-[38px] flex size-[76px] items-center justify-center rounded-full border-4 border-paper bg-pen text-card shadow-[0_10px_22px_rgba(45,75,216,0.45)] active:scale-95"
         >
           <MicIcon size={30} strokeWidth={2} />

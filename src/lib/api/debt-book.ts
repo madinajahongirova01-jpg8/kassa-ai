@@ -22,7 +22,8 @@ export function toPaymentEvent(payment: ApiPaymentListItem): DebtEvent {
     id: payment.id,
     customerId: payment.customer.id,
     type: "payment",
-    note: payment.note ?? "Пардохт",
+    // No note: the history shows the translated "payment" label instead.
+    note: payment.note ?? "",
     amount: -toDirams(payment.amount),
     date: payment.paidOn,
     time: businessTime(payment.createdAt),

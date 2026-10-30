@@ -1,6 +1,10 @@
+"use client";
+
+import { useT } from "@/components/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
 
 export function DemoBadge({ className }: { className?: string }) {
+  const t = useT();
   return (
     <span
       className={cn(
@@ -8,7 +12,7 @@ export function DemoBadge({ className }: { className?: string }) {
         className,
       )}
     >
-      Маълумоти намунавӣ
+      {t("common.demoData")}
     </span>
   );
 }

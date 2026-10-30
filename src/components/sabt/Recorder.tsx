@@ -1,6 +1,7 @@
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
 import { MicIcon } from "@/components/daftar/icons";
+import { useT } from "@/components/i18n/I18nProvider";
 import { waveform } from "@/data/sabt";
 import { cn } from "@/lib/cn";
 
@@ -11,6 +12,7 @@ type RecorderProps = {
 };
 
 export function Recorder({ recording, seconds, onToggle }: RecorderProps) {
+  const t = useT();
   const played = Math.round(waveform.length * 0.72);
   return (
     <Card shadow="none" className="flex items-center gap-4 rounded-[20px] px-4 py-4 lg:gap-[22px] lg:px-[22px]">
@@ -21,7 +23,7 @@ export function Recorder({ recording, seconds, onToggle }: RecorderProps) {
           type="button"
           onClick={onToggle}
           aria-pressed={recording}
-          aria-label={recording ? "Бас кардан" : "Боз гап занед"}
+          aria-label={recording ? t("sabt.recorder.stop") : t("sabt.recorder.speakAgain")}
           className={cn(
             "relative flex size-[52px] items-center justify-center rounded-full text-card shadow-mic active:scale-95 lg:size-[60px]",
             recording ? "bg-red" : "bg-pen",
@@ -46,9 +48,9 @@ export function Recorder({ recording, seconds, onToggle }: RecorderProps) {
         <span className="ml-3.5 font-mono text-[13px] text-ink-2">{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}</span>
       </div>
       <div className="hidden text-right sm:block">
-        <div className="font-display text-sm font-bold">{recording ? "Гӯш мекунам…" : "Боз гап занед"}</div>
+        <div className="font-display text-sm font-bold">{recording ? t("sabt.said.listening") : t("sabt.recorder.speakAgain")}</div>
         <HandNote tone="muted" className="text-xl">
-          {recording ? "тамом шуд — пахш кунед" : "агар чизе монда бошад"}
+          {recording ? t("sabt.recorder.doneHint") : t("sabt.recorder.moreHint")}
         </HandNote>
       </div>
     </Card>

@@ -1,5 +1,7 @@
+import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
+import type { Locale } from "@/lib/i18n/config";
 import { weekdayDate, type DayStat } from "@/lib/hisobot";
 
 type Stat = { label: string; value: string; tone: string; note: string };
@@ -14,9 +16,9 @@ function StatCard({ stat }: { stat: Stat }) {
   );
 }
 
-function dayStat(label: string, day: DayStat | null, tone: string, missing: string): Stat {
+function dayStat(label: string, day: DayStat | null, tone: string, missing: string, locale: Locale): Stat {
   if (!day) return { label, value: "—", tone: "text-ink-3", note: missing };
-  return { label, value: formatMoney(day.profit, { sign: true, unit: false }), tone, note: weekdayDate(day.date) };
+  return { label, value: formatMoney(day.profit, { sign: true, unit: false, locale }), tone, note: weekdayDate(day.date, locale) };
 }
 
 type ReportInsightsProps = {
@@ -27,14 +29,16 @@ type ReportInsightsProps = {
 };
 
 export function ReportInsights({ best, worst, debtGiven, debtReturned }: ReportInsightsProps) {
+  const t = useT();
+  const locale = useLocale();
   const stats: Stat[] = [
-    dayStat("Беҳтарин рӯз", best, "text-green", "ҳоло сабт нест"),
-    dayStat("Сусттарин рӯз", worst, "text-red", best ? "барои муқоиса рӯзҳо кам" : "ҳоло сабт нест"),
+    dayStat(t("report.insights.best"), best, "text-green", t("report.insights.noEntries"), locale),
+    dayStat(t("report.insights.worst"), worst, "text-red", best ? t("report.insights.fewDays") : t("report.insights.noEntries"), locale),
     {
-      label: "Насия баргашт",
-      value: formatMoney(debtReturned, { unit: false }),
+      label: t("report.insights.debtReturned"),
+      value: formatMoney(debtReturned, { unit: false, locale }),
       tone: debtReturned > 0 ? "text-pen" : "text-ink-3",
-      note: `насия дода шуд: ${formatMoney(debtGiven, { unit: false })}`,
+      note: t("report.insights.debtGiven", { amount: formatMoney(debtGiven, { unit: false, locale }) }),
     },
   ];
 

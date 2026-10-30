@@ -1,6 +1,7 @@
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
 import { Marker } from "@/components/daftar/Marker";
+import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
 import type { ExpenseGroup } from "@/lib/ledger";
@@ -16,32 +17,34 @@ type MonthPanelProps = {
 };
 
 export function MonthPanel({ monthLabel, totals, expenses, canExport, onExcel }: MonthPanelProps) {
+  const t = useT();
+  const locale = useLocale();
   const largest = Math.max(0, ...expenses.map((item) => item.amount));
   return (
     <section className="flex flex-col gap-4 lg:min-h-0">
       <Card className="rounded-sheet px-5 py-[18px]">
-        <h2 className="font-display text-[15px] font-bold">Моҳи {monthLabel}</h2>
+        <h2 className="font-display text-[15px] font-bold">{t("ledger.panel.title", { month: monthLabel })}</h2>
         <div className="mt-3.5 flex justify-between">
-          <span className="text-ink-2">Пул даромад</span>
-          <span className="font-mono font-bold text-green">{formatMoney(totals.income, { sign: true, unit: false })}</span>
+          <span className="text-ink-2">{t("ledger.panel.moneyIn")}</span>
+          <span className="font-mono font-bold text-green">{formatMoney(totals.income, { sign: true, unit: false, locale })}</span>
         </div>
         <div className="mt-2 flex justify-between">
-          <span className="text-ink-2">Пул рафт</span>
-          <span className="font-mono font-bold text-red">{formatMoney(-totals.expense, { unit: false })}</span>
+          <span className="text-ink-2">{t("ledger.panel.moneyOut")}</span>
+          <span className="font-mono font-bold text-red">{formatMoney(-totals.expense, { unit: false, locale })}</span>
         </div>
         <div className="my-3 border-t-[1.5px] border-dashed border-line-strong" />
         <div className="flex items-baseline justify-between">
-          <span className="font-bold">Фоида</span>
-          <Marker className={cn("px-1 font-display text-2xl font-extrabold", totals.profit < 0 && "text-red")}>{formatMoney(totals.profit, { unit: false })}</Marker>
+          <span className="font-bold">{t("ledger.panel.profit")}</span>
+          <Marker className={cn("px-1 font-display text-2xl font-extrabold", totals.profit < 0 && "text-red")}>{formatMoney(totals.profit, { unit: false, locale })}</Marker>
         </div>
-        <p className="mt-2 text-xs text-ink-3">Фоида = даромад − хароҷот. Насия ба фоида дохил намешавад.</p>
+        <p className="mt-2 text-xs text-ink-3">{t("ledger.panel.profitHint")}</p>
       </Card>
 
       <Card shadow="none" className="flex flex-col gap-3 rounded-sheet px-5 py-[18px] lg:min-h-0 lg:flex-1">
-        <h2 className="font-display text-[15px] font-bold">Пул ба куҷо рафт?</h2>
+        <h2 className="font-display text-[15px] font-bold">{t("ledger.panel.whereWent")}</h2>
         {expenses.length === 0 ? (
           <HandNote tone="muted" role="status" className="text-xl leading-tight">
-            дар ин моҳ хароҷот сабт нашудааст
+            {t("ledger.panel.noExpenses")}
           </HandNote>
         ) : (
           <ul className="flex flex-col gap-3 lg:min-h-0 lg:overflow-y-auto">
@@ -49,7 +52,7 @@ export function MonthPanel({ monthLabel, totals, expenses, canExport, onExcel }:
               <li key={item.category}>
                 <div className="flex justify-between text-[13px]">
                   <span>{item.label}</span>
-                  <b className="font-mono">{formatMoney(item.amount, { unit: false })}</b>
+                  <b className="font-mono">{formatMoney(item.amount, { unit: false, locale })}</b>
                 </div>
                 <div style={{ width: `${Math.max((item.amount / largest) * 100, 5)}%` }} className="mt-1.5 h-3 rounded-md bg-marker" />
               </li>

@@ -5,9 +5,10 @@ import { HandNote } from "@/components/daftar/HandNote";
 import { Marker } from "@/components/daftar/Marker";
 import { ReportChart } from "@/components/hisobot/ReportChart";
 import { ReportInsights } from "@/components/hisobot/ReportInsights";
+import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import { reportPeriods, type ReportPeriod } from "@/data/hisobot";
 import { cn } from "@/lib/cn";
-import { formatDayMonth, formatMoney } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
 import { buildPeriodReport, reportCsv, reportFileName, type ReportData } from "@/lib/hisobot";
 
 const exportClass = "h-[38px] rounded-xl border-[1.5px] border-ink bg-card px-3.5 font-semibold text-ink hover:text-pen disabled:text-ink-3";
@@ -23,7 +24,9 @@ function downloadCsv(csv: string, fileName: string) {
 
 export function ReportView({ data }: { data: ReportData }) {
   const [period, setPeriod] = useState<ReportPeriod>("month");
-  const report = buildPeriodReport(data, period);
+  const t = useT();
+  const locale = useLocale();
+  const report = buildPeriodReport(data, period, locale);
   const loss = report.profit < 0;
   const empty = report.days.length === 0;
 
@@ -34,19 +37,22 @@ export function ReportView({ data }: { data: ReportData }) {
           <HandNote className="inline-block -rotate-2 text-[26px] lg:text-[30px]">{report.lead}</HandNote>
           <div className="mt-1 font-display leading-none font-extrabold tracking-[-0.03em]">
             <Marker className={cn("px-1.5 text-[56px] lg:text-[64px] xl:text-[76px]", loss && "text-red")}>
-              {formatMoney(Math.abs(report.profit), { unit: false })}
+              {formatMoney(Math.abs(report.profit), { unit: false, locale })}
             </Marker>
             <span className="mt-2 block text-xl font-bold lg:ml-2.5 lg:inline lg:text-[24px] xl:text-[28px]">
-              {loss ? "сомонӣ зарар кардед." : "сомонӣ фоида кардед."}
+              {loss ? t("report.lost") : t("report.gained")}
             </span>
           </div>
           <p className="mt-2 hidden text-sm text-ink-2 print:block">
-            Ҳисоботи Kassa AI · {formatDayMonth(report.from)} {report.from.slice(0, 4)} — {formatDayMonth(report.to)} {report.to.slice(0, 4)}
+            {t("report.printTitle", { from: formatDate(report.from, locale), to: formatDate(report.to, locale) })}
           </p>
           <p className="mt-2 text-sm text-ink-2">
             {report.hasCash
-              ? `Даромад ${formatMoney(report.income, { unit: false })} − хароҷот ${formatMoney(report.expense, { unit: false })}. Насия ба фоида дохил намешавад.`
-              : "Дар ин давра ҳоло даромад ё хароҷот сабт нашудааст."}
+              ? t("report.summary", {
+                  income: formatMoney(report.income, { unit: false, locale }),
+                  expense: formatMoney(report.expense, { unit: false, locale }),
+                })
+              : t("report.noCash")}
           </p>
         </div>
         <div className="flex flex-col gap-3 lg:items-end">
@@ -57,23 +63,23 @@ export function ReportView({ data }: { data: ReportData }) {
           )}
           <div className="flex flex-wrap items-center gap-2.5 print:hidden">
             <div className="flex gap-1.5 rounded-full border-[1.5px] border-ink bg-card p-1">
-              {reportPeriods.map((item) => (
+              {reportPeriods.map((id) => (
                 <button
-                  key={item.id}
+                  key={id}
                   type="button"
-                  aria-pressed={period === item.id}
-                  onClick={() => setPeriod(item.id)}
-                  className={cn("h-8 rounded-full px-3.5", period === item.id ? "bg-ink font-semibold text-card" : "text-ink hover:text-pen")}
+                  aria-pressed={period === id}
+                  onClick={() => setPeriod(id)}
+                  className={cn("h-8 rounded-full px-3.5", period === id ? "bg-ink font-semibold text-card" : "text-ink hover:text-pen")}
                 >
-                  {item.label}
+                  {t(`report.periods.${id}`)}
                 </button>
               ))}
             </div>
-            <button type="button" disabled={empty} onClick={() => downloadCsv(reportCsv(report), reportFileName(report))} className={exportClass}>
+            <button type="button" disabled={empty} onClick={() => downloadCsv(reportCsv(report, locale), reportFileName(report))} className={exportClass}>
               Excel (.csv)
             </button>
             <button type="button" disabled={empty} onClick={() => window.print()} className={cn(exportClass, "hidden sm:block")}>
-              PDF (чоп)
+              {t("report.print")}
             </button>
           </div>
         </div>

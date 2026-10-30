@@ -8,63 +8,66 @@ import { Stamp } from "@/components/daftar/Stamp";
 import { Highlighted } from "@/components/sabt/SaidCard";
 import { sabtDemo } from "@/data/sabt";
 import { cn } from "@/lib/cn";
-import { formatSomoni } from "@/lib/format";
+import { formatDayMonth, formatSomoni } from "@/lib/format";
+import { getLocale } from "@/lib/i18n/server";
+import { createPlural, createT } from "@/lib/i18n/translate";
 import { parseSabt } from "@/lib/sabt";
 
-export function LandingHero() {
+// The sample sentence stays Tajik in every language: it shows what the Tajik text parser understands.
+export async function LandingHero() {
+  const locale = await getLocale();
+  const t = createT(locale);
+  const plural = createPlural(locale);
   const entries = parseSabt(sabtDemo.transcript);
   const profit = entries.reduce((sum, entry) => sum + (entry.kind === "income" ? entry.amount : -entry.amount), 0);
 
   return (
     <section className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] lg:items-center lg:gap-14">
       <div className="min-w-0">
-        <HandNote className="inline-block -rotate-2 text-[26px] lg:text-[32px]">Шумо гап мезанед…</HandNote>
+        <HandNote className="inline-block -rotate-2 text-[26px] lg:text-[32px]">{t("landing.hero.note")}</HandNote>
         <h1 className="mt-2 font-display text-[40px] leading-[1.08] font-extrabold tracking-[-0.03em] sm:text-[56px] xl:text-[68px]">
-          Kassa AI <Marker className="px-1.5">менависад.</Marker>
+          Kassa AI <Marker className="px-1.5">{t("landing.hero.marker")}</Marker>
         </h1>
-        <p className="mt-5 max-w-135 text-base leading-relaxed text-ink-2 lg:text-lg">
-          Дафтари рақамӣ барои дӯкон ва тиҷорати хурд. Пули даромад, пули рафт ва насияро бо матн сабт кунед — Kassa
-          суммаҳоро ҷудо мекунад ва чек месозад.
-        </p>
-        <p className="mt-1.5 text-xs text-ink-3">Овоз ва акси чек — ба наздикӣ.</p>
+        <p className="mt-5 max-w-135 text-base leading-relaxed text-ink-2 lg:text-lg">{t("landing.hero.text")}</p>
+        <p className="mt-1.5 text-xs text-ink-3">{t("landing.hero.soon")}</p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Link
             href="/app/new"
             className="flex items-center justify-center gap-2.5 rounded-tile border-[1.5px] border-ink bg-pen px-6 py-3.5 font-display text-base font-bold text-card shadow-hard hover:bg-[#2340c0] active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm"
           >
-            Нависед
+            {t("landing.hero.write")}
           </Link>
           <Link
             href="/app"
             className="flex items-center justify-center rounded-tile border-[1.5px] border-ink bg-card px-6 py-3.5 font-display text-base font-bold text-ink shadow-hard hover:text-pen active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm"
           >
-            Намунаро бинед
+            {t("landing.hero.sample")}
           </Link>
         </div>
-        <p className="mt-3.5 text-xs text-ink-3">Дар саҳифаҳо ҳоло маълумоти намунавӣ нишон дода мешавад.</p>
+        <p className="mt-3.5 text-xs text-ink-3">{t("landing.hero.sampleNote")}</p>
       </div>
 
       <div className="relative min-w-0">
         <Card shadow="lg" className="relative rounded-3xl px-5 pt-6 pb-5 lg:px-6">
           <span className="absolute -top-3.5 right-4 rotate-3 rounded-lg border-[1.5px] border-ink bg-marker px-2.5 py-0.5 font-hand text-xl font-semibold">
-            {entries.length} сабт ёфтам!
+            {plural("sabt.said.found", entries.length)}
           </span>
-          <div className="text-xs font-semibold tracking-wider text-ink-3 uppercase">Шумо гуфтед</div>
+          <div className="text-xs font-semibold tracking-wider text-ink-3 uppercase">{t("landing.hero.youSaid")}</div>
           <p className="mt-2 font-display text-lg leading-[1.7] font-medium lg:text-xl">
             «<Highlighted text={sabtDemo.transcript} entries={entries} />»
           </p>
           <div className="mt-2 flex flex-wrap gap-x-5 font-hand text-xl font-semibold">
-            <span className="text-red">● сурх — пул рафт</span>
-            <span className="text-green">● сабз — пул омад</span>
+            <span className="text-red">{t("sabt.legend.expense")}</span>
+            <span className="text-green">{t("sabt.legend.income")}</span>
           </div>
         </Card>
 
         <div className="mt-2 flex items-start gap-3 pl-6 text-pen">
           <CurvedArrow className="mt-1 hidden -scale-x-100 rotate-80 sm:block" />
           <Receipt className="w-full max-w-85 px-5 pt-6 pb-7 text-[13px] sm:ml-auto">
-            <div className="text-center font-display text-[15px] font-bold tracking-[0.06em]">ЧЕКИ НАВ</div>
+            <div className="text-center font-display text-[15px] font-bold tracking-[0.06em]">{t("sabt.receipt.title")}</div>
             <div className="mt-1 text-center text-[11px] text-ink-2">
-              {sabtDemo.date} · {sabtDemo.time}
+              {formatDayMonth(sabtDemo.date, locale)} · {sabtDemo.time}
             </div>
             <ReceiptDivider className="mt-3 mb-1" />
             {entries.map((entry, index) => (
@@ -74,17 +77,17 @@ export function LandingHero() {
               >
                 <span className="truncate">{entry.title}</span>
                 <span className={cn("font-bold", entry.kind === "income" ? "text-green" : "text-red")}>
-                  {formatSomoni(entry.kind === "income" ? entry.amount : -entry.amount, { sign: true, unit: false })}
+                  {formatSomoni(entry.kind === "income" ? entry.amount : -entry.amount, { sign: true, unit: false, locale })}
                 </span>
               </div>
             ))}
             <ReceiptDivider className="mt-1.5 mb-2" />
             <div className="flex justify-between text-lg font-bold">
-              <span>ФОИДА</span>
-              <span className={profit >= 0 ? "text-green" : "text-red"}>{formatSomoni(profit, { sign: true, unit: false })}</span>
+              <span>{t("sabt.receipt.profit")}</span>
+              <span className={profit >= 0 ? "text-green" : "text-red"}>{formatSomoni(profit, { sign: true, unit: false, locale })}</span>
             </div>
             <div className="mt-4 flex justify-end pr-1">
-              <Stamp size="sm">ТАСДИҚ ШУД ✓</Stamp>
+              <Stamp size="sm">{t("sabt.receipt.stamp")}</Stamp>
             </div>
           </Receipt>
         </div>

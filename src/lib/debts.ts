@@ -1,6 +1,9 @@
 import type { DebtCustomer, DebtEvent } from "@/data/debts";
 import { daysBetween } from "@/lib/dates";
 import { formatDayMonth } from "@/lib/format";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { createT } from "@/lib/i18n/translate";
+import { DEFAULT_DEBT_NOTE } from "@/lib/nasiyaForms";
 
 export type DebtStatus = "overdue" | "near" | "active" | "paid";
 export type StatusFilter = "all" | "near" | "overdue" | "paid";
@@ -12,8 +15,19 @@ export function daysUntil(date: string, today: string) {
   return daysBetween(today, date);
 }
 
-export function dayMonth(date: string, today: string) {
-  return date === today ? "имрӯз" : formatDayMonth(date);
+export function dayMonth(date: string, today: string, locale: Locale = DEFAULT_LOCALE) {
+  return date === today ? createT(locale)("nasiya.today") : formatDayMonth(date, locale);
+}
+
+/**
+ * What the history row shows: the owner's own note, or a translated system label for a payment
+ * without a note and for a debt saved with the default description.
+ */
+export function historyNote(event: DebtEvent, locale: Locale = DEFAULT_LOCALE) {
+  const t = createT(locale);
+  if (event.type === "payment" && !event.note.trim()) return t("nasiya.history.payment");
+  if (event.type === "debt" && event.note === DEFAULT_DEBT_NOTE) return t("nasiya.history.debt");
+  return event.note;
 }
 
 export function debtStatus(customer: DebtCustomer, today: string): DebtStatus {

@@ -1,9 +1,10 @@
 import { HandNote } from "@/components/daftar/HandNote";
 import { CameraIcon, MicIcon, TextIcon } from "@/components/daftar/icons";
 import { Marker } from "@/components/daftar/Marker";
+import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
-import { dayLabel, entryAmountText, ledgerCategories, type LedgerDay, type LedgerEntry, type LedgerKind, type LedgerSource } from "@/lib/ledger";
+import { categoryLabel, dayLabel, entryAmountText, type LedgerDay, type LedgerEntry, type LedgerKind, type LedgerSource } from "@/lib/ledger";
 
 const amountTone: Record<LedgerKind, string> = {
   income: "text-green",
@@ -20,14 +21,16 @@ const pillTone: Record<LedgerKind, string> = {
 };
 
 function SourceIcon({ source }: { source: LedgerSource | null }) {
-  if (source === "voice") return <MicIcon className="text-pen" label="овоз" />;
-  if (source === "photo") return <CameraIcon className="text-ink-3" label="акси чек" />;
-  if (source === "text") return <TextIcon className="text-ink-3" label="матн" />;
+  const t = useT();
+  if (source === "voice") return <MicIcon className="text-pen" label={t("ledger.sources.voice")} />;
+  if (source === "photo") return <CameraIcon className="text-ink-3" label={t("ledger.sources.photo")} />;
+  if (source === "text") return <TextIcon className="text-ink-3" label={t("ledger.sources.text")} />;
   return <span aria-hidden />;
 }
 
 function LedgerRow({ entry }: { entry: LedgerEntry }) {
-  const category = ledgerCategories[entry.category];
+  const locale = useLocale();
+  const category = categoryLabel(entry.category, locale);
   return (
     <li className="grid grid-cols-[38px_14px_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-grid py-3 sm:grid-cols-[48px_14px_minmax(0,1fr)_110px_96px] sm:gap-x-4">
       <span className="text-xs text-ink-3">{entry.time}</span>
@@ -39,12 +42,14 @@ function LedgerRow({ entry }: { entry: LedgerEntry }) {
       <span className="hidden sm:block">
         <span className={cn("inline-block rounded-full border-[1.5px] px-2 py-px font-sans text-xs font-semibold", pillTone[entry.kind])}>{category}</span>
       </span>
-      <span className={cn("text-right font-bold", amountTone[entry.kind])}>{entryAmountText(entry)}</span>
+      <span className={cn("text-right font-bold", amountTone[entry.kind])}>{entryAmountText(entry, locale)}</span>
     </li>
   );
 }
 
 export function LedgerDays({ days, today, emptyText }: { days: LedgerDay[]; today: string; emptyText: string }) {
+  const t = useT();
+  const locale = useLocale();
   if (days.length === 0) {
     return (
       <HandNote tone="muted" role="status" className="block py-10 text-center text-2xl">
@@ -55,12 +60,13 @@ export function LedgerDays({ days, today, emptyText }: { days: LedgerDay[]; toda
   return (
     <>
       {days.map((day) => {
-        const total = formatMoney(day.total, { sign: true, unit: false });
+        const total = formatMoney(day.total, { sign: true, unit: false, locale });
+        const label = dayLabel(day.date, today, locale);
         return (
-          <section key={day.date} aria-label={dayLabel(day.date, today)}>
+          <section key={day.date} aria-label={label}>
             <div className="flex items-baseline justify-between pt-3.5 pb-1 first:pt-2.5">
-              <HandNote className="text-2xl">{dayLabel(day.date, today)}</HandNote>
-              <span className="font-display text-sm font-bold" title="Фоидаи рӯз: даромад − хароҷот">
+              <HandNote className="text-2xl">{label}</HandNote>
+              <span className="font-display text-sm font-bold" title={t("ledger.dayProfitHint")}>
                 {day.date === today ? <Marker className="px-1">{total}</Marker> : total}
               </span>
             </div>

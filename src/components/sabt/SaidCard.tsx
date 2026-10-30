@@ -1,6 +1,7 @@
 import type { Ref } from "react";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
+import { usePlural, useT } from "@/components/i18n/I18nProvider";
 import { DemoBadge } from "@/components/ui/DemoBadge";
 import type { SabtMode } from "@/data/sabt";
 import { cn } from "@/lib/cn";
@@ -40,11 +41,13 @@ type SaidCardProps = {
 };
 
 export function SaidCard({ mode, text, entries, demo, listening, locked, onText, textRef }: SaidCardProps) {
+  const t = useT();
+  const plural = usePlural();
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3">
         <HandNote className="inline-block -rotate-2 text-[26px] lg:text-[30px]">
-          {mode === "text" ? "Нависед…" : "Шумо гуфтед…"}
+          {mode === "text" ? t("sabt.said.write") : t("sabt.said.said")}
         </HandNote>
         {demo && <DemoBadge />}
       </div>
@@ -52,7 +55,7 @@ export function SaidCard({ mode, text, entries, demo, listening, locked, onText,
         {mode === "text" ? (
           <>
             <label htmlFor="sabt-text" className="sr-only">
-              Матни сабт
+              {t("sabt.said.textLabel")}
             </label>
             <textarea
               id="sabt-text"
@@ -66,7 +69,7 @@ export function SaidCard({ mode, text, entries, demo, listening, locked, onText,
           </>
         ) : !text ? (
           <HandNote tone="muted" className="text-2xl">
-            {listening ? "Гӯш мекунам…" : "Микрофонро пахш карда, гап занед"}
+            {listening ? t("sabt.said.listening") : t("sabt.said.pressMic")}
           </HandNote>
         ) : (
           <p className="font-display text-[19px] leading-[1.7] font-medium lg:text-[22px] lg:leading-[1.75] xl:text-[27px]">
@@ -75,14 +78,14 @@ export function SaidCard({ mode, text, entries, demo, listening, locked, onText,
         )}
         {entries.length > 0 && (
           <span className="absolute -top-[18px] right-4 rotate-5 rounded-lg border-[1.5px] border-ink bg-marker px-2.5 py-0.5 font-hand text-xl font-semibold lg:right-[26px] lg:text-[22px]">
-            {entries.length} сабт ёфтам!
+            {plural("sabt.said.found", entries.length)}
           </span>
         )}
       </Card>
       <div className="mt-4 flex flex-wrap gap-x-[26px] gap-y-1 font-hand text-xl font-semibold lg:text-[22px]">
-        <span className="text-red">● сурх — пул рафт</span>
-        <span className="text-green">● сабз — пул омад</span>
-        {entries.some((entry) => entry.kind === "debt") && <span className="text-pen">● кабуд — насия, ба чек намеравад</span>}
+        <span className="text-red">{t("sabt.legend.expense")}</span>
+        <span className="text-green">{t("sabt.legend.income")}</span>
+        {entries.some((entry) => entry.kind === "debt") && <span className="text-pen">{t("sabt.legend.debt")}</span>}
       </div>
     </div>
   );

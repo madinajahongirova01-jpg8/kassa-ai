@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useT } from "@/components/i18n/I18nProvider";
 import { Icon } from "@/components/ui/Icon";
 import { adminMobileNav } from "@/data/navigation";
 import { cn } from "@/lib/cn";
 import { isNavActive } from "@/lib/nav";
+import { usePagePathname } from "@/lib/usePagePathname";
 
 export function AdminMobileNav() {
-  const pathname = usePathname();
+  const pathname = usePagePathname();
+  const t = useT();
 
   return (
     <nav className="fixed bottom-0 z-50 w-full bg-surface/85 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-2px_12px_rgba(0,0,0,0.04)] backdrop-blur-xl lg:hidden">
@@ -26,7 +28,7 @@ export function AdminMobileNav() {
               )}
             >
               <Icon name={item.icon} className="text-[22px]" />
-              <span className="font-label-caps text-label-caps">{item.label}</span>
+              <span className="font-label-caps text-label-caps">{t(item.labelKey)}</span>
             </Link>
           );
         })}

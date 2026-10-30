@@ -3,14 +3,17 @@ import { Suspense } from "react";
 import { PageLoading } from "@/components/daftar/PageState";
 import { ReportView } from "@/components/hisobot/ReportView";
 import { loadReportData } from "@/lib/api/report-book";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Ҳисобот — Kassa AI",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: `${t("nav.reports")} — Kassa AI` };
+}
 
-export default function ReportsPage() {
+export default async function ReportsPage() {
+  const t = await getT();
   return (
-    <Suspense fallback={<PageLoading text="ҳисобот тайёр мешавад…" />}>
+    <Suspense fallback={<PageLoading text={t("report.loading")} />}>
       <Reports />
     </Suspense>
   );
