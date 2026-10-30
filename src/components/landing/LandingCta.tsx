@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
-import { MicCta } from "@/components/daftar/MicCta";
 
 export function LandingCta() {
   return (
@@ -18,7 +17,6 @@ export function LandingCta() {
           </Link>
         </div>
       </div>
-      <MicCta />
     </Card>
   );
 }

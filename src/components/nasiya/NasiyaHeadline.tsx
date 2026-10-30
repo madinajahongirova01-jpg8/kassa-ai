@@ -1,14 +1,21 @@
-import Link from "next/link";
 import { HandNote } from "@/components/daftar/HandNote";
 import { Marker } from "@/components/daftar/Marker";
+import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
+
+export type NasiyaFormKind = "customer" | "debt";
+
+const actionClass =
+  "flex h-10 items-center rounded-tile border-[1.5px] border-ink px-3.5 font-display text-xs font-bold whitespace-nowrap text-ink shadow-hard hover:text-ink active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm lg:h-[46px] lg:px-5 lg:text-sm";
 
 type NasiyaHeadlineProps = {
   total: number;
   overdueCount: number;
+  openForm: NasiyaFormKind | null;
+  onOpenForm: (kind: NasiyaFormKind) => void;
 };
 
-export function NasiyaHeadline({ total, overdueCount }: NasiyaHeadlineProps) {
+export function NasiyaHeadline({ total, overdueCount, openForm, onOpenForm }: NasiyaHeadlineProps) {
   return (
     <div className="flex items-end justify-between gap-4">
       <div>
@@ -25,12 +32,24 @@ export function NasiyaHeadline({ total, overdueCount }: NasiyaHeadlineProps) {
             {overdueCount} нафар дер кард!
           </HandNote>
         )}
-        <Link
-          href="/app/new"
-          className="flex h-10 items-center rounded-tile border-[1.5px] border-ink bg-marker px-3.5 font-display text-xs font-bold text-ink shadow-hard hover:text-ink active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm lg:h-[46px] lg:px-5 lg:text-sm"
-        >
-          + Қарзи нав
-        </Link>
+        <div className="flex flex-col items-end gap-2 sm:flex-row">
+          <button
+            type="button"
+            aria-expanded={openForm === "customer"}
+            onClick={() => onOpenForm("customer")}
+            className={cn(actionClass, "bg-card")}
+          >
+            + Муштарии нав
+          </button>
+          <button
+            type="button"
+            aria-expanded={openForm === "debt"}
+            onClick={() => onOpenForm("debt")}
+            className={cn(actionClass, "bg-marker")}
+          >
+            + Қарзи нав
+          </button>
+        </div>
       </div>
     </div>
   );

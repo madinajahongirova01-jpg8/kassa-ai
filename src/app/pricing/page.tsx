@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
-import { MicIcon } from "@/components/daftar/icons";
 import { Marker } from "@/components/daftar/Marker";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { PlanCard } from "@/components/pricing/PlanCard";
@@ -44,13 +43,6 @@ export default function PricingPage() {
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/app/new"
-                className="flex items-center justify-center gap-2.5 rounded-tile border-[1.5px] border-ink bg-pen px-6 py-3.5 font-display text-base font-bold text-card shadow-hard hover:bg-[#2340c0] active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm"
-              >
-                <MicIcon size={20} strokeWidth={2.2} />
-                Гап занед
-              </Link>
               <Link
                 href="/app"
                 className="flex items-center justify-center rounded-tile border-[1.5px] border-ink bg-card px-6 py-3.5 font-display text-base font-bold text-ink shadow-hard hover:text-pen active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm"

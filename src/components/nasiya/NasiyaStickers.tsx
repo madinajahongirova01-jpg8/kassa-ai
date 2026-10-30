@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { HandNote } from "@/components/daftar/HandNote";
-import { MicIcon } from "@/components/daftar/icons";
 import { Stamp } from "@/components/daftar/Stamp";
 import { Sticker, type StickerTape } from "@/components/daftar/Sticker";
 import { cn } from "@/lib/cn";
@@ -42,6 +40,7 @@ function DebtSticker({ row, today, index, selected, onSelect }: DebtStickerProps
   const { customer, balance, status } = row;
   const overdue = status === "overdue";
   const paid = status === "paid";
+  const settled = paid && row.history.some((event) => event.type === "debt");
   const turn = turns[index % turns.length];
   const note = stickerNote(row, today);
   return (
@@ -69,10 +68,10 @@ function DebtSticker({ row, today, index, selected, onSelect }: DebtStickerProps
         <div className="text-xs text-ink-2">{customer.phone}</div>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <span className={cn("font-display text-[32px] leading-none font-extrabold", overdue && "text-red", paid && "text-ink-3 line-through")}>
-          {formatMoney(paid ? row.originalAmount : balance, { unit: false })}
+        <span className={cn("font-display text-[32px] leading-none font-extrabold", overdue && "text-red", settled && "text-ink-3 line-through")}>
+          {formatMoney(settled ? row.originalAmount : balance, { unit: false })}
         </span>
-        {paid && (
+        {settled && (
           <Stamp tone="green" size="sm">
             ПАРДОХТ ШУД
           </Stamp>
@@ -82,20 +81,6 @@ function DebtSticker({ row, today, index, selected, onSelect }: DebtStickerProps
         {note.text}
       </HandNote>
     </Sticker>
-  );
-}
-
-function VoiceDebtCard() {
-  return (
-    <Link
-      href="/app/new"
-      className="flex min-h-[136px] flex-col items-center justify-center gap-1.5 rounded-tile border-2 border-dashed border-ink-3 bg-card/60 px-4 py-4 text-center text-ink-2 hover:border-pen hover:text-ink-2 lg:min-h-0"
-    >
-      <span className="flex size-11 items-center justify-center rounded-full bg-pen text-card">
-        <MicIcon size={20} strokeWidth={2} />
-      </span>
-      <HandNote className="text-[22px] leading-tight">«Раҳим 120 насия гирифт»</HandNote>
-    </Link>
   );
 }
 
@@ -125,7 +110,6 @@ export function NasiyaStickers({ rows, empty, today, selectedId, onSelect }: Nas
           {empty ? "ҳоло насия нест" : "касе ёфт нашуд"}
         </HandNote>
       )}
-      <VoiceDebtCard />
     </div>
   );
 }
