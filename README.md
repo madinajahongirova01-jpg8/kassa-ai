@@ -1,200 +1,543 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kassa AI
 
-## Getting Started
+Дафтари электронии хазина ва насия барои дӯконҳои хурд · Электронная тетрадь кассы и долгов для небольших магазинов · A digital cash book and debt ledger for small shops
 
-First, run the development server:
+**Забон / Язык / Language:** [Тоҷикӣ](#тоҷикӣ) · [Русский](#русский) · [English](#english)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+> Лоиҳа дар марҳилаи таҳия аст ва ҳоло дар ҷое ҷойгир (deploy) нашудааст.
+> Проект в разработке и пока нигде не развёрнут.
+> The project is under development and is not deployed anywhere yet.
+
+---
+
+## Тоҷикӣ
+
+### Лоиҳа дар бораи чӣ
+
+Kassa AI ба соҳиби дӯкон кӯмак мекунад, ки даромад, хароҷот ва насияи муштариёнро сабт кунад ва фоидаи рӯз, ҳафта, моҳ ва солро бинад. Интерфейс бо забони тоҷикӣ аст. Маблағҳо бо сомонӣ ҳисоб мешаванд.
+
+Лоиҳа аз ду барнома иборат аст:
+
+- **Frontend** — Next.js дар решаи репозиторий (`/`), порти `3000`.
+- **Backend API** — NestJS дар `apps/api`, порти `3001`, базаи PostgreSQL.
+
+Браузер бевосита ба API муроҷиат намекунад: Route Handler-ҳои Next.js (`src/app/api/*`) дархостҳоро ба API мефиристанд, токени сессия дар cookie-и `httpOnly` (`kassa_session`) нигоҳ дошта мешавад.
+
+### Имкониятҳои амалан иҷрошуда
+
+| Саҳифа | Чӣ кор мекунад |
+| --- | --- |
+| `/` | Саҳифаи асосӣ (landing). |
+| `/pricing` | Тарофаҳо. Пардохти онлайн пайваст нашудааст. |
+| `/login` | Даромадан ва бақайдгирӣ (почта, парол, номи тиҷорат, ном — ихтиёрӣ). |
+| `/app` — Имрӯз | Даромад ва хароҷоти имрӯз аз база. Блоки «Ба шумо қарздоранд» ҳоло маълумоти намунавӣ нишон медиҳад (бо нишони «демо»). |
+| `/app/new` — Сабти нав | Матнро менависед (масалан «такси 30, фурӯш 1800»), барнома онро бо қоидаҳои оддӣ ба сатрҳо ҷудо мекунад, шумо тасдиқ мекунед ва сабтҳо дар база нигоҳ дошта мешаванд. Сатрҳои насия дар ин ҷо сабт намешаванд. |
+| `/app/transactions` — Дафтар | Ҳамаи сабтҳо, насияҳо ва пардохтҳо рӯз ба рӯз барои як моҳ; содирот ба CSV ва чоп. |
+| `/app/debts` — Насия | Муштарии нав, насияи нав, қабули пардохт (аз насияи кӯҳнатарин сар карда), филтрҳо, тугмаҳои занг ва SMS (рақами телефон санҷида мешавад). |
+| `/app/reports` — Ҳисобот | Ҳафта / моҳ / сол: даромад, хароҷот, фоида, диаграмма, хароҷот аз рӯи категория, насияи додашуда ва баргардонидашуда; CSV ва чоп. |
+| `/admin` | Танҳо саҳифаи холӣ бо нишони «демо». |
+
+Backend: бақайдгирӣ ва даромадан (JWT), маҳдудияти кӯшишҳо барои `/auth/register` ва `/auth/login`, муштариён, насияҳо, пардохтҳо, сабтҳои хазина, ҳисоботи ҷамъбастӣ. Ҳар корбар танҳо маълумоти худро мебинад.
+
+### Маҳдудиятҳо
+
+- **AI ҳоло пайваст нашудааст.** Матн дар «Сабти нав» бо қоидаҳои оддӣ (regex) таҳлил мешавад, на бо модели AI.
+- **Вуруди овозӣ ба таъхир гузошта шудааст.** Режими «Овоз» танҳо санҷишӣ аст: шинохтани овози худи браузерро (Web Speech API) истифода мебарад ва на ҳама браузерҳо онро дастгирӣ мекунанд.
+- **Акси чек иҷро нашудааст.** Тугмаи «Акси чек» ғайрифаъол аст («Ба наздикӣ»).
+- Пардохти онлайни тарофаҳо нест; панели `/admin` холӣ аст.
+- Насия ва пардохтро тағйир додан ё нест кардан мумкин нест; сабтҳои хазинаро ҳам. Муштариро нест кардан мумкин нест.
+- Токени нав кардан (refresh), барқарор кардани парол ва тасдиқи почта нест. Баромадан танҳо cookie-ро пок мекунад.
+- Дархости такрории пардохт пардохти дуюм сабт мекунад (idempotency нест).
+
+### Стек
+
+- Frontend: Next.js 16.4, React 19.3, TypeScript 5, Tailwind CSS 4, Recharts 3, Vitest 3, ESLint 9.
+- Backend: NestJS 11, TypeScript 5.9, Prisma 7.10 (`@prisma/adapter-pg`), PostgreSQL, Argon2id, JWT (HS256), `@nestjs/throttler`, Jest 30, Supertest.
+- CI: GitHub Actions (`.github/workflows/ci.yml`), Node.js 24, PostgreSQL 17.
+
+### Сохтор
+
+```text
+.
+├── src/                    # Frontend (Next.js App Router)
+│   ├── app/                # Саҳифаҳо ва Route Handler-ҳо (src/app/api)
+│   ├── components/         # Компонентҳои UI аз рӯи саҳифаҳо
+│   ├── data/               # Матнҳо ва маълумоти намунавӣ
+│   ├── lib/                # Мантиқ, ҳисобҳо, муштарии API (lib/api)
+│   └── proxy.ts            # Бе cookie-и сессия /app/* → /login
+├── apps/api/               # Backend (NestJS)
+│   ├── prisma/             # schema.prisma ва миграцияҳо
+│   ├── src/                # auth, customers, debts, cash-entries, reports, common, config
+│   └── test/               # Тестҳои e2e
+├── design/                 # Маводи дизайн
+└── .github/workflows/ci.yml
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Талабот
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Node.js 20.19+ (дар CI — 24) ва npm
+- PostgreSQL 14+ (дар CI — 17)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Насб ва оғоз
 
-## Backend API (`apps/api`)
+**1. PostgreSQL.** Ҳар PostgreSQL-и маҳаллӣ кор мекунад. Мисол бо Docker. Паролро худатон интихоб кунед (танҳо ҳарфҳои лотинӣ, рақамҳо ва дефис, то дар `DATABASE_URL` бе тағйир истифода шавад) ва ҳамон паролро дар `DATABASE_URL` ва `TEST_DATABASE_URL`-и `apps/api/.env` нависед:
 
-The backend is a separate NestJS application in `apps/api` with its own `package.json` and `package-lock.json`. It does not change the frontend: the frontend still uses mock data and is not connected to the API yet. Neither the frontend nor the API is deployed.
+```bash
+KASSA_DB_PASSWORD='change-me-local-password'
+docker run -d --name kassa-postgres -p 5432:5432 \
+  -e POSTGRES_USER=kassa -e POSTGRES_PASSWORD="$KASSA_DB_PASSWORD" -e POSTGRES_DB=kassa_ai \
+  postgres:17
+# То 60 сония интизор мешавем, то PostgreSQL пайвастҳоро қабул кунад
+for attempt in $(seq 1 60); do
+  docker exec kassa-postgres pg_isready -q -h 127.0.0.1 -U kassa -d kassa_ai && break
+  sleep 1
+done
+docker exec kassa-postgres createdb -U kassa kassa_ai_test   # танҳо барои тестҳои e2e
+```
 
-Stack: NestJS 11, TypeScript, Prisma 7 (`@prisma/adapter-pg`), PostgreSQL, Argon2id password hashing, JWT (HS256) access tokens.
-
-### Requirements
-
-- Node.js 20.19+ (CI uses Node.js 24)
-- npm
-- PostgreSQL 14+ (CI uses PostgreSQL 17)
-
-### Setup
+**2. Backend:**
 
 ```bash
 cd apps/api
 npm install
-cp .env.example .env
+cp .env.example .env            # пас .env-ро таҳрир кунед
+npm run prisma:generate
+npm run prisma:migrate:deploy
+npm run start:dev               # http://localhost:3001
 ```
 
-Edit `apps/api/.env`:
+**3. Frontend** (дар терминали дигар, аз решаи репозиторий):
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev                     # http://localhost:3000
+```
+
+Пас `http://localhost:3000/login`-ро кушоед ва ҳисоб кушоед.
+
+### Тағйирёбандаҳои муҳит
+
+Файлҳои `.env` ва `.env.local`-ро ба git илова накунед. Сирҳои воқеиро дар README ва коммитҳо нанависед.
+
+Frontend — `.env.local` дар реша:
+
+| Тағйирёбанда | Ҳатмӣ | Тавсиф |
+| --- | --- | --- |
+| `KASSA_API_URL` | ҳа | Суроғаи API, масалан `http://localhost:3001`. Танҳо дар сервер истифода мешавад. |
+
+Backend — `apps/api/.env`:
+
+| Тағйирёбанда | Ҳатмӣ | Пешфарз | Тавсиф |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | ҳа | — | Сатри пайвасти PostgreSQL |
+| `JWT_SECRET` | ҳа | — | Сатри тасодуфӣ, на камтар аз 32 аломат (масалан `openssl rand -base64 48`) |
+| `JWT_EXPIRES_IN_SECONDS` | не | `3600` | Мӯҳлати токен бо сония |
+| `PORT` | не | `3001` | Порти API |
+| `NODE_ENV` | не | `development` | `development`, `test` ё `production` |
+| `AUTH_THROTTLE_LIMIT` | не | `10` | Шумораи кӯшишҳои бақайдгирӣ/даромадан дар як давра |
+| `AUTH_THROTTLE_TTL_SECONDS` | не | `60` | Давраи маҳдудият бо сония |
+| `TRUST_PROXY` | не | `loopback` | Проксиҳои боэътимод (IP, CIDR ё `loopback`/`linklocal`/`uniquelocal`) |
+| `TEST_DATABASE_URL` | барои e2e | — | Базаи алоҳида; номаш бояд бо `_test` анҷом ёбад |
+
+Агар тағйирёбандаи ҳатмӣ набошад ё нодуруст бошад, API оғоз намешавад.
+
+### Фармонҳо
+
+Frontend (реша):
+
+| Фармон | Вазифа |
+| --- | --- |
+| `npm run dev` | Сервери таҳия |
+| `npm run lint` | ESLint |
+| `npx next typegen && npx tsc --noEmit` | Санҷиши типҳо (мисли CI) |
+| `npm test` | Тестҳои Vitest (`src/**/*.test.ts`) |
+| `npm run build` | Сохтани production |
+| `npm start` | Оғози build-и тайёр |
+
+Backend (`apps/api`):
+
+| Фармон | Вазифа |
+| --- | --- |
+| `npm run start:dev` | API бо watch |
+| `npm run build` / `npm start` | Сохтан / оғози `dist/main.js` |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Unit-тестҳо (Jest), база лозим нест |
+| `npm run test:e2e` | Тестҳои HTTP + база (`TEST_DATABASE_URL` лозим) |
+| `npm run prisma:generate` | Сохтани Prisma Client ба `src/generated/prisma` |
+| `npm run prisma:migrate:deploy` | Татбиқи миграцияҳо |
+| `npm run prisma:migrate:dev` | Миграцияи нав пас аз тағйири `schema.prisma` |
+
+Тестҳои e2e танҳо ба базае кор мекунанд, ки номаш бо `_test` анҷом меёбад, ва дар байни тестҳо ҳамаи маълумотро пок мекунанд. Ба базаи маълумоти воқеӣ равона накунед.
+
+### API
+
+Рӯйхати пурраи endpoint-ҳо ва форматҳо дар бахши [English → API reference](#api-reference) аст.
+
+---
+
+## Русский
+
+### О проекте
+
+Kassa AI помогает владельцу магазина записывать доходы, расходы и долги покупателей и видеть прибыль за день, неделю, месяц и год. Интерфейс на таджикском языке. Суммы считаются в сомони.
+
+Проект состоит из двух приложений:
+
+- **Frontend** — Next.js в корне репозитория (`/`), порт `3000`.
+- **Backend API** — NestJS в `apps/api`, порт `3001`, база PostgreSQL.
+
+Браузер не обращается к API напрямую: Route Handlers Next.js (`src/app/api/*`) пересылают запросы в API, токен сессии хранится в `httpOnly`-cookie (`kassa_session`).
+
+### Реализованные возможности
+
+| Страница | Что делает |
+| --- | --- |
+| `/` | Лендинг. |
+| `/pricing` | Тарифы. Онлайн-оплата не подключена. |
+| `/login` | Вход и регистрация (email, пароль, название бизнеса, имя — необязательно). |
+| `/app` — Сегодня | Доходы и расходы за сегодня из базы. Блок «Вам должны» пока показывает пример данных (с пометкой «демо»). |
+| `/app/new` — Новая запись | Вы пишете текст (например «такси 30, фурӯш 1800»), приложение разбивает его на строки по простым правилам, вы подтверждаете — записи сохраняются в базе. Строки о долгах здесь не сохраняются. |
+| `/app/transactions` — Тетрадь | Все записи, долги и платежи по дням за месяц; экспорт в CSV и печать. |
+| `/app/debts` — Долги | Новый покупатель, новый долг, приём платежа (гасит сначала самый старый долг), фильтры, кнопки звонка и SMS (номер телефона проверяется). |
+| `/app/reports` — Отчёт | Неделя / месяц / год: доход, расход, прибыль, график, расходы по категориям, выданные и возвращённые долги; CSV и печать. |
+| `/admin` | Только пустая страница с пометкой «демо». |
+
+Backend: регистрация и вход (JWT), ограничение частоты запросов для `/auth/register` и `/auth/login`, покупатели, долги, платежи, кассовые записи, сводный отчёт. Каждый пользователь видит только свои данные.
+
+### Ограничения
+
+- **AI пока не подключён.** Текст в «Новой записи» разбирается простыми правилами (regex), а не AI-моделью.
+- **Голосовой ввод отложен.** Режим «Овоз» только экспериментальный: использует встроенное распознавание речи браузера (Web Speech API), которое поддерживают не все браузеры.
+- **Фото чека не реализовано.** Кнопка «Акси чек» неактивна («Скоро»).
+- Онлайн-оплаты тарифов нет; панель `/admin` пустая.
+- Долги, платежи и кассовые записи нельзя редактировать или удалять. Покупателя нельзя удалить.
+- Нет refresh-токенов, сброса пароля и подтверждения email. Выход только очищает cookie.
+- Повтор запроса платежа создаёт второй платёж (нет идемпотентности).
+
+### Стек
+
+- Frontend: Next.js 16.4, React 19.3, TypeScript 5, Tailwind CSS 4, Recharts 3, Vitest 3, ESLint 9.
+- Backend: NestJS 11, TypeScript 5.9, Prisma 7.10 (`@prisma/adapter-pg`), PostgreSQL, Argon2id, JWT (HS256), `@nestjs/throttler`, Jest 30, Supertest.
+- CI: GitHub Actions (`.github/workflows/ci.yml`), Node.js 24, PostgreSQL 17.
+
+### Структура
+
+```text
+.
+├── src/                    # Frontend (Next.js App Router)
+│   ├── app/                # Страницы и Route Handlers (src/app/api)
+│   ├── components/         # UI-компоненты по страницам
+│   ├── data/               # Тексты и демо-данные
+│   ├── lib/                # Логика, расчёты, клиент API (lib/api)
+│   └── proxy.ts            # Без cookie сессии /app/* → /login
+├── apps/api/               # Backend (NestJS)
+│   ├── prisma/             # schema.prisma и миграции
+│   ├── src/                # auth, customers, debts, cash-entries, reports, common, config
+│   └── test/               # E2E-тесты
+├── design/                 # Дизайн-материалы
+└── .github/workflows/ci.yml
+```
+
+### Требования
+
+- Node.js 20.19+ (в CI — 24) и npm
+- PostgreSQL 14+ (в CI — 17)
+
+### Установка и запуск
+
+**1. PostgreSQL.** Подойдёт любой локальный PostgreSQL. Пример с Docker. Пароль выберите сами (только латинские буквы, цифры и дефис, чтобы его можно было без изменений вставить в `DATABASE_URL`) и укажите тот же пароль в `DATABASE_URL` и `TEST_DATABASE_URL` в `apps/api/.env`:
+
+```bash
+KASSA_DB_PASSWORD='change-me-local-password'
+docker run -d --name kassa-postgres -p 5432:5432 \
+  -e POSTGRES_USER=kassa -e POSTGRES_PASSWORD="$KASSA_DB_PASSWORD" -e POSTGRES_DB=kassa_ai \
+  postgres:17
+# Ждём до 60 секунд, пока PostgreSQL начнёт принимать подключения
+for attempt in $(seq 1 60); do
+  docker exec kassa-postgres pg_isready -q -h 127.0.0.1 -U kassa -d kassa_ai && break
+  sleep 1
+done
+docker exec kassa-postgres createdb -U kassa kassa_ai_test   # только для e2e-тестов
+```
+
+**2. Backend:**
+
+```bash
+cd apps/api
+npm install
+cp .env.example .env            # затем отредактируйте .env
+npm run prisma:generate
+npm run prisma:migrate:deploy
+npm run start:dev               # http://localhost:3001
+```
+
+**3. Frontend** (в другом терминале, из корня репозитория):
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev                     # http://localhost:3000
+```
+
+Откройте `http://localhost:3000/login` и зарегистрируйтесь.
+
+### Переменные окружения
+
+Не добавляйте `.env` и `.env.local` в git. Не пишите настоящие секреты в README и коммиты.
+
+Frontend — `.env.local` в корне:
+
+| Переменная | Обязательна | Описание |
+| --- | --- | --- |
+| `KASSA_API_URL` | да | Адрес API, например `http://localhost:3001`. Используется только на сервере. |
+
+Backend — `apps/api/.env`:
+
+| Переменная | Обязательна | По умолчанию | Описание |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | да | — | Строка подключения к PostgreSQL |
+| `JWT_SECRET` | да | — | Случайная строка не короче 32 символов (например `openssl rand -base64 48`) |
+| `JWT_EXPIRES_IN_SECONDS` | нет | `3600` | Срок жизни токена в секундах |
+| `PORT` | нет | `3001` | Порт API |
+| `NODE_ENV` | нет | `development` | `development`, `test` или `production` |
+| `AUTH_THROTTLE_LIMIT` | нет | `10` | Число попыток регистрации/входа за период |
+| `AUTH_THROTTLE_TTL_SECONDS` | нет | `60` | Длина периода ограничения в секундах |
+| `TRUST_PROXY` | нет | `loopback` | Доверенные прокси (IP, CIDR или `loopback`/`linklocal`/`uniquelocal`) |
+| `TEST_DATABASE_URL` | для e2e | — | Отдельная база; имя должно заканчиваться на `_test` |
+
+Если обязательная переменная отсутствует или некорректна, API не запустится.
+
+### Команды
+
+Frontend (корень):
+
+| Команда | Назначение |
+| --- | --- |
+| `npm run dev` | Сервер разработки |
+| `npm run lint` | ESLint |
+| `npx next typegen && npx tsc --noEmit` | Проверка типов (как в CI) |
+| `npm test` | Тесты Vitest (`src/**/*.test.ts`) |
+| `npm run build` | Production-сборка |
+| `npm start` | Запуск готовой сборки |
+
+Backend (`apps/api`):
+
+| Команда | Назначение |
+| --- | --- |
+| `npm run start:dev` | API в режиме watch |
+| `npm run build` / `npm start` | Сборка / запуск `dist/main.js` |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Unit-тесты (Jest), база не нужна |
+| `npm run test:e2e` | HTTP + база (нужен `TEST_DATABASE_URL`) |
+| `npm run prisma:generate` | Генерация Prisma Client в `src/generated/prisma` |
+| `npm run prisma:migrate:deploy` | Применить миграции |
+| `npm run prisma:migrate:dev` | Новая миграция после изменения `schema.prisma` |
+
+E2E-тесты работают только с базой, имя которой заканчивается на `_test`, и между тестами удаляют все данные. Не направляйте их на базу с настоящими данными.
+
+### API
+
+Полный список endpoints и форматов — в разделе [English → API reference](#api-reference).
+
+---
+
+## English
+
+### About
+
+Kassa AI helps a shop owner record income, expenses and customer debts, and see profit for a day, week, month or year. The user interface is in Tajik. Amounts are in somoni.
+
+The project has two applications:
+
+- **Frontend** — Next.js at the repository root (`/`), port `3000`.
+- **Backend API** — NestJS in `apps/api`, port `3001`, PostgreSQL database.
+
+The browser never calls the API directly: Next.js Route Handlers (`src/app/api/*`) forward requests to the API, and the session token is kept in an `httpOnly` cookie (`kassa_session`). State-changing requests are accepted only from the same origin.
+
+### Implemented features
+
+| Page | What it does |
+| --- | --- |
+| `/` | Landing page. |
+| `/pricing` | Plans. Online payment is not connected. |
+| `/login` | Sign in and registration (email, password, business name, optional name). |
+| `/app` — Today | Today's income and expenses from the database. The "they owe you" block still shows sample data (marked "demo"). |
+| `/app/new` — New entry | You type text (e.g. "такси 30, фурӯш 1800"), the app splits it into lines using simple rules, you confirm, and the entries are saved to the database. Lines recognised as debts are not saved here. |
+| `/app/transactions` — Ledger | All cash entries, debts and payments by day for a month; CSV export and print. |
+| `/app/debts` — Debts | New customer, new debt, receiving a payment (oldest debt is paid first), filters, call and SMS buttons (phone numbers are validated). |
+| `/app/reports` — Reports | Week / month / year: income, expense, profit, chart, expenses by category, debts given and returned; CSV export and print. |
+| `/admin` | Placeholder page marked "demo" only. |
+
+Backend: registration and login (JWT), rate limiting on `/auth/register` and `/auth/login`, customers, debts, payments, cash entries, summary report. Every user sees only their own data.
+
+### Limitations
+
+- **AI is not connected yet.** Text on the "New entry" page is parsed with simple rules (regular expressions), not an AI model.
+- **Voice input is postponed.** The "Овоз" (voice) mode is experimental only: it uses the browser's built-in speech recognition (Web Speech API), which not every browser supports.
+- **Receipt photos are not implemented.** The "Акси чек" button is disabled ("coming soon").
+- No online payment for plans; the `/admin` panel is empty.
+- Debts, payments and cash entries cannot be edited or deleted. Customers cannot be deleted.
+- No refresh tokens, password reset or email verification. Logout only clears the cookie (tokens stay valid until they expire).
+- Payment requests are not idempotent: retrying a successful request records a second payment.
+- Not production-ready and not deployed.
+
+### Stack
+
+- Frontend: Next.js 16.4, React 19.3, TypeScript 5, Tailwind CSS 4, Recharts 3, Vitest 3, ESLint 9.
+- Backend: NestJS 11, TypeScript 5.9, Prisma 7.10 (`@prisma/adapter-pg`), PostgreSQL, Argon2id, JWT (HS256), `@nestjs/throttler`, Jest 30, Supertest.
+- CI: GitHub Actions (`.github/workflows/ci.yml`), Node.js 24, PostgreSQL 17.
+
+### Structure
+
+```text
+.
+├── src/                    # Frontend (Next.js App Router)
+│   ├── app/                # Pages and Route Handlers (src/app/api)
+│   ├── components/         # UI components grouped by page
+│   ├── data/               # Texts and sample data
+│   ├── lib/                # Logic, calculations, API client (lib/api)
+│   └── proxy.ts            # Redirects /app/* to /login without a session cookie
+├── apps/api/               # Backend (NestJS)
+│   ├── prisma/             # schema.prisma and migrations
+│   ├── src/                # auth, customers, debts, cash-entries, reports, common, config
+│   └── test/               # E2E tests
+├── design/                 # Design materials
+└── .github/workflows/ci.yml
+```
+
+Database tables (`apps/api/prisma/schema.prisma`): `users`, `customers`, `debts`, `payments`, `cash_entries`. Money is stored as integer dirams (1 somoni = 100 dirams).
+
+### Requirements
+
+- Node.js 20.19+ (CI uses 24) and npm
+- PostgreSQL 14+ (CI uses 17)
+
+### Setup and running
+
+**1. PostgreSQL.** Any local PostgreSQL works. Docker example. Choose your own password (Latin letters, digits and dashes only, so it can go into `DATABASE_URL` unchanged) and put the same password into `DATABASE_URL` and `TEST_DATABASE_URL` in `apps/api/.env`:
+
+```bash
+KASSA_DB_PASSWORD='change-me-local-password'
+docker run -d --name kassa-postgres -p 5432:5432 \
+  -e POSTGRES_USER=kassa -e POSTGRES_PASSWORD="$KASSA_DB_PASSWORD" -e POSTGRES_DB=kassa_ai \
+  postgres:17
+# Wait up to 60 seconds until PostgreSQL accepts connections
+for attempt in $(seq 1 60); do
+  docker exec kassa-postgres pg_isready -q -h 127.0.0.1 -U kassa -d kassa_ai && break
+  sleep 1
+done
+docker exec kassa-postgres createdb -U kassa kassa_ai_test   # only for e2e tests
+```
+
+**2. Backend:**
+
+```bash
+cd apps/api
+npm install
+cp .env.example .env            # then edit .env
+npm run prisma:generate
+npm run prisma:migrate:deploy
+npm run start:dev               # http://localhost:3001
+```
+
+**3. Frontend** (in another terminal, from the repository root):
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev                     # http://localhost:3000
+```
+
+Open `http://localhost:3000/login` and create an account.
+
+### Environment variables
+
+Never commit `.env` or `.env.local`. Do not put real secrets in the README or in commits.
+
+Frontend — `.env.local` at the root:
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `DATABASE_URL` | yes | PostgreSQL connection string for the development database |
-| `JWT_SECRET` | yes | Random string, at least 32 characters (for example `openssl rand -base64 48`) |
-| `JWT_EXPIRES_IN_SECONDS` | no | Access token lifetime, default `3600` |
-| `PORT` | no | API port, default `3001` (the frontend uses `3000`) |
-| `NODE_ENV` | no | `development`, `test` or `production` |
-| `TEST_DATABASE_URL` | for e2e tests | Separate database whose name must end with `_test` |
+| `KASSA_API_URL` | yes | API address, e.g. `http://localhost:3001`. Server-side only (no `NEXT_PUBLIC_` prefix). |
 
-The API refuses to start if a required variable is missing or invalid. Never commit `.env`.
+Backend — `apps/api/.env`:
 
-### PostgreSQL
-
-Any local PostgreSQL works. Example with Docker:
-
-```bash
-docker run -d --name kassa-postgres -p 5432:5432 \
-  -e POSTGRES_USER=kassa -e POSTGRES_PASSWORD=kassa_local_password -e POSTGRES_DB=kassa_ai \
-  postgres:17
-docker exec kassa-postgres createdb -U kassa kassa_ai_test
-```
-
-### Prisma
-
-```bash
-cd apps/api
-npm run prisma:generate         # generates the client into src/generated/prisma (git-ignored)
-npm run prisma:migrate:deploy   # applies committed migrations
-npm run prisma:migrate:dev      # creates a new migration after changing prisma/schema.prisma
-```
-
-### Running
-
-```bash
-# API (http://localhost:3001)
-cd apps/api
-npm run start:dev               # or: npm run build && npm start
-
-# Frontend (http://localhost:3000), from the repository root
-npm run dev
-```
-
-### Tests
-
-```bash
-cd apps/api
-npm test                        # unit tests, no database needed
-npm run test:e2e                # HTTP + database tests for Auth, customers, debts and payments
-```
-
-E2E tests use `TEST_DATABASE_URL` only, refuse to run unless the database name ends with `_test`, apply migrations to it and delete all rows from the `users` table between tests (customers, debts and payments are removed with their owner). Do not point it at a database with real data.
-
-### Auth
-
-Users are identified by email. Emails are trimmed and lowercased before saving, so `Owner@Example.com` and `owner@example.com` are the same account. `name` is optional. Passwords must be 8–128 characters and are stored only as Argon2id hashes.
-
-| Method | Path | Body | Success |
+| Variable | Required | Default | Description |
 | --- | --- | --- | --- |
-| `POST` | `/auth/register` | `{ "email", "password", "name"? }` | `201` with `{ accessToken, tokenType: "Bearer", expiresIn, user }` |
-| `POST` | `/auth/login` | `{ "email", "password" }` | `200` with the same shape |
-| `GET` | `/auth/me` | header `Authorization: Bearer <token>` | `200` with `{ user }` |
+| `DATABASE_URL` | yes | — | PostgreSQL connection string |
+| `JWT_SECRET` | yes | — | Random string, at least 32 characters (e.g. `openssl rand -base64 48`); the example value is rejected in production |
+| `JWT_EXPIRES_IN_SECONDS` | no | `3600` | Access token lifetime in seconds |
+| `PORT` | no | `3001` | API port |
+| `NODE_ENV` | no | `development` | `development`, `test` or `production` |
+| `AUTH_THROTTLE_LIMIT` | no | `10` | Register/login attempts allowed per period |
+| `AUTH_THROTTLE_TTL_SECONDS` | no | `60` | Rate-limit period in seconds |
+| `TRUST_PROXY` | no | `loopback` | Trusted proxies (IPs, CIDR ranges or `loopback`/`linklocal`/`uniquelocal`) |
+| `TEST_DATABASE_URL` | for e2e | — | Separate database whose name must end with `_test` |
 
-`user` is `{ id, email, name, createdAt }`; the password hash is never returned.
+The API refuses to start if a required variable is missing or invalid.
 
-Errors share one format:
+### Commands
 
-```json
-{ "statusCode": 400, "error": "Bad Request", "message": "Validation failed", "details": ["..."] }
-```
+Frontend (root):
 
-- `400` invalid input (unknown fields are rejected), `401` wrong credentials or a missing/invalid/expired token, `409` email already registered, `500` internal error with no internal details.
-- Login returns the same `401` message for an unknown email and a wrong password.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run lint` | ESLint |
+| `npx next typegen && npx tsc --noEmit` | Type check (same as CI) |
+| `npm test` | Vitest tests (`src/**/*.test.ts`) |
+| `npm run build` | Production build |
+| `npm start` | Serve the production build |
 
-### Customers, debts and payments
+Backend (`apps/api`):
 
-All endpoints below require `Authorization: Bearer <token>`. Every query is limited to the current user's data on the server: another user's customer, debt or payment is answered with `404`, exactly like a non-existent one. The database also enforces this with composite foreign keys `(customer_id, owner_id)` and `(debt_id, owner_id)`.
+| Command | Purpose |
+| --- | --- |
+| `npm run start:dev` | API in watch mode |
+| `npm run build` / `npm start` | Build / run `dist/main.js` |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Unit tests (Jest), no database needed |
+| `npm run test:e2e` | HTTP + database tests (needs `TEST_DATABASE_URL`) |
+| `npm run prisma:generate` | Generate the Prisma Client into `src/generated/prisma` (git-ignored) |
+| `npm run prisma:migrate:deploy` | Apply committed migrations |
+| `npm run prisma:migrate:dev` | Create a new migration after changing `schema.prisma` |
 
-**Money.** Amounts are sent and returned in somoni as strings with up to two decimals (`"150"`, `"150.5"`, `"150.50"`; JSON numbers such as `150.5` are also accepted). They are parsed without floating-point arithmetic and stored as integer dirams (1 somoni = 100 dirams). Allowed range: `0.01` – `10000000.00`. Responses always use two decimals, e.g. `"150.50"`.
+E2E tests use `TEST_DATABASE_URL` only, refuse to run unless the database name ends with `_test`, apply migrations and delete all data between tests. Never point them at a database with real data.
 
-**Dates.** `occurredOn`, `dueOn` and `paidOn` are calendar dates `YYYY-MM-DD`. `occurredOn` and `paidOn` cannot be in the future (by Asia/Dushanbe time), `dueOn` cannot be earlier than `occurredOn`, and a payment cannot be dated before its debt. `paidOn` defaults to today (Asia/Dushanbe).
+CI runs on every pull request and on pushes to `main`: frontend lint, type check, unit tests and build; API Prisma generate, lint, type check, unit tests, migrations, e2e tests and build.
 
-**Status** is calculated automatically: `ACTIVE` (nothing paid), `PARTIALLY_PAID`, `PAID` (remaining amount is `0.00`). A payment larger than the remaining amount is rejected with `422`. Payments are registered in a transaction that locks the debt row, so concurrent payments cannot exceed the debt; database CHECK constraints guard the same rules.
+### API reference
 
-| Method | Path | Body / query | Success |
+Base URL: `http://localhost:3001`. All endpoints except register and login require `Authorization: Bearer <token>`. Another user's record is answered with `404`, exactly like a missing one.
+
+| Method | Path | Body / query | Response |
 | --- | --- | --- | --- |
-| `POST` | `/customers` | `{ "name", "phone"?, "note"? }` | `201` customer |
-| `GET` | `/customers` | | `200` customer list (newest first) |
+| `POST` | `/auth/register` | `{ email, password, businessName, name? }` | `201` `{ accessToken, tokenType, expiresIn, user }` |
+| `POST` | `/auth/login` | `{ email, password }` | `200`, same shape |
+| `GET` | `/auth/me` | | `200` `{ user }` |
+| `POST` | `/customers` | `{ name, phone?, note? }` | `201` customer with `balance` |
+| `GET` | `/customers` | | `200` customer list |
 | `GET` | `/customers/:id` | | `200` customer |
-| `PATCH` | `/customers/:id` | any of `name`, `phone`, `note` (`phone`/`note` can be `null`) | `200` customer |
-| `POST` | `/customers/:customerId/debts` | `{ "amount", "description", "occurredOn", "dueOn"? }` | `201` debt |
+| `PATCH` | `/customers/:id` | any of `name`, `phone`, `note` (`phone` and `note` can be `null` to clear them) | `200` customer |
+| `POST` | `/customers/:customerId/debts` | `{ amount, description, occurredOn, dueOn? }` | `201` debt |
 | `GET` | `/customers/:customerId/debts` | | `200` debts of the customer |
-| `GET` | `/debts` | `?status=ACTIVE\|PARTIALLY_PAID\|PAID&customerId=<uuid>` (both optional) | `200` debt list |
-| `GET` | `/debts/:id` | | `200` debt with `payments` |
-| `POST` | `/debts/:id/payments` | `{ "amount", "paidOn"?, "note"? }` | `201` `{ payment, debt }` |
+| `POST` | `/customers/:customerId/payments` | `{ amount, paidOn?, note? }` | `201` `{ amount, payments, debts }`, paid against the customer's oldest open debts first |
+| `GET` | `/debts` | `?status=ACTIVE\|PARTIALLY_PAID\|PAID&customerId=` | `200` debt list |
+| `GET` | `/debts/:id` | | `200` debt with payments |
+| `POST` | `/debts/:id/payments` | `{ amount, paidOn?, note? }` | `201` `{ payment, debt }` |
 | `GET` | `/debts/:id/payments` | | `200` payment list |
+| `GET` | `/payments` | `?from&to&limit&cursor` | `200` `{ items, nextCursor }` |
+| `POST` | `/cash-entries` | `{ entries: [{ kind, category, amount, title, occurredOn?, source }] }` (1–50, saved all-or-nothing) | `201` list of created entries |
+| `GET` | `/cash-entries` | `?from&to&kind&limit&cursor` | `200` `{ items, nextCursor }` |
+| `GET` | `/reports/summary` | `?from&to` (required, max 366 days) | `200` `{ from, to, today, days, expenseByCategory, totals }` |
 
-Customer: `{ id, name, phone, note, balance: { totalAmount, paidAmount, remainingAmount, openDebtsCount }, createdAt, updatedAt }`.
-Debt: `{ id, customerId, amount, paidAmount, remainingAmount, status, description, occurredOn, dueOn, createdAt, updatedAt }`.
-Payment: `{ id, debtId, amount, paidOn, note, createdAt }`.
-
-Errors: `400` invalid input or malformed id, `401` missing/invalid token, `404` not found or belongs to another user, `422` payment exceeds the remaining amount or the debt is already paid (`details` contains `remainingAmount: <amount>`).
-
-Example session (`http://localhost:3001`):
-
-```bash
-TOKEN=$(curl -s -X POST localhost:3001/auth/login -H 'Content-Type: application/json' \
-  -d '{"email":"owner@example.com","password":"correct-horse-battery"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).accessToken')
-
-curl -s -X POST localhost:3001/customers -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"name":"Aziz","phone":"+992 90 123 45 67"}'
-# {"id":"<customerId>","name":"Aziz",...,"balance":{"totalAmount":"0.00",...}}
-
-curl -s -X POST localhost:3001/customers/<customerId>/debts -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"amount":"100.00","description":"Flour, 2 bags","occurredOn":"2026-01-10","dueOn":"2026-02-10"}'
-# {"id":"<debtId>","amount":"100.00","paidAmount":"0.00","remainingAmount":"100.00","status":"ACTIVE",...}
-
-curl -s -X POST localhost:3001/debts/<debtId>/payments -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"amount":"25.50","paidOn":"2026-01-11"}'
-# {"payment":{"amount":"25.50",...},"debt":{"paidAmount":"25.50","remainingAmount":"74.50","status":"PARTIALLY_PAID",...}}
-
-curl -s -X POST localhost:3001/debts/<debtId>/payments -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"amount":"80"}'
-# 422 {"statusCode":422,"error":"Unprocessable Entity","message":"Payment exceeds the remaining debt","details":["remainingAmount: 74.50"]}
-```
-
-### CI
-
-`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`:
-
-- frontend: `npm ci`, `npm run lint`, `npm run build` (includes TypeScript type checking)
-- API (with a temporary PostgreSQL 17 service and test-only secrets): `npm ci`, `npm run prisma:generate`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run prisma:migrate:deploy`, `npm run test:e2e`, `npm run build`
-
-### Current limitations
-
-- Customers, debts and payments can be created and read; customers can be edited. There is no deletion of customers, debts or payments and no editing of debts or payments yet. Lists are not paginated.
-- Payment requests are not idempotent: retrying a request that already succeeded registers a second payment (it is still limited by the remaining amount).
-- Auth has registration, login and the current-user profile only. There are no refresh tokens, logout/token revocation, password reset or email verification; emails are not verified.
-- Access tokens are valid until they expire (default 1 hour).
-- No rate limiting on login/registration yet; add it before any public deployment.
-- No CORS configuration: the frontend is not connected to the API yet.
-- Not production-ready and not deployed.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Validation:** unknown body or query fields are rejected with `400`. Passwords are 8–128 characters.
+- **Money:** strings in somoni with up to two decimals (`"150.50"`), range `0.01`–`10000000.00`; responses always use two decimals.
+- **Dates:** `YYYY-MM-DD`; "today" is calculated in the Asia/Dushanbe time zone and is the default for a cash entry's `occurredOn` and a payment's `paidOn`. A debt's `occurredOn`, a cash entry's `occurredOn` and a payment's `paidOn` cannot be in the future; `dueOn` cannot be earlier than `occurredOn`; `paidOn` cannot be earlier than the debt's `occurredOn`; `from` cannot be later than `to`.
+- **Enums:** `kind` = `INCOME` / `EXPENSE`; `category` = `SALE`, `GOODS`, `SALARY`, `UTILITIES`, `TRANSPORT`, `RENT`, `OTHER`; `source` = `VOICE`, `TEXT`, `PHOTO`; debt `status` is calculated automatically.
+- **Pagination:** `limit` 1–200 (default 50); pass `nextCursor` back as `cursor`.
+- **Errors:** `{ statusCode, error, message, details? }`. `400` invalid input, `401` missing/invalid token or wrong credentials, `404` not found, `409` email already registered, `422` payment exceeds the remaining debt (or the debt is already paid / the customer has no open debts), `429` too many auth attempts.
