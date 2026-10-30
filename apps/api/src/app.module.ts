@@ -5,6 +5,7 @@ import { CashEntriesModule } from './cash-entries/cash-entries.module';
 import { validateEnv } from './config/env';
 import { CustomersModule } from './customers/customers.module';
 import { DebtsModule } from './debts/debts.module';
+import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReportsModule } from './reports/reports.module';
 
@@ -21,6 +22,7 @@ import { ReportsModule } from './reports/reports.module';
     DebtsModule,
     CashEntriesModule,
     ReportsModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
