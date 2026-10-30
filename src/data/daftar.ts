@@ -25,7 +25,6 @@ export const daftarCategories: Record<DaftarCategory, string> = {
   debt: "насия",
 };
 
-export const ledgerStart = "2024-05-18";
 
 const todayCategories: Record<string, DaftarCategory> = { d1: "goods", d2: "transport", d3: "salary", d4: "sale", d6: "sale" };
 
@@ -64,18 +63,3 @@ export const cashEntries: DaftarEntry[] = [
   { id: "l17", date: "2024-05-18", time: "10:20", title: "Шакар, 2 халта", category: "goods", source: "voice", kind: "expense", amount: 480 },
   { id: "l18", date: "2024-05-18", time: "12:00", title: "Музди коргар", category: "salary", source: "text", kind: "expense", amount: 150 },
 ];
-
-export const monthSummary = {
-  label: "май",
-  period: "Май 2024",
-  records: 312,
-  income: 48600,
-  expense: 31200,
-  breakdown: [
-    { label: "Мол (орд, гӯшт, шакар)", amount: 18900 },
-    { label: "Маоши коргарон", amount: 9000 },
-    { label: "Иҷора", amount: 2500 },
-    { label: "Роҳкиро", amount: 800, alert: true },
-  ],
-  note: "роҳкиро аз апрел 2 баробар зиёд шуд",
-};

@@ -1,0 +1,13 @@
+import "server-only";
+import { connection } from "next/server";
+import { sessionGet, sessionGetAll } from "@/lib/api/session-data";
+import { businessToday } from "@/lib/dates";
+import { fetchLedgerMonth } from "@/lib/ledgerLoad";
+
+export async function loadLedgerMonth(monthParam: string | undefined, returnTo: string) {
+  await connection();
+  return fetchLedgerMonth(monthParam, businessToday(), {
+    get: <T>(path: string) => sessionGet<T>(path, returnTo),
+    getAll: <T>(path: string, query: Record<string, string>) => sessionGetAll<T>(path, query, returnTo),
+  });
+}
