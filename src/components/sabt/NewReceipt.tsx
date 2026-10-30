@@ -1,10 +1,13 @@
+"use client";
+
+import Link from "next/link";
 import { HandNote } from "@/components/daftar/HandNote";
 import { Receipt, ReceiptDivider } from "@/components/daftar/Receipt";
 import { Stamp } from "@/components/daftar/Stamp";
-import { sabtDemo } from "@/data/sabt";
 import { cn } from "@/lib/cn";
 import { formatSomoni } from "@/lib/format";
-import type { SabtEntry } from "@/lib/sabt";
+import { cashSabtEntries, debtSabtEntries, type SabtEntry } from "@/lib/sabt";
+import { useBusinessNow } from "@/lib/useBusinessNow";
 
 type NewReceiptProps = {
   entries: SabtEntry[];
@@ -14,15 +17,16 @@ type NewReceiptProps = {
 };
 
 export function NewReceipt({ entries, profit, confirmed, onEditRow }: NewReceiptProps) {
+  const now = useBusinessNow();
+  const cash = cashSabtEntries(entries);
+  const debts = debtSabtEntries(entries);
   return (
     <Receipt className="rotate-1 px-6 pt-6 pb-[34px] text-sm">
       <div className="text-center font-display text-[15px] font-bold tracking-[0.06em]">ЧЕКИ НАВ</div>
-      <div className="mt-1 text-center text-[11px] text-ink-2">
-        №{sabtDemo.receiptNumber} · {sabtDemo.date} · {sabtDemo.time}
-      </div>
+      <div className="mt-1 min-h-[1.5em] text-center text-[11px] text-ink-2">{now}</div>
       <ReceiptDivider className="mt-4 mb-2" />
       <ul>
-        {entries.map((entry) => (
+        {cash.map((entry) => (
           <li key={entry.id} className="border-b border-dotted border-line last:border-b-0">
             <button
               type="button"
@@ -40,8 +44,27 @@ export function NewReceipt({ entries, profit, confirmed, onEditRow }: NewReceipt
             </button>
           </li>
         ))}
-        {entries.length === 0 && <li className="py-6 text-center font-sans text-ink-3">ҳоло ягон сабт нест</li>}
+        {cash.length === 0 && <li className="py-6 text-center font-sans text-ink-3">ҳоло ягон сабт нест</li>}
       </ul>
+      {debts.length > 0 && (
+        <div role="note" className="mt-3 rounded-tile border-[1.5px] border-dashed border-ink-3 px-3 py-2.5 font-sans">
+          <ul className="text-ink-2">
+            {debts.map((entry) => (
+              <li key={entry.id} className="flex justify-between gap-3 py-0.5">
+                <span className="min-w-0 truncate">{entry.title}</span>
+                <span className="font-bold">{formatSomoni(entry.amount, { unit: false })}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-xs text-ink-2">
+            Насия ба чек дохил намешавад. Насияро дар саҳифаи{" "}
+            <Link href="/app/debts" className="font-semibold text-pen underline">
+              Насия
+            </Link>{" "}
+            сабт кунед.
+          </p>
+        </div>
+      )}
       <ReceiptDivider className="mt-2.5 mb-3" />
       <div className="flex justify-between text-[22px] font-bold">
         <span>{profit >= 0 ? "ФОИДА" : "ЗАРАР"}</span>

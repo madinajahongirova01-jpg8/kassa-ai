@@ -1,7 +1,7 @@
 import type { ApiCashCategory, ApiEntrySource } from "@/lib/api/types";
 import { DIRAMS_PER_SOMONI, toApiAmount } from "@/lib/money";
 
-export type SabtKind = "income" | "expense";
+export type SabtKind = "income" | "expense" | "debt";
 
 export const MAX_SABT_AMOUNT = 10_000_000;
 
@@ -21,7 +21,7 @@ type Rule = {
   title: (clause: string) => string;
   note: string;
   category: ApiCashCategory;
-  kind?: SabtKind;
+  kind?: "income" | "expense";
 };
 
 const rules: Rule[] = [
@@ -39,7 +39,8 @@ const rules: Rule[] = [
   { match: /фурӯш/i, title: () => "Фурӯш", note: "даромад", category: "SALE", kind: "income" },
 ];
 
-const INCOME_WORDS = /фурӯш|даромад|омад|супорид|баргардонд/i;
+const INCOME_WORDS = /фурӯш|даромад|омад|супорид/i;
+const DEBT_WORDS = /насия|қарз|баргардонд/i;
 // \b does not see Cyrillic letters as word characters, so match on whitespace instead.
 const FILLER_WORDS = /(^|\s)(имрӯз|дирӯз|ба|боз|гирифтам|додам|шуд|кардам|сомонӣ|смн)(?=\s|$)/gi;
 const UNIT_AFTER = /^\s*(халта|кг|л|литр|дона|қуттӣ)/i;
@@ -53,20 +54,20 @@ function fallbackTitle(clause: string) {
   return words ? capitalize(words) : "Сабт";
 }
 
-/** Demo parser: one entry per clause that holds an amount, e.g. «такси 30». */
 export function parseSabt(text: string): SabtEntry[] {
   const entries: SabtEntry[] = [];
   for (const clause of text.matchAll(/[^,.;!?«»"]+/g)) {
     const body = clause[0];
     const amount = [...body.matchAll(/\d+/g)].findLast((n) => !UNIT_AFTER.test(body.slice(n.index + n[0].length)));
     if (!amount) continue;
-    const rule = rules.find((r) => r.match.test(body));
+    const debt = DEBT_WORDS.test(body);
+    const rule = debt ? undefined : rules.find((r) => r.match.test(body));
     const start = clause.index + amount.index;
     entries.push({
       id: `s${entries.length + 1}`,
       title: rule ? rule.title(body) : fallbackTitle(body),
-      note: rule?.note ?? "дигар",
-      kind: rule?.kind ?? (INCOME_WORDS.test(body) ? "income" : "expense"),
+      note: debt ? "насия" : (rule?.note ?? "дигар"),
+      kind: debt ? "debt" : (rule?.kind ?? (INCOME_WORDS.test(body) ? "income" : "expense")),
       category: rule?.category ?? "OTHER",
       amount: Number(amount[0]),
       start,
@@ -76,13 +77,21 @@ export function parseSabt(text: string): SabtEntry[] {
   return entries;
 }
 
+export function cashSabtEntries(entries: SabtEntry[]) {
+  return entries.filter((entry) => entry.kind !== "debt");
+}
+
+export function debtSabtEntries(entries: SabtEntry[]) {
+  return entries.filter((entry) => entry.kind === "debt");
+}
+
 export function canSaveSabt(entries: SabtEntry[]) {
-  return entries.every((entry) => entry.amount > 0 && entry.amount <= MAX_SABT_AMOUNT);
+  return cashSabtEntries(entries).every((entry) => entry.amount > 0 && entry.amount <= MAX_SABT_AMOUNT);
 }
 
 export function toCashEntriesPayload(entries: SabtEntry[], source: ApiEntrySource) {
   return {
-    entries: entries.map((entry) => ({
+    entries: cashSabtEntries(entries).map((entry) => ({
       kind: entry.kind === "income" ? "INCOME" : "EXPENSE",
       category: entry.category,
       amount: toApiAmount(entry.amount * DIRAMS_PER_SOMONI),
@@ -93,5 +102,5 @@ export function toCashEntriesPayload(entries: SabtEntry[], source: ApiEntrySourc
 }
 
 export function sabtProfit(entries: SabtEntry[]) {
-  return entries.reduce((sum, e) => sum + (e.kind === "income" ? e.amount : -e.amount), 0);
+  return cashSabtEntries(entries).reduce((sum, e) => sum + (e.kind === "income" ? e.amount : -e.amount), 0);
 }

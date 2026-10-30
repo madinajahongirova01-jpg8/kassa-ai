@@ -16,7 +16,7 @@ export function Highlighted({ text, entries }: { text: string; entries: SabtEntr
         key={entry.id}
         className={cn(
           "px-1 font-bold [background:linear-gradient(transparent_55%,var(--mark)_55%,var(--mark)_95%,transparent_95%)]",
-          entry.kind === "income" ? "[--mark:var(--color-green-mid)]" : "[--mark:var(--color-red-soft)]",
+          entry.kind === "income" ? "[--mark:var(--color-green-mid)]" : entry.kind === "debt" ? "[--mark:var(--color-pen-pale)]" : "[--mark:var(--color-red-soft)]",
         )}
       >
         {text.slice(entry.start, entry.end)}
@@ -82,6 +82,7 @@ export function SaidCard({ mode, text, entries, demo, listening, locked, onText,
       <div className="mt-4 flex flex-wrap gap-x-[26px] gap-y-1 font-hand text-xl font-semibold lg:text-[22px]">
         <span className="text-red">● сурх — пул рафт</span>
         <span className="text-green">● сабз — пул омад</span>
+        {entries.some((entry) => entry.kind === "debt") && <span className="text-pen">● кабуд — насия, ба чек намеравад</span>}
       </div>
     </div>
   );

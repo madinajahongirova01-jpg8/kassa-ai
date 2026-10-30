@@ -9,7 +9,7 @@ import { SabtSteps } from "@/components/sabt/SabtSteps";
 import { SaidCard } from "@/components/sabt/SaidCard";
 import { sabtDemo, sabtModes, type SabtMode } from "@/data/sabt";
 import { cn } from "@/lib/cn";
-import { canSaveSabt, MAX_SABT_AMOUNT, parseSabt, sabtProfit, toCashEntriesPayload } from "@/lib/sabt";
+import { canSaveSabt, cashSabtEntries, MAX_SABT_AMOUNT, parseSabt, sabtProfit, toCashEntriesPayload } from "@/lib/sabt";
 import { useSpeechRecognition } from "@/lib/useSpeechRecognition";
 
 function PhotoDrop({ fileName, onFile }: { fileName: string | null; onFile: (name: string) => void }) {
@@ -31,9 +31,9 @@ function saveErrorText(status: number) {
 }
 
 export function SabtView() {
-  const [mode, setMode] = useState<SabtMode>("voice");
+  const [mode, setMode] = useState<SabtMode>("text");
   const [text, setText] = useState(sabtDemo.transcript);
-  const [seconds, setSeconds] = useState(sabtDemo.seconds);
+  const [seconds, setSeconds] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -44,6 +44,7 @@ export function SabtView() {
 
   const entries = useMemo(() => parseSabt(text), [text]);
   const profit = sabtProfit(entries);
+  const cashCount = cashSabtEntries(entries).length;
   const isDemo = text === sabtDemo.transcript;
 
   useEffect(() => {
@@ -108,7 +109,7 @@ export function SabtView() {
 
   const steps = [
     { title: mode === "text" ? "Шумо навиштед" : "Шумо гуфтед", note: mode === "text" ? `${text.length} аломат` : `${seconds} сония`, done: !recording },
-    { title: "AI фаҳмид", note: `${entries.length} сабт, ${profit >= 0 ? "1 фоида" : "1 зарар"}`, done: entries.length > 0 && !recording },
+    { title: "Ҳисоб шуд", note: `${cashCount} сабт, ${profit >= 0 ? "1 фоида" : "1 зарар"}`, done: cashCount > 0 && !recording },
     { title: confirmed ? "Тасдиқ шуд" : "Шумо тасдиқ кунед", note: confirmed ? "дар база нигоҳ дошта шуд" : "чекро бинед →", done: confirmed, active: !confirmed },
   ];
 
@@ -116,19 +117,21 @@ export function SabtView() {
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-7 xl:grid-cols-[minmax(0,1fr)_380px] xl:gap-10">
       <section className="flex min-w-0 flex-col gap-[18px]">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {sabtModes.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 aria-pressed={mode === item.id}
+                disabled={item.disabled}
                 onClick={() => setMode(item.id)}
                 className={cn(
-                  "h-[38px] rounded-full border-[1.5px] border-ink px-4",
+                  "flex h-[38px] items-center gap-1.5 rounded-full border-[1.5px] border-ink px-4 disabled:border-dashed disabled:border-ink-3 disabled:text-ink-3 disabled:hover:text-ink-3",
                   mode === item.id ? "bg-ink font-semibold text-card" : "bg-card font-medium text-ink hover:text-pen",
                 )}
               >
                 {item.label}
+                {item.tag && <span className={cn("text-[11px] font-semibold", mode === item.id ? "text-card/70" : "text-ink-3")}>{item.tag}</span>}
               </button>
             ))}
           </div>
@@ -195,7 +198,7 @@ export function SabtView() {
           ) : (
             <button
               type="button"
-              disabled={entries.length === 0 || recording || saving || isDemo}
+              disabled={cashCount === 0 || recording || saving || isDemo}
               onClick={save}
               className="h-[54px] flex-2 rounded-card border-[1.5px] border-ink bg-pen font-display text-[15px] font-bold text-card shadow-hard active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm disabled:bg-pen-pale disabled:shadow-none"
             >

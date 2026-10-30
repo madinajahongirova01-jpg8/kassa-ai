@@ -35,7 +35,7 @@ export function BottomNav() {
         {tabs.slice(2)}
         <Link
           href="/app/new"
-          aria-label="Гап занед"
+          aria-label="Сабти нав"
           className="absolute top-[-34px] left-1/2 -ml-[38px] flex size-[76px] items-center justify-center rounded-full border-4 border-paper bg-pen text-card shadow-[0_10px_22px_rgba(45,75,216,0.45)] active:scale-95"
         >
           <MicIcon size={30} strokeWidth={2} />

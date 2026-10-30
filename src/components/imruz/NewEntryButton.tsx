@@ -12,7 +12,9 @@ export function NewEntryButton() {
       </span>
       <span>
         <span className="block font-display text-2xl font-bold lg:text-[28px]">+ Сабти нав</span>
-        <span className="block text-sm text-pen-soft lg:text-base">Гӯед ё нависед</span>
+        <span className="block text-sm text-pen-soft lg:text-base">
+          Нависед <span className="ml-1 text-xs opacity-80">· Овоз — ба наздикӣ</span>
+        </span>
       </span>
     </Link>
   );

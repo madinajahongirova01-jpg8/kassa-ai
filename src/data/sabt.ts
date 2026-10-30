@@ -1,9 +1,9 @@
 export type SabtMode = "voice" | "text" | "photo";
 
-export const sabtModes: { id: SabtMode; label: string }[] = [
-  { id: "voice", label: "Овоз" },
+export const sabtModes: { id: SabtMode; label: string; tag?: string; disabled?: boolean }[] = [
   { id: "text", label: "Матн" },
-  { id: "photo", label: "Акси чек" },
+  { id: "voice", label: "Овоз", tag: "санҷишӣ" },
+  { id: "photo", label: "Акси чек", tag: "Ба наздикӣ", disabled: true },
 ];
 
 export const sabtDemo = {

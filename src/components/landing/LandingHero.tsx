@@ -24,7 +24,7 @@ export function LandingHero() {
         </h1>
         <p className="mt-5 max-w-135 text-base leading-relaxed text-ink-2 lg:text-lg">
           Дафтари рақамӣ барои дӯкон ва тиҷорати хурд. Пули даромад, пули рафт ва насияро бо овоз, матн ё акси чек сабт кунед —
-          AI суммаҳоро ҷудо карда, чек месозад.
+          Kassa суммаҳоро ҷудо мекунад ва чек месозад.
         </p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Link
