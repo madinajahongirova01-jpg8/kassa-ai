@@ -11,7 +11,7 @@ export const appNav: Omit<NavItem, "icon">[] = [
   { label: "Ҳисобот", href: "/app/reports" },
 ];
 
-export const liveDataRoutes = ["/app", "/app/debts"];
+export const liveDataRoutes = ["/app", "/app/new", "/app/transactions", "/app/debts", "/app/reports"];
 
 export const adminSidebarNav: NavItem[] = [
   { label: "Шарҳи умумӣ", href: "/admin", icon: "analytics" },
