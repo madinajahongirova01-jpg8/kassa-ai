@@ -21,7 +21,7 @@ export function AdminSidebar() {
           <div className="flex flex-col">
             <span className="font-headline-sm text-headline-sm tracking-tight text-on-surface">Kassa AI</span>
             <span className="font-label-caps text-label-caps tracking-wider text-on-surface-variant uppercase">
-              Super Admin HQ
+              Панели идоракунӣ
             </span>
           </div>
         </Link>
@@ -54,7 +54,7 @@ export function AdminSidebar() {
       <div className="flex flex-col gap-4 px-3">
         <div className="flex flex-col gap-2 rounded-xl bg-surface-container-high/60 p-3.5">
           <div className="flex items-center justify-between">
-            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">TJ-HQ Telemetry</span>
+            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Система</span>
             <span className="inline-block h-2 w-2 rounded-full bg-primary" />
           </div>
           <div className="flex items-center justify-between font-body-sm text-body-sm">
@@ -64,7 +64,7 @@ export function AdminSidebar() {
         </div>
         <div className="flex items-center justify-between px-1 font-body-sm text-body-sm text-on-surface-variant">
           <span className="flex items-center gap-1.5">
-            <Icon name="lock" className="text-[16px]" /> SSL ТҶ-Сервер
+            <Icon name="lock" className="text-[16px]" /> Сервер
           </span>
           <span className="font-label-caps text-label-caps text-on-surface-variant">{systemStatus.region}</span>
         </div>

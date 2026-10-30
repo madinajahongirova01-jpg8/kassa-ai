@@ -25,7 +25,7 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: "Kassa AI — дафтари рақамӣ",
   description:
-    "Ҳисобдории овозӣ ва дафтари насия барои тиҷорати хурди Тоҷикистон",
+    "Ҳисобдории содда ва дафтари насия барои тиҷорати хурд",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

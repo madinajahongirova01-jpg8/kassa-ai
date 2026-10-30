@@ -9,7 +9,7 @@ export function AdminHeader() {
           <div className="flex items-center gap-1.5 rounded-sm bg-surface-container-high px-2 py-1">
             <span className="font-headline-sm text-headline-sm text-primary">KASSA</span>
             <span className="rounded-sm bg-primary px-1 py-0.5 font-label-caps text-label-caps font-semibold text-on-primary">
-              TJ-HQ
+              Admin
             </span>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-secondary-container/60 px-2 py-0.5">
@@ -28,7 +28,8 @@ export function AdminHeader() {
             <Icon name="search" className="pointer-events-none absolute left-3 text-[20px] text-on-surface-variant" />
             <input
               type="text"
-              placeholder="Ҷустуҷӯи тиҷоратҳо, сабтҳои овозӣ ё ID..."
+              placeholder="Ҷустуҷӯ — ба наздикӣ"
+              disabled
               className="w-full rounded-lg border-0 bg-surface-container-lowest py-2 pr-4 pl-10 font-body-sm text-body-sm text-on-surface shadow-[0_1px_3px_rgba(15,42,35,0.04)] placeholder:text-on-surface-variant/60 focus:ring-1 focus:ring-primary focus:outline-none"
             />
           </div>
@@ -54,7 +55,6 @@ export function AdminHeader() {
               className="relative rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
             >
               <Icon name="notifications" className="text-[22px]" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error" />
             </button>
             <div className="h-6 w-px bg-outline-variant/30" />
             <div className="flex items-center gap-3 pl-1">

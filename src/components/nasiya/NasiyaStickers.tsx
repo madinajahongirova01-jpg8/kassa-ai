@@ -95,7 +95,6 @@ function VoiceDebtCard() {
         <MicIcon size={20} strokeWidth={2} />
       </span>
       <HandNote className="text-[22px] leading-tight">«Раҳим 120 насия гирифт»</HandNote>
-      <span className="text-xs">гӯед — варақча худаш пайдо мешавад</span>
     </Link>
   );
 }

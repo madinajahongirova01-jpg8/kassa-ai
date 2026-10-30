@@ -9,7 +9,6 @@ export const sabtModes: { id: SabtMode; label: string; tag?: string; disabled?: 
 export const sabtDemo = {
   transcript: "Имрӯз 2 халта орд гирифтам 600, такси 30, ба коргар 150 додам. Фурӯш 1800 шуд.",
   seconds: 9,
-  receiptNumber: "2804",
   date: "24 май",
   time: "14:35",
 };

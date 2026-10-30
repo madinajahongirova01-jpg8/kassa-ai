@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
-import { CurvedArrow, MicIcon } from "@/components/daftar/icons";
+import { CurvedArrow } from "@/components/daftar/icons";
 import { Marker } from "@/components/daftar/Marker";
 import { Receipt, ReceiptDivider } from "@/components/daftar/Receipt";
 import { Stamp } from "@/components/daftar/Stamp";
@@ -23,16 +23,16 @@ export function LandingHero() {
           Kassa AI <Marker className="px-1.5">менависад.</Marker>
         </h1>
         <p className="mt-5 max-w-135 text-base leading-relaxed text-ink-2 lg:text-lg">
-          Дафтари рақамӣ барои дӯкон ва тиҷорати хурд. Пули даромад, пули рафт ва насияро бо овоз, матн ё акси чек сабт кунед —
-          Kassa суммаҳоро ҷудо мекунад ва чек месозад.
+          Дафтари рақамӣ барои дӯкон ва тиҷорати хурд. Пули даромад, пули рафт ва насияро бо матн сабт кунед — Kassa
+          суммаҳоро ҷудо мекунад ва чек месозад.
         </p>
+        <p className="mt-1.5 text-xs text-ink-3">Овоз ва акси чек — ба наздикӣ.</p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Link
             href="/app/new"
             className="flex items-center justify-center gap-2.5 rounded-tile border-[1.5px] border-ink bg-pen px-6 py-3.5 font-display text-base font-bold text-card shadow-hard hover:bg-[#2340c0] active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-sm"
           >
-            <MicIcon size={20} strokeWidth={2.2} />
-            Гап занед
+            Нависед
           </Link>
           <Link
             href="/app"
@@ -64,7 +64,7 @@ export function LandingHero() {
           <Receipt className="w-full max-w-85 px-5 pt-6 pb-7 text-[13px] sm:ml-auto">
             <div className="text-center font-display text-[15px] font-bold tracking-[0.06em]">ЧЕКИ НАВ</div>
             <div className="mt-1 text-center text-[11px] text-ink-2">
-              №{sabtDemo.receiptNumber} · {sabtDemo.date} · {sabtDemo.time}
+              {sabtDemo.date} · {sabtDemo.time}
             </div>
             <ReceiptDivider className="mt-3 mb-1" />
             {entries.map((entry, index) => (

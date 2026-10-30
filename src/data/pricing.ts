@@ -15,7 +15,7 @@ export const plans: Plan[] = [
 ];
 
 export const appFeatures = [
-  { title: "Сабти нав", note: "бо овоз, матн ё акси чек", href: "/app/new" },
+  { title: "Сабти нав", note: "бо матн; овоз ва акси чек — ба наздикӣ", href: "/app/new" },
   { title: "Имрӯз", note: "фоидаи рӯз дар як ҷумла", href: "/app" },
   { title: "Дафтар", note: "ҳамаи сабтҳо рӯз ба рӯз", href: "/app/transactions" },
   { title: "Насия", note: "кӣ ба шумо чӣ қадар қарздор аст", href: "/app/debts" },
