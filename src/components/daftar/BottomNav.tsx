@@ -27,7 +27,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Менюи асосӣ"
-      className="fixed inset-x-0 bottom-0 z-40 border-t-[1.5px] border-ink bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t-[1.5px] border-ink bg-card pb-[env(safe-area-inset-bottom)] lg:hidden print:hidden"
     >
       <div className="relative mx-auto flex h-[92px] max-w-[600px] items-center justify-around px-2 text-[11px] font-semibold">
         {tabs.slice(0, 2)}
