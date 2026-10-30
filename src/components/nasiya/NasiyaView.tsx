@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
 import { NasiyaFilters } from "@/components/nasiya/NasiyaFilters";
-import { NewCustomerForm, NewDebtForm } from "@/components/nasiya/NasiyaForms";
+import { EditCustomerForm, NewCustomerForm, NewDebtForm } from "@/components/nasiya/NasiyaForms";
 import { NasiyaHeadline, type NasiyaFormKind } from "@/components/nasiya/NasiyaHeadline";
 import { NasiyaSheet } from "@/components/nasiya/NasiyaSheet";
 import { NasiyaStickers } from "@/components/nasiya/NasiyaStickers";
@@ -19,12 +19,14 @@ export function NasiyaView({ book }: { book: DebtBook }) {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(() => (rows.find((r) => r.status === "overdue") ?? rows[0])?.customer.id);
   const [openForm, setOpenForm] = useState<NasiyaFormKind | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const sheetRef = useRef<HTMLElement>(null);
 
   const totals = debtTotals(rows);
   const visible = rows.filter((row) => matchesStatus(row.status, filter) && matchesQuery(row.customer, query));
   const selected = rows.find((row) => row.customer.id === selectedId) ?? rows[0];
+  const editing = customers.find((customer) => customer.id === editingId);
 
   function select(id: string) {
     setSelectedId(id);
@@ -33,11 +35,19 @@ export function NasiyaView({ book }: { book: DebtBook }) {
 
   function toggleForm(kind: NasiyaFormKind) {
     setNotice(null);
+    setEditingId(null);
     setOpenForm((current) => (current === kind ? null : kind));
+  }
+
+  function startEdit(customerId: string) {
+    setNotice(null);
+    setOpenForm(null);
+    setEditingId(customerId);
   }
 
   function saved(customerId: string, text: string) {
     setOpenForm(null);
+    setEditingId(null);
     setNotice(text);
     setFilter("all");
     setQuery("");
@@ -59,6 +69,14 @@ export function NasiyaView({ book }: { book: DebtBook }) {
             onClose={() => setOpenForm(null)}
           />
         )}
+        {editing && (
+          <EditCustomerForm
+            key={editing.id}
+            customer={editing}
+            onSaved={(id) => saved(id, "Маълумоти муштарӣ нигоҳ дошта шуд.")}
+            onClose={() => setEditingId(null)}
+          />
+        )}
         {notice && (
           <HandNote tone="green" role="status" className="text-xl leading-tight">
             {notice}
@@ -67,7 +85,16 @@ export function NasiyaView({ book }: { book: DebtBook }) {
         <NasiyaFilters counts={statusCounts(rows)} filter={filter} onFilter={setFilter} query={query} onQuery={setQuery} />
         <NasiyaStickers rows={visible} empty={rows.length === 0} today={today} selectedId={selected?.customer.id} onSelect={select} />
       </section>
-      {selected && <NasiyaSheet ref={sheetRef} row={selected} today={today} businessName={businessName} />}
+      {selected && (
+        <NasiyaSheet
+          ref={sheetRef}
+          row={selected}
+          today={today}
+          businessName={businessName}
+          editing={editingId === selected.customer.id}
+          onEdit={() => startEdit(selected.customer.id)}
+        />
+      )}
     </div>
   );
 }

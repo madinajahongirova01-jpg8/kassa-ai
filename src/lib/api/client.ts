@@ -3,10 +3,18 @@
 
 export type PostResult<T> = { ok: true; data: T } | { ok: false; status: number; details: string[] };
 
-export async function postJson<T = unknown>(url: string, body: unknown): Promise<PostResult<T>> {
+export function postJson<T = unknown>(url: string, body: unknown): Promise<PostResult<T>> {
+  return sendJson<T>("POST", url, body);
+}
+
+export function patchJson<T = unknown>(url: string, body: unknown): Promise<PostResult<T>> {
+  return sendJson<T>("PATCH", url, body);
+}
+
+async function sendJson<T>(method: "POST" | "PATCH", url: string, body: unknown): Promise<PostResult<T>> {
   try {
     const response = await fetch(url, {
-      method: "POST",
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
       cache: "no-store",

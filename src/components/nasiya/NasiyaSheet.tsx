@@ -30,10 +30,12 @@ type NasiyaSheetProps = {
   row: DebtRow;
   today: string;
   businessName: string | null;
+  editing: boolean;
+  onEdit: () => void;
   ref?: Ref<HTMLElement>;
 };
 
-export function NasiyaSheet({ row, today, businessName, ref }: NasiyaSheetProps) {
+export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: NasiyaSheetProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<{ customerId: string; text: string } | null>(null);
@@ -76,6 +78,14 @@ export function NasiyaSheet({ row, today, businessName, ref }: NasiyaSheetProps)
             {customer.phone}
             {customer.note && ` · ${customer.note}`}
           </div>
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-expanded={editing}
+            className="mt-1 text-sm font-semibold text-ink-2 hover:text-pen print:hidden"
+          >
+            ✎ Таҳрир
+          </button>
         </div>
         <div className="text-right">
           <div className={cn("font-display text-[30px] leading-tight font-extrabold", overdue && "text-red", paid && "text-green")}>

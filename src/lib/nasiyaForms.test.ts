@@ -9,6 +9,7 @@ import {
   parseDebtAmount,
   somoniToDirams,
   toDebtPayload,
+  updateCustomer,
   type DebtForm,
   type Post,
 } from "@/lib/nasiyaForms";
@@ -149,6 +150,39 @@ describe("createCustomer", () => {
     expect(await createCustomer({ name: "Зафар", phone: "" }, fakePost({ ok: false, status: 0, details: [] }).post)).toEqual({
       ok: false,
       error: "Сервер ҳоло ҷавоб намедиҳад. Сабт нигоҳ дошта нашуд, боз кӯшиш кунед.",
+    });
+  });
+});
+
+describe("updateCustomer", () => {
+  it("sends the trimmed name and phone to the customer's own URL", async () => {
+    const { post, calls } = fakePost({ ok: true, data: { id: CUSTOMER_ID } });
+    const result = await updateCustomer(CUSTOMER_ID, { name: "  Зафар Каримов ", phone: " +992 93 555 7890 " }, post);
+
+    expect(result).toEqual({ ok: true, data: { id: CUSTOMER_ID } });
+    expect(calls).toEqual([{ url: `/api/customers/${CUSTOMER_ID}`, body: { name: "Зафар Каримов", phone: "+992 93 555 7890" } }]);
+  });
+
+  it("clears the phone with null when the field is emptied", async () => {
+    const { post, calls } = fakePost({ ok: true, data: { id: CUSTOMER_ID } });
+    await updateCustomer(CUSTOMER_ID, { name: "Зафар", phone: "  " }, post);
+    expect(calls[0].body).toEqual({ name: "Зафар", phone: null });
+  });
+
+  it("does not call the API for an invalid name or phone", async () => {
+    const { post, calls } = fakePost({ ok: true, data: {} });
+    expect(await updateCustomer(CUSTOMER_ID, { name: "", phone: "" }, post)).toEqual({ ok: false, error: "Номи муштариро нависед." });
+    expect(await updateCustomer(CUSTOMER_ID, { name: "Зафар", phone: "занг занед" }, post)).toEqual({
+      ok: false,
+      error: "Рақами телефонро дуруст нависед, масалан +992 90 123 45 67.",
+    });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("explains a missing customer", async () => {
+    expect(await updateCustomer(CUSTOMER_ID, { name: "Зафар", phone: "" }, fakePost({ ok: false, status: 404, details: [] }).post)).toEqual({
+      ok: false,
+      error: "Ин муштарӣ ёфт нашуд. Саҳифаро нав кунед.",
     });
   });
 });

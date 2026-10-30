@@ -1,4 +1,4 @@
-import { postJson, type PostResult } from "@/lib/api/client";
+import { patchJson, postJson, type PostResult } from "@/lib/api/client";
 import type { ApiCustomer, ApiDebt } from "@/lib/api/types";
 import { normalizePhone } from "@/lib/contact";
 import { DIRAMS_PER_SOMONI, toApiAmount } from "@/lib/money";
@@ -96,6 +96,11 @@ export function toCustomerPayload(form: CustomerForm) {
   return phone ? { name: form.name.trim(), phone } : { name: form.name.trim() };
 }
 
+// An empty phone on edit means "remove it", which the API expects as null.
+export function toCustomerUpdatePayload(form: CustomerForm) {
+  return { name: form.name.trim(), phone: form.phone.trim() || null };
+}
+
 export function toDebtPayload(form: DebtForm, dirams: number, today: string) {
   const payload = {
     amount: toApiAmount(dirams),
@@ -114,6 +119,7 @@ function commonErrorText(status: number): string {
 
 export function customerErrorText(status: number): string {
   if (status === 400) return "Маълумоти муштариро санҷед: ном ҳатмист, телефон — бо рақамҳо.";
+  if (status === 404) return "Ин муштарӣ ёфт нашуд. Саҳифаро нав кунед.";
   return commonErrorText(status);
 }
 
@@ -128,6 +134,14 @@ export async function createCustomer(form: CustomerForm, post: Post = postJson):
   const first = errors.name ?? errors.phone;
   if (first) return { ok: false, error: first };
   const result = await post<ApiCustomer>("/api/customers", toCustomerPayload(form));
+  return result.ok ? { ok: true, data: result.data } : { ok: false, error: customerErrorText(result.status) };
+}
+
+export async function updateCustomer(customerId: string, form: CustomerForm, patch: Post = patchJson): Promise<FormResult<ApiCustomer>> {
+  const errors = validateCustomer(form);
+  const first = errors.name ?? errors.phone;
+  if (first) return { ok: false, error: first };
+  const result = await patch<ApiCustomer>(`/api/customers/${encodeURIComponent(customerId)}`, toCustomerUpdatePayload(form));
   return result.ok ? { ok: true, data: result.data } : { ok: false, error: customerErrorText(result.status) };
 }
 

@@ -66,7 +66,7 @@ export function isUuid(value: string) {
 
 // Data changes made by the signed-in user: same-origin check, only the listed body fields are passed on,
 // and the session token goes to the API as a Bearer header. The API checks ownership and amounts.
-export async function forwardMutation(request: NextRequest, path: string, fields: string[]) {
+export async function forwardMutation(request: NextRequest, path: string, fields: string[], method: "POST" | "PATCH" = "POST") {
   const rejected = rejectCrossOrigin(request);
   if (rejected) return rejected;
 
@@ -77,7 +77,7 @@ export async function forwardMutation(request: NextRequest, path: string, fields
   if (body === null) return errorResponse({ status: 400, message: "Expected a JSON object" });
 
   const payload = Object.fromEntries(fields.filter((field) => body[field] !== undefined).map((field) => [field, body[field]]));
-  const result = await apiRequest<unknown>(path, { method: "POST", body: payload, token, clientIp: clientIp(request) });
+  const result = await apiRequest<unknown>(path, { method, body: payload, token, clientIp: clientIp(request) });
   if (!result.ok) {
     const response = errorResponse(result.error);
     if (result.error.status === 401) clearSessionCookie(response);

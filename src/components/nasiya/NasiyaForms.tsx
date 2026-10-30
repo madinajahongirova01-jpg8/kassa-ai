@@ -3,16 +3,20 @@
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
 import type { DebtCustomer } from "@/data/debts";
+import type { ApiCustomer } from "@/lib/api/types";
 import { cn } from "@/lib/cn";
 import {
   createCustomer,
   createDebt,
   MAX_CUSTOMER_NAME,
   MAX_DEBT_NOTE,
+  updateCustomer,
   validateCustomer,
   validateDebt,
   type CustomerErrors,
+  type CustomerForm as CustomerFormValues,
   type DebtErrors,
+  type FormResult,
 } from "@/lib/nasiyaForms";
 
 const fieldClass =
@@ -91,12 +95,24 @@ function useSubmitGuard() {
   return { pending, run };
 }
 
-export function NewCustomerForm({ onCreated, onClose }: { onCreated: (id: string) => void; onClose: () => void }) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+type CustomerFormProps = {
+  title: string;
+  submitText: string;
+  idPrefix: string;
+  initial: CustomerFormValues;
+  save: (form: CustomerFormValues) => Promise<FormResult<ApiCustomer>>;
+  onSaved: (id: string) => void;
+  onClose: () => void;
+};
+
+function CustomerForm({ title, submitText, idPrefix, initial, save, onSaved, onClose }: CustomerFormProps) {
+  const [name, setName] = useState(initial.name);
+  const [phone, setPhone] = useState(initial.phone);
   const [errors, setErrors] = useState<CustomerErrors>({});
   const [error, setError] = useState<string | null>(null);
   const { pending, run } = useSubmitGuard();
+  const nameId = `${idPrefix}-name`;
+  const phoneId = `${idPrefix}-phone`;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,33 +122,33 @@ export function NewCustomerForm({ onCreated, onClose }: { onCreated: (id: string
     setError(null);
     if (found.name || found.phone) return;
     void run(async () => {
-      const result = await createCustomer(form);
+      const result = await save(form);
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      onCreated(result.data.id);
+      onSaved(result.data.id);
     });
   }
 
   return (
-    <FormShell title="Муштарии нав" onSubmit={submit} onClose={onClose} pending={pending} submitText="Муштариро илова кунед" error={error}>
-      <Field id="customer-name" label="Номи муштарӣ" error={errors.name}>
+    <FormShell title={title} onSubmit={submit} onClose={onClose} pending={pending} submitText={submitText} error={error}>
+      <Field id={nameId} label="Номи муштарӣ" error={errors.name}>
         <input
-          id="customer-name"
+          id={nameId}
           value={name}
           onChange={(event) => setName(event.target.value)}
           maxLength={MAX_CUSTOMER_NAME}
           autoComplete="off"
           autoFocus
           aria-invalid={Boolean(errors.name)}
-          aria-describedby={errors.name ? "customer-name-error" : undefined}
+          aria-describedby={errors.name ? `${nameId}-error` : undefined}
           className={fieldClass}
         />
       </Field>
-      <Field id="customer-phone" label="Телефон" hint="ихтиёрӣ" error={errors.phone}>
+      <Field id={phoneId} label="Телефон" hint="ихтиёрӣ" error={errors.phone}>
         <input
-          id="customer-phone"
+          id={phoneId}
           type="tel"
           inputMode="tel"
           value={phone}
@@ -140,11 +156,39 @@ export function NewCustomerForm({ onCreated, onClose }: { onCreated: (id: string
           placeholder="+992 90 123 45 67"
           autoComplete="off"
           aria-invalid={Boolean(errors.phone)}
-          aria-describedby={errors.phone ? "customer-phone-error" : undefined}
+          aria-describedby={errors.phone ? `${phoneId}-error` : undefined}
           className={fieldClass}
         />
       </Field>
     </FormShell>
+  );
+}
+
+export function NewCustomerForm({ onCreated, onClose }: { onCreated: (id: string) => void; onClose: () => void }) {
+  return (
+    <CustomerForm
+      title="Муштарии нав"
+      submitText="Муштариро илова кунед"
+      idPrefix="customer"
+      initial={{ name: "", phone: "" }}
+      save={(form) => createCustomer(form)}
+      onSaved={onCreated}
+      onClose={onClose}
+    />
+  );
+}
+
+export function EditCustomerForm({ customer, onSaved, onClose }: { customer: DebtCustomer; onSaved: (id: string) => void; onClose: () => void }) {
+  return (
+    <CustomerForm
+      title="Таҳрири муштарӣ"
+      submitText="Тағйиротро нигоҳ доред"
+      idPrefix="edit-customer"
+      initial={{ name: customer.name, phone: customer.phone }}
+      save={(form) => updateCustomer(customer.id, form)}
+      onSaved={onSaved}
+      onClose={onClose}
+    />
   );
 }
 
