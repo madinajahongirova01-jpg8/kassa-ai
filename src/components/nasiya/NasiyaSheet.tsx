@@ -5,6 +5,7 @@ import { useState, type Ref } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
 import { postJson, requestErrorText } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
+import { normalizePhone, phoneProblemText, reminderText, smsHref, telHref } from "@/lib/contact";
 import { dayMonth, lastPayment, type DebtRow } from "@/lib/debts";
 import { formatMoney } from "@/lib/format";
 import { toApiAmount } from "@/lib/money";
@@ -36,15 +37,17 @@ export function NasiyaSheet({ row, today, businessName, ref }: NasiyaSheetProps)
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<{ customerId: string; text: string } | null>(null);
+  const [phoneNotice, setPhoneNotice] = useState<{ customerId: string; where: "call" | "sms" } | null>(null);
   const { customer, balance, status, history } = row;
   const paid = status === "paid";
   const overdue = status === "overdue";
   const line = dueLine(row, today);
-  const firstName = customer.name.split(" ")[0];
+  const firstName = customer.name.trim().split(/\s+/)[0];
   const amount = `${formatMoney(balance, { unit: false })} сомонӣ`;
-  const from = businessName ? ` Аз ${businessName}.` : "";
-  const message = `Салом, ${firstName}!${from} Қарзи шумо ${amount} аст. Агар имкон бошад, то охири ҳафта баргардонед. Ташаккур!`;
-  const phone = customer.phone.replace(/\s/g, "");
+  const message = reminderText({ name: customer.name, businessName, balance });
+  const phone = normalizePhone(customer.phone);
+  const phoneProblem = phone.ok ? null : phoneProblemText(phone.reason);
+  const noticeAt = (where: "call" | "sms") => phoneProblem !== null && phoneNotice?.customerId === customer.id && phoneNotice.where === where;
 
   // The whole remaining balance as one payment; the API splits it across the open debts atomically
   // and refuses it (422) if it would exceed what is still owed.
@@ -110,10 +113,21 @@ export function NasiyaSheet({ row, today, businessName, ref }: NasiyaSheetProps)
         >
           {pending ? "Сабт мешавад…" : "Пардохт қабул шуд"}
         </button>
-        <a href={`tel:${phone}`} className={cn(buttonClass, "h-[46px] rounded-tile")}>
-          Занг задан
-        </a>
+        {phone.ok ? (
+          <a href={telHref(phone.phone)} className={cn(buttonClass, "h-[46px] rounded-tile")}>
+            Занг задан
+          </a>
+        ) : (
+          <button type="button" onClick={() => setPhoneNotice({ customerId: customer.id, where: "call" })} className={cn(buttonClass, "h-[46px] rounded-tile")}>
+            Занг задан
+          </button>
+        )}
       </div>
+      {noticeAt("call") && (
+        <HandNote tone="red" role="alert" className="text-xl leading-tight">
+          {phoneProblem}
+        </HandNote>
+      )}
       {error?.customerId === customer.id && (
         <HandNote tone="red" role="alert" className="text-xl leading-tight">
           {error.text}
@@ -141,10 +155,21 @@ export function NasiyaSheet({ row, today, businessName, ref }: NasiyaSheetProps)
             <a href={`https://t.me/share/url?url=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer" className={cn(buttonClass, "h-[38px]")}>
               Telegram
             </a>
-            <a href={`sms:${phone}?body=${encodeURIComponent(message)}`} className={cn(buttonClass, "h-[38px]")}>
-              SMS
-            </a>
+            {phone.ok ? (
+              <a href={smsHref(phone.phone, message)} className={cn(buttonClass, "h-[38px]")}>
+                SMS
+              </a>
+            ) : (
+              <button type="button" onClick={() => setPhoneNotice({ customerId: customer.id, where: "sms" })} className={cn(buttonClass, "h-[38px]")}>
+                SMS
+              </button>
+            )}
           </div>
+          {noticeAt("sms") && (
+            <HandNote tone="red" role="alert" className="mt-2 block text-xl leading-tight">
+              {phoneProblem}
+            </HandNote>
+          )}
         </div>
       )}
     </section>

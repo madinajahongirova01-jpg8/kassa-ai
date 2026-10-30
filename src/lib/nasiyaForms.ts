@@ -1,5 +1,6 @@
 import { postJson, type PostResult } from "@/lib/api/client";
 import type { ApiCustomer, ApiDebt } from "@/lib/api/types";
+import { normalizePhone } from "@/lib/contact";
 import { DIRAMS_PER_SOMONI, toApiAmount } from "@/lib/money";
 
 export const MAX_CUSTOMER_NAME = 100;
@@ -28,7 +29,7 @@ export function customerNameError(name: string): string | null {
 
 export function customerPhoneError(phone: string): string | null {
   const trimmed = phone.trim();
-  if (!trimmed || PHONE_PATTERN.test(trimmed)) return null;
+  if (!trimmed || (PHONE_PATTERN.test(trimmed) && normalizePhone(trimmed).ok)) return null;
   return "Рақами телефонро дуруст нависед, масалан +992 90 123 45 67.";
 }
 
