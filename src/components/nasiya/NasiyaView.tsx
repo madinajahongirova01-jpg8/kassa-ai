@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
+import { NasiyaCalculator } from "@/components/nasiya/NasiyaCalculator";
 import { NasiyaFilters } from "@/components/nasiya/NasiyaFilters";
 import { EditCustomerForm, NewCustomerForm, NewDebtForm } from "@/components/nasiya/NasiyaForms";
 import { NasiyaHeadline, type NasiyaFormKind } from "@/components/nasiya/NasiyaHeadline";
@@ -59,6 +60,7 @@ export function NasiyaView({ book }: { book: DebtBook }) {
     <div className="grid gap-5 lg:h-[calc(100dvh-116px)] lg:min-h-[700px] lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-[30px] xl:grid-cols-[minmax(0,1fr)_400px]">
       <section className="flex min-w-0 flex-col gap-4 lg:gap-[18px]">
         <NasiyaHeadline total={totals.total} overdueCount={totals.overdueCount} openForm={openForm} onOpenForm={toggleForm} />
+        <NasiyaCalculator />
         {openForm === "customer" && <NewCustomerForm onCreated={(id) => saved(id, "Муштарӣ илова шуд.")} onClose={() => setOpenForm(null)} />}
         {openForm === "debt" && (
           <NewDebtForm
