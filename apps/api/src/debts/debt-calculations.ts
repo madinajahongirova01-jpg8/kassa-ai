@@ -96,3 +96,12 @@ export function allocatePayment(debts: (DebtBalance & { id: string })[], payment
   }
   return { ok: true, parts };
 }
+
+export function revertPayment(balance: DebtBalance, paymentDirams: number): { paidDirams: number; status: DebtStatus } {
+  assertValidBalance(balance);
+  if (!Number.isSafeInteger(paymentDirams) || paymentDirams <= 0 || paymentDirams > balance.paidDirams) {
+    throw new RangeError('Cancelled payment must be a positive amount not above what was paid');
+  }
+  const next = { amountDirams: balance.amountDirams, paidDirams: balance.paidDirams - paymentDirams };
+  return { paidDirams: next.paidDirams, status: debtStatusFor(next) };
+}

@@ -59,6 +59,8 @@ function payment(overrides: Partial<ApiPaymentListItem>): ApiPaymentListItem {
     method: "CASH",
     paidOn: "2026-10-25",
     note: null,
+    groupId: "pay",
+    cancelledAt: null,
     createdAt: "2026-10-25T10:00:00.000Z",
     debt: { id: "debt", description: "Орд", occurredOn: "2026-10-20" },
     customer: { id: CUSTOMER, name: "Зафар Мирзоев" },
@@ -122,6 +124,12 @@ describe("buildLedgerEntries", () => {
     expect(entries.map((entry) => entry.id)).toEqual(["sale", "goods", "taxi", "flour", "debt-debt", "payment-pay"]);
     expect(entries[4]).toMatchObject({ kind: "debtGiven", title: "Зафар Мирзоев насия гирифт: Орд", amount: 12_000, source: null });
     expect(entries[5]).toMatchObject({ kind: "debtPaid", title: "Зафар Мирзоев қарзашро баргардонд", amount: 5_000 });
+  });
+
+  it("leaves cancelled payments out of the Daftar", () => {
+    const entries = buildLedgerEntries(data({ payments: [payment({}), payment({ id: "undone", cancelledAt: "2026-10-26T08:00:00.000Z" })] }), "2026-10");
+    expect(entries.map((entry) => entry.id)).not.toContain("payment-undone");
+    expect(entries.map((entry) => entry.id)).toContain("payment-pay");
   });
 
   it("returns nothing for a month without records", () => {

@@ -87,12 +87,15 @@ model Payment {
   method       PaymentMethod @default(CASH)
   paidOn       DateTime      @map("paid_on") @db.Date
   note         String?
+  groupId      String        @default(dbgenerated("gen_random_uuid()")) @map("group_id") @db.Uuid
+  cancelledAt  DateTime?     @map("cancelled_at")
   createdAt    DateTime      @default(now()) @map("created_at")
 
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   debt  Debt @relation(fields: [debtId, ownerId], references: [id, ownerId], onDelete: NoAction)
 
   @@index([debtId])
+  @@index([groupId])
   @@map("payments")
 }
 

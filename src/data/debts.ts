@@ -30,6 +30,10 @@ export type DebtEvent = {
   date: string;
   time: string;
   method?: PaymentMethod;
+  paid?: number;
+  dueOn?: string | null;
+  groupId?: string;
+  cancelled?: boolean;
 };
 
 export type DebtBook = {

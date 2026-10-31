@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type Ref } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
 import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
+import { NasiyaSheetEditor } from "@/components/nasiya/NasiyaSheetEditor";
 import { PaymentForm } from "@/components/nasiya/PaymentForm";
 import { cn } from "@/lib/cn";
 import { normalizePhone, phoneProblemText, reminderAmount, reminderText, smsHref, telHref } from "@/lib/contact";
@@ -37,10 +38,12 @@ type NasiyaSheetProps = {
   businessName: string | null;
   editing: boolean;
   onEdit: () => void;
+  onEditClose: () => void;
+  onEditSaved: () => void;
   ref?: Ref<HTMLElement>;
 };
 
-export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: NasiyaSheetProps) {
+export function NasiyaSheet({ row, today, businessName, editing, onEdit, onEditClose, onEditSaved, ref }: NasiyaSheetProps) {
   const router = useRouter();
   const [refreshing, startRefresh] = useTransition();
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -86,14 +89,15 @@ export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: 
             {customer.phone}
             {customer.note && ` · ${customer.note}`}
           </div>
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-expanded={editing}
-            className="mt-1 text-sm font-semibold text-ink-2 hover:text-pen print:hidden"
-          >
-            {t("nasiya.sheet.edit")}
-          </button>
+          {!editing && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="mt-1 text-sm font-semibold text-ink-2 hover:text-pen print:hidden"
+            >
+              {t("nasiya.sheet.edit")}
+            </button>
+          )}
         </div>
         <div className="text-right">
           <div className={cn("font-display text-[30px] leading-tight font-extrabold", overdue && "text-red", paid && "text-green")}>
@@ -107,98 +111,105 @@ export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: 
         {line.text}
       </HandNote>
 
-      <ul className="flex flex-col font-mono text-[13px]">
-        {history.map((event) => (
-          <li key={event.id} className="flex gap-3.5 border-b border-grid py-[9px]">
-            <span className="w-12 shrink-0 text-ink-3">{dayMonth(event.date, today, locale)}</span>
-            <span className="min-w-0 flex-1">
-              {historyNote(event, locale)}
-              {event.type === "payment" && event.method && <span className="text-ink-3"> · {t(`nasiya.methods.${event.method}`)}</span>}
-            </span>
-            <span className={cn("font-bold", event.type === "payment" && "text-green")}>{formatMoney(event.amount, { unit: false, locale })}</span>
-          </li>
-        ))}
-        <li className="flex gap-3.5 border-b-[1.5px] border-ink py-[9px]">
-          <span className="w-12 shrink-0 text-ink-3">{t("nasiya.today")}</span>
-          <span className="flex-1 font-bold">{t("nasiya.sheet.balance")}</span>
-          <span className={cn("font-bold", overdue && "text-red", paid && "text-green")}>{formatMoney(balance, { unit: false, locale })}</span>
-        </li>
-      </ul>
+      {editing ? (
+        <NasiyaSheetEditor key={customer.id} customer={customer} history={history} today={today} onSaved={onEditSaved} onClose={onEditClose} />
+      ) : (
+        <>
+          <ul className="flex flex-col font-mono text-[13px]">
+            {history.map((event) => (
+              <li key={event.id} className={cn("flex gap-3.5 border-b border-grid py-[9px]", event.cancelled && "text-ink-3")}>
+                <span className="w-12 shrink-0 text-ink-3">{dayMonth(event.date, today, locale)}</span>
+                <span className={cn("min-w-0 flex-1", event.cancelled && "line-through")}>
+                  {historyNote(event, locale)}
+                  {event.type === "payment" && event.method && <span className="text-ink-3"> · {t(`nasiya.methods.${event.method}`)}</span>}
+                </span>
+                {event.cancelled && <span className="shrink-0 font-sans text-xs font-semibold text-red">{t("nasiya.edit.cancelled")}</span>}
+                <span className={cn("font-bold", event.cancelled ? "line-through" : event.type === "payment" && "text-green")}>{formatMoney(event.amount, { unit: false, locale })}</span>
+              </li>
+            ))}
+            <li className="flex gap-3.5 border-b-[1.5px] border-ink py-[9px]">
+              <span className="w-12 shrink-0 text-ink-3">{t("nasiya.today")}</span>
+              <span className="flex-1 font-bold">{t("nasiya.sheet.balance")}</span>
+              <span className={cn("font-bold", overdue && "text-red", paid && "text-green")}>{formatMoney(balance, { unit: false, locale })}</span>
+            </li>
+          </ul>
 
-      <div className="flex gap-2.5">
-        <button
-          type="button"
-          disabled={paid || paying || refreshing}
-          onClick={openPayment}
-          aria-expanded={paying}
-          className="h-[46px] flex-1 rounded-tile border-[1.5px] border-ink bg-pen px-2 text-sm font-bold whitespace-nowrap text-card shadow-hard-sm active:translate-x-px active:translate-y-px active:shadow-none disabled:border-line-strong disabled:bg-line disabled:text-ink-3 disabled:shadow-none"
-        >
-          {refreshing ? t("nasiya.saving") : t("nasiya.payment.title")}
-        </button>
-        {phone.ok ? (
-          <a href={telHref(phone.phone)} className={cn(buttonClass, "h-[46px] rounded-tile")}>
-            {t("nasiya.sheet.call")}
-          </a>
-        ) : (
-          <button type="button" onClick={() => setPhoneNotice({ customerId: customer.id, where: "call" })} className={cn(buttonClass, "h-[46px] rounded-tile")}>
-            {t("nasiya.sheet.call")}
-          </button>
-        )}
-      </div>
-      {noticeAt("call") && (
-        <HandNote tone="red" role="alert" className="text-xl leading-tight">
-          {phoneProblem}
-        </HandNote>
-      )}
-      {paying && !paid && (
-        <PaymentForm key={customer.id} customerId={customer.id} balance={balance} onPaid={paymentSaved} onCancel={() => setPayingId(null)} />
-      )}
-      {paidId === customer.id && !refreshing && (
-        <HandNote tone="green" role="status" className="text-xl leading-tight">
-          {t("nasiya.payment.saved")}
-        </HandNote>
-      )}
-
-      {!paid && (
-        <div className="mt-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="font-bold">{t("nasiya.sheet.reminderTitle")}</span>
-            <HandNote className="text-xl">{t("nasiya.sheet.reminderNote")}</HandNote>
-          </div>
-          <p className="mt-2.5 rounded-[16px_16px_16px_4px] bg-pen-mist px-3.5 py-3 text-[13.5px] leading-normal">
-            {t("nasiya.reminder.hello", { name: firstName })}
-            {businessName && (
-              <>
-                {" "}
-                {t("nasiya.reminder.fromBefore")}
-                <b>{businessName}</b>
-                {t("nasiya.reminder.fromAfter")}
-              </>
-            )}{" "}
-            {t("nasiya.reminder.debtBefore")}
-            <b>{amount}</b>
-            {t("nasiya.reminder.debtAfter")}
-          </p>
-          <div className="mt-2.5 flex gap-2">
-            <a href={`https://t.me/share/url?url=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer" className={cn(buttonClass, "h-[38px]")}>
-              Telegram
-            </a>
+          <div className="flex gap-2.5">
+            <button
+              type="button"
+              disabled={paid || paying || refreshing}
+              onClick={openPayment}
+              aria-expanded={paying}
+              className="h-[46px] flex-1 rounded-tile border-[1.5px] border-ink bg-pen px-2 text-sm font-bold whitespace-nowrap text-card shadow-hard-sm active:translate-x-px active:translate-y-px active:shadow-none disabled:border-line-strong disabled:bg-line disabled:text-ink-3 disabled:shadow-none"
+            >
+              {refreshing ? t("nasiya.saving") : t("nasiya.payment.title")}
+            </button>
             {phone.ok ? (
-              <a href={smsHref(phone.phone, message)} className={cn(buttonClass, "h-[38px]")}>
-                SMS
+              <a href={telHref(phone.phone)} className={cn(buttonClass, "h-[46px] rounded-tile")}>
+                {t("nasiya.sheet.call")}
               </a>
             ) : (
-              <button type="button" onClick={() => setPhoneNotice({ customerId: customer.id, where: "sms" })} className={cn(buttonClass, "h-[38px]")}>
-                SMS
+              <button type="button" onClick={() => setPhoneNotice({ customerId: customer.id, where: "call" })} className={cn(buttonClass, "h-[46px] rounded-tile")}>
+                {t("nasiya.sheet.call")}
               </button>
             )}
           </div>
-          {noticeAt("sms") && (
-            <HandNote tone="red" role="alert" className="mt-2 block text-xl leading-tight">
+          {noticeAt("call") && (
+            <HandNote tone="red" role="alert" className="text-xl leading-tight">
               {phoneProblem}
             </HandNote>
           )}
-        </div>
+          {paying && !paid && (
+            <PaymentForm key={customer.id} customerId={customer.id} balance={balance} onPaid={paymentSaved} onCancel={() => setPayingId(null)} />
+          )}
+          {paidId === customer.id && !refreshing && (
+            <HandNote tone="green" role="status" className="text-xl leading-tight">
+              {t("nasiya.payment.saved")}
+            </HandNote>
+          )}
+
+          {!paid && (
+            <div className="mt-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-bold">{t("nasiya.sheet.reminderTitle")}</span>
+                <HandNote className="text-xl">{t("nasiya.sheet.reminderNote")}</HandNote>
+              </div>
+              <p className="mt-2.5 rounded-[16px_16px_16px_4px] bg-pen-mist px-3.5 py-3 text-[13.5px] leading-normal">
+                {t("nasiya.reminder.hello", { name: firstName })}
+                {businessName && (
+                  <>
+                    {" "}
+                    {t("nasiya.reminder.fromBefore")}
+                    <b>{businessName}</b>
+                    {t("nasiya.reminder.fromAfter")}
+                  </>
+                )}{" "}
+                {t("nasiya.reminder.debtBefore")}
+                <b>{amount}</b>
+                {t("nasiya.reminder.debtAfter")}
+              </p>
+              <div className="mt-2.5 flex gap-2">
+                <a href={`https://t.me/share/url?url=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer" className={cn(buttonClass, "h-[38px]")}>
+                  Telegram
+                </a>
+                {phone.ok ? (
+                  <a href={smsHref(phone.phone, message)} className={cn(buttonClass, "h-[38px]")}>
+                    SMS
+                  </a>
+                ) : (
+                  <button type="button" onClick={() => setPhoneNotice({ customerId: customer.id, where: "sms" })} className={cn(buttonClass, "h-[38px]")}>
+                    SMS
+                  </button>
+                )}
+              </div>
+              {noticeAt("sms") && (
+                <HandNote tone="red" role="alert" className="mt-2 block text-xl leading-tight">
+                  {phoneProblem}
+                </HandNote>
+              )}
+            </div>
+          )}
+        </>
       )}
     </section>
   );

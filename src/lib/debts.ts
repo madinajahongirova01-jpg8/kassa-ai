@@ -96,7 +96,7 @@ export function openDebtorsByUrgency(rows: DebtRow[]): DebtRow[] {
 }
 
 export function lastPayment(row: DebtRow) {
-  return row.history.findLast((e) => e.type === "payment") ?? null;
+  return row.history.findLast((e) => e.type === "payment" && !e.cancelled) ?? null;
 }
 
 export function debtTotals(rows: DebtRow[]) {

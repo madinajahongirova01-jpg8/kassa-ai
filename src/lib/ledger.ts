@@ -122,7 +122,7 @@ export function buildLedgerEntries(data: LedgerApiData, month: string, locale: L
   return [
     ...data.cashEntries.filter((item) => inMonth(item.occurredOn)).map(cashToLedger),
     ...data.debts.filter((debt) => inMonth(debt.occurredOn)).map((debt) => debtToLedger(debt, names, locale)),
-    ...data.payments.filter((payment) => inMonth(payment.paidOn)).map((payment) => paymentToLedger(payment, locale)),
+    ...data.payments.filter((payment) => payment.cancelledAt === null && inMonth(payment.paidOn)).map((payment) => paymentToLedger(payment, locale)),
   ];
 }
 

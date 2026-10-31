@@ -4,7 +4,7 @@ import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
 import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import type { DebtCustomer } from "@/data/debts";
-import { patchJson, postJson } from "@/lib/api/client";
+import { postJson } from "@/lib/api/client";
 import type { ApiCustomer } from "@/lib/api/types";
 import { cn } from "@/lib/cn";
 import {
@@ -12,7 +12,6 @@ import {
   createDebt,
   MAX_CUSTOMER_NAME,
   MAX_DEBT_NOTE,
-  updateCustomer,
   validateCustomer,
   validateDebt,
   type CustomerErrors,
@@ -180,22 +179,6 @@ export function NewCustomerForm({ onCreated, onClose }: { onCreated: (id: string
       initial={{ name: "", phone: "" }}
       save={(form) => createCustomer(form, postJson, locale)}
       onSaved={onCreated}
-      onClose={onClose}
-    />
-  );
-}
-
-export function EditCustomerForm({ customer, onSaved, onClose }: { customer: DebtCustomer; onSaved: (id: string) => void; onClose: () => void }) {
-  const t = useT();
-  const locale = useLocale();
-  return (
-    <CustomerForm
-      title={t("nasiya.forms.editCustomer")}
-      submitText={t("nasiya.forms.saveChanges")}
-      idPrefix="edit-customer"
-      initial={{ name: customer.name, phone: customer.phone }}
-      save={(form) => updateCustomer(customer.id, form, patchJson, locale)}
-      onSaved={onSaved}
       onClose={onClose}
     />
   );

@@ -60,6 +60,8 @@ const payment: ApiPaymentListItem = {
   method: "CASH",
   paidOn: "2026-10-25",
   note: null,
+  groupId: "pay",
+  cancelledAt: null,
   createdAt: "2026-10-25T10:00:00.000Z",
   debt: { id: "debt", description: "Орд", occurredOn: "2026-10-20" },
   customer: { id: CUSTOMER, name: "Зафар Мирзоев" },

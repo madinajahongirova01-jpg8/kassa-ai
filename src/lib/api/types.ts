@@ -39,6 +39,8 @@ export type ApiPaymentListItem = {
   method: PaymentMethod;
   paidOn: string;
   note: string | null;
+  groupId: string;
+  cancelledAt: string | null;
   createdAt: string;
   debt: { id: string; description: string; occurredOn: string };
   customer: { id: string; name: string };

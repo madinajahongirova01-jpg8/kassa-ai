@@ -14,6 +14,8 @@ export function toDebtEvent(debt: ApiDebt): DebtEvent {
     amount: toDirams(debt.amount),
     date: debt.occurredOn,
     time: businessTime(debt.createdAt),
+    paid: toDirams(debt.paidAmount),
+    dueOn: debt.dueOn,
   };
 }
 
@@ -28,6 +30,8 @@ export function toPaymentEvent(payment: ApiPaymentListItem): DebtEvent {
     date: payment.paidOn,
     time: businessTime(payment.createdAt),
     method: payment.method,
+    groupId: payment.groupId,
+    cancelled: payment.cancelledAt !== null,
   };
 }
 
@@ -60,7 +64,7 @@ export async function loadDebtBook(returnTo: string, { withPayments }: { withPay
     sessionGet<ApiMe>("/auth/me", returnTo),
     sessionGet<ApiCustomer[]>("/customers", returnTo),
     sessionGet<ApiDebt[]>("/debts", returnTo),
-    withPayments ? sessionGetAll<ApiPaymentListItem>("/payments", {}, returnTo) : Promise.resolve([]),
+    withPayments ? sessionGetAll<ApiPaymentListItem>("/payments", { includeCancelled: "true" }, returnTo) : Promise.resolve([]),
   ]);
   return {
     today: businessToday(),

@@ -54,7 +54,7 @@ describe('DebtsService', () => {
       },
       payment: {
         create: jest.fn((args: PaymentCreateArgs) =>
-          Promise.resolve({ id: 'payment-id', createdAt: new Date(), ...args.data }),
+          Promise.resolve({ id: 'payment-id', groupId: 'payment-id', cancelledAt: null, createdAt: new Date(), ...args.data }),
         ),
       },
     };

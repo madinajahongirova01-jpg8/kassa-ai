@@ -245,7 +245,7 @@ const tg = {
     notices: {
       customerAdded: "Муштарӣ илова шуд.",
       debtAdded: "Қарз сабт шуд.",
-      customerSaved: "Маълумоти муштарӣ нигоҳ дошта шуд.",
+      recordsSaved: "Тағйирот нигоҳ дошта шуд.",
     },
     filters: {
       all: "Ҳама",
@@ -362,6 +362,23 @@ const tg = {
       CASH: "Нақд",
       CARD: "Корт",
       TRANSFER: "Интиқол",
+    },
+    edit: {
+      save: "Нигоҳ доштан",
+      cancel: "Бекор",
+      due: "Мӯҳлат",
+      paid: "аллакай пардохт: {amount} смн",
+      cancelPayment: "Пардохтро бекор кардан",
+      confirm: "Шумо боварӣ доред?",
+      confirmYes: "Ҳа, бекор кунед",
+      confirmNo: "Не",
+      cancelled: "Бекор шуд",
+      paymentCancelled: "Пардохт бекор шуд, боқимонда аз нав ҳисоб шуд.",
+      errors: {
+        amountInvalid: "Маблағро бо рақам нависед, масалан 100 ё 100.50.",
+        belowPaid: "Маблағи қарз набояд аз пардохтшуда ({paid} смн) кам бошад.",
+        dueBeforeDebt: "Мӯҳлат набояд пеш аз санаи қарз бошад.",
+      },
     },
     calc: {
       title: "Ҳисобкунак",
@@ -875,7 +892,7 @@ const ru: Dictionary = {
     notices: {
       customerAdded: "Клиент добавлен.",
       debtAdded: "Долг записан.",
-      customerSaved: "Данные клиента сохранены.",
+      recordsSaved: "Изменения сохранены.",
     },
     filters: {
       all: "Все",
@@ -992,6 +1009,23 @@ const ru: Dictionary = {
       CASH: "Наличные",
       CARD: "Карта",
       TRANSFER: "Перевод",
+    },
+    edit: {
+      save: "Сохранить",
+      cancel: "Отмена",
+      due: "Срок",
+      paid: "уже оплачено: {amount} смн",
+      cancelPayment: "Отменить оплату",
+      confirm: "Вы уверены?",
+      confirmYes: "Да, отменить",
+      confirmNo: "Нет",
+      cancelled: "Отменена",
+      paymentCancelled: "Оплата отменена, остаток пересчитан.",
+      errors: {
+        amountInvalid: "Введите сумму цифрами, например 100 или 100.50.",
+        belowPaid: "Сумма долга не может быть меньше уже оплаченной ({paid} смн).",
+        dueBeforeDebt: "Срок не может быть раньше даты долга.",
+      },
     },
     calc: {
       title: "Калькулятор",
@@ -1502,7 +1536,7 @@ const en: Dictionary = {
     notices: {
       customerAdded: "Customer added.",
       debtAdded: "Debt recorded.",
-      customerSaved: "Customer details saved.",
+      recordsSaved: "Changes saved.",
     },
     filters: {
       all: "All",
@@ -1619,6 +1653,23 @@ const en: Dictionary = {
       CASH: "Cash",
       CARD: "Card",
       TRANSFER: "Transfer",
+    },
+    edit: {
+      save: "Save",
+      cancel: "Cancel",
+      due: "Due",
+      paid: "already paid: {amount} TJS",
+      cancelPayment: "Cancel payment",
+      confirm: "Are you sure?",
+      confirmYes: "Yes, cancel it",
+      confirmNo: "No",
+      cancelled: "Cancelled",
+      paymentCancelled: "Payment cancelled, balance recalculated.",
+      errors: {
+        amountInvalid: "Enter the amount in digits, for example 100 or 100.50.",
+        belowPaid: "The debt can't be less than what's already paid ({paid} TJS).",
+        dueBeforeDebt: "The due date can't be before the debt date.",
+      },
     },
     calc: {
       title: "Calculator",

@@ -5,6 +5,8 @@ import { UpdateCustomerDto } from '../../customers/dto/update-customer.dto';
 import { CreateDebtDto } from './create-debt.dto';
 import { CreatePaymentDto } from './create-payment.dto';
 import { ListDebtsQueryDto } from './list-debts-query.dto';
+import { ListPaymentsQueryDto } from './list-payments-query.dto';
+import { UpdateDebtDto } from './update-debt.dto';
 
 const pipe = createValidationPipe();
 
@@ -122,6 +124,33 @@ describe('DTO validation', () => {
         'method must be one of: CASH, CARD, TRANSFER',
       ]);
       expect((await validationDetails(CreatePaymentDto, { amount: 10, method: 'cash' })).length).toBe(1);
+    });
+  });
+
+  describe('UpdateDebtDto', () => {
+    it('converts the amount, trims the description and allows clearing dueOn', async () => {
+      expect(await validate(UpdateDebtDto, { amount: '80.50', description: ' Sugar ', dueOn: null })).toEqual({
+        amount: 8_050,
+        description: 'Sugar',
+        dueOn: null,
+      });
+    });
+
+    it.each([
+      ['a null amount', { amount: null }],
+      ['a zero amount', { amount: '0' }],
+      ['a blank description', { description: '  ' }],
+      ['an invalid dueOn', { dueOn: '2026-02-30' }],
+      ['an owner id', { ownerId: '7f9c2c1e-3b0a-4c39-9a51-0d4f3f7d2a10' }],
+    ])('rejects %s', async (_case, payload) => {
+      expect((await validationDetails(UpdateDebtDto, payload)).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('ListPaymentsQueryDto', () => {
+    it('reads includeCancelled from the query string', async () => {
+      expect(await validate(ListPaymentsQueryDto, { includeCancelled: 'true' }, 'query')).toEqual({ includeCancelled: true });
+      await expect(validate(ListPaymentsQueryDto, { includeCancelled: 'yes' }, 'query')).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 

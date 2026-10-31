@@ -6,7 +6,7 @@ import { HandNote } from "@/components/daftar/HandNote";
 import { useT } from "@/components/i18n/I18nProvider";
 import { NasiyaCalculator } from "@/components/nasiya/NasiyaCalculator";
 import { NasiyaFilters } from "@/components/nasiya/NasiyaFilters";
-import { EditCustomerForm, NewCustomerForm, NewDebtForm } from "@/components/nasiya/NasiyaForms";
+import { NewCustomerForm, NewDebtForm } from "@/components/nasiya/NasiyaForms";
 import { NasiyaHeadline, type NasiyaFormKind } from "@/components/nasiya/NasiyaHeadline";
 import { NasiyaSheet } from "@/components/nasiya/NasiyaSheet";
 import { NasiyaStickers } from "@/components/nasiya/NasiyaStickers";
@@ -29,7 +29,6 @@ export function NasiyaView({ book }: { book: DebtBook }) {
   const totals = debtTotals(rows);
   const visible = rows.filter((row) => matchesStatus(row.status, filter) && matchesQuery(row.customer, query));
   const selected = rows.find((row) => row.customer.id === selectedId) ?? rows[0];
-  const editing = customers.find((customer) => customer.id === editingId);
 
   function select(id: string) {
     setSelectedId(id);
@@ -73,14 +72,6 @@ export function NasiyaView({ book }: { book: DebtBook }) {
             onClose={() => setOpenForm(null)}
           />
         )}
-        {editing && (
-          <EditCustomerForm
-            key={editing.id}
-            customer={editing}
-            onSaved={(id) => saved(id, t("nasiya.notices.customerSaved"))}
-            onClose={() => setEditingId(null)}
-          />
-        )}
         {notice && (
           <HandNote tone="green" role="status" className="text-xl leading-tight">
             {notice}
@@ -97,6 +88,8 @@ export function NasiyaView({ book }: { book: DebtBook }) {
           businessName={businessName}
           editing={editingId === selected.customer.id}
           onEdit={() => startEdit(selected.customer.id)}
+          onEditClose={() => setEditingId(null)}
+          onEditSaved={() => saved(selected.customer.id, t("nasiya.notices.recordsSaved"))}
         />
       )}
     </div>

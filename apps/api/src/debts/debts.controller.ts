@@ -2,7 +2,6 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post
 import type { PublicUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { DateRangePageQueryDto } from '../common/date-range.dto';
 import { Page } from '../common/pagination';
 import {
   CustomerPaymentResultResponse,
@@ -16,6 +15,7 @@ import { DebtsService } from './debts.service';
 import { CreateDebtDto } from './dto/create-debt.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { ListDebtsQueryDto } from './dto/list-debts-query.dto';
+import { ListPaymentsQueryDto } from './dto/list-payments-query.dto';
 
 @Controller()
 @UseGuards(JwtAuthGuard)
@@ -45,7 +45,7 @@ export class DebtsController {
   @Get('payments')
   listAllPayments(
     @CurrentUser() user: PublicUser,
-    @Query() query: DateRangePageQueryDto,
+    @Query() query: ListPaymentsQueryDto,
   ): Promise<Page<PaymentListItemResponse>> {
     return this.debts.listAllPayments(user.id, query);
   }

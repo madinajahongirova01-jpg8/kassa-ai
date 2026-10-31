@@ -1,6 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import { BadRequestException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { formatCalendarDate, parseCalendarDate, todayInBusinessTimeZone } from '../common/dates';
-import { calendarDateFilter, DateRangePageQueryDto } from '../common/date-range.dto';
+import { calendarDateFilter } from '../common/date-range.dto';
 import { formatDirams } from '../common/money';
 import { decodeCursor, DEFAULT_PAGE_SIZE, Page, toPage } from '../common/pagination';
 import { CUSTOMER_NOT_FOUND_MESSAGE, CustomersService } from '../customers/customers.service';
@@ -21,10 +22,11 @@ import {
 import { CreateDebtDto } from './dto/create-debt.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { ListDebtsQueryDto } from './dto/list-debts-query.dto';
+import { ListPaymentsQueryDto } from './dto/list-payments-query.dto';
 
 export const DEBT_NOT_FOUND_MESSAGE = 'Debt not found';
 
-function invalidInput(...details: string[]): BadRequestException {
+export function invalidInput(...details: string[]): BadRequestException {
   return new BadRequestException({ message: 'Validation failed', details });
 }
 
@@ -79,7 +81,7 @@ export class DebtsService {
   async findOne(ownerId: string, id: string): Promise<DebtWithPaymentsResponse> {
     const debt = await this.prisma.debt.findFirst({
       where: { id, ownerId },
-      include: { payments: { orderBy: [{ paidOn: 'asc' }, { createdAt: 'asc' }] } },
+      include: { payments: { where: { cancelledAt: null }, orderBy: [{ paidOn: 'asc' }, { createdAt: 'asc' }] } },
     });
     if (debt === null) {
       throw new NotFoundException(DEBT_NOT_FOUND_MESSAGE);
@@ -141,7 +143,7 @@ export class DebtsService {
   }
 
   /** All payments of the owner, newest first, optionally limited to an inclusive paidOn range. */
-  async listAllPayments(ownerId: string, query: DateRangePageQueryDto): Promise<Page<PaymentListItemResponse>> {
+  async listAllPayments(ownerId: string, query: ListPaymentsQueryDto): Promise<Page<PaymentListItemResponse>> {
     const paidOn = calendarDateFilter(query.from, query.to);
     const limit = query.limit ?? DEFAULT_PAGE_SIZE;
     const cursor = query.cursor === undefined ? undefined : decodeCursor(query.cursor);
@@ -151,6 +153,7 @@ export class DebtsService {
       where: {
         ownerId,
         paidOn,
+        cancelledAt: query.includeCancelled === true ? undefined : null,
         OR:
           cursor === undefined || cursorDate === undefined
             ? undefined
@@ -225,6 +228,7 @@ export class DebtsService {
         });
       }
 
+      const groupId = randomUUID();
       const payments: PaymentResponse[] = [];
       const debts: DebtResponse[] = [];
       for (const part of outcome.parts) {
@@ -232,6 +236,7 @@ export class DebtsService {
           data: {
             ownerId,
             debtId: part.debtId,
+            groupId,
             amountDirams: part.amountDirams,
             method: dto.method ?? PaymentMethod.CASH,
             paidOn: parseCalendarDate(paidOn),

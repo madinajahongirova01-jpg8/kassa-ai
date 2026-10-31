@@ -1,5 +1,5 @@
 import { DebtStatus } from '../generated/prisma/enums';
-import { allocatePayment, applyPayment, debtStatusFor, remainingDirams } from './debt-calculations';
+import { allocatePayment, applyPayment, debtStatusFor, remainingDirams, revertPayment } from './debt-calculations';
 
 describe('debt calculations', () => {
   describe('debtStatusFor', () => {
@@ -108,6 +108,18 @@ describe('debt calculations', () => {
 
     it.each([0, -1, 0.5])('throws for an invalid payment amount %p', (amount) => {
       expect(() => allocatePayment(debts, amount)).toThrow(RangeError);
+    });
+  });
+
+  describe('revertPayment', () => {
+    it('returns a cancelled payment to the balance and recomputes the status', () => {
+      expect(revertPayment({ amountDirams: 10_000, paidDirams: 10_000 }, 4_000)).toEqual({ paidDirams: 6_000, status: DebtStatus.PARTIALLY_PAID });
+      expect(revertPayment({ amountDirams: 10_000, paidDirams: 4_000 }, 4_000)).toEqual({ paidDirams: 0, status: DebtStatus.ACTIVE });
+    });
+
+    it('refuses to return more than was paid', () => {
+      expect(() => revertPayment({ amountDirams: 10_000, paidDirams: 3_000 }, 3_001)).toThrow(RangeError);
+      expect(() => revertPayment({ amountDirams: 10_000, paidDirams: 3_000 }, 0)).toThrow(RangeError);
     });
   });
 });

@@ -103,7 +103,7 @@ export class ReportsService {
       }),
       this.prisma.payment.groupBy({
         by: ['paidOn', 'method'],
-        where: { ownerId, paidOn: range },
+        where: { ownerId, paidOn: range, cancelledAt: null },
         _sum: { amountDirams: true },
       }),
     ]);

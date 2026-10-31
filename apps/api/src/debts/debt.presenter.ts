@@ -12,6 +12,8 @@ export interface PaymentResponse {
   method: PaymentMethod;
   paidOn: string;
   note: string | null;
+  groupId: string;
+  cancelledAt: Date | null;
   createdAt: Date;
 }
 
@@ -36,6 +38,11 @@ export interface DebtWithPaymentsResponse extends DebtResponse {
 export interface PaymentResultResponse {
   payment: PaymentResponse;
   debt: DebtResponse;
+}
+
+export interface CancelPaymentResultResponse {
+  payments: PaymentResponse[];
+  debts: DebtResponse[];
 }
 
 /** One payment split across the customer's debts: one payment row per debt it touched. */
@@ -72,6 +79,8 @@ export function toPaymentResponse(payment: Payment): PaymentResponse {
     method: payment.method,
     paidOn: formatCalendarDate(payment.paidOn),
     note: payment.note,
+    groupId: payment.groupId,
+    cancelledAt: payment.cancelledAt,
     createdAt: payment.createdAt,
   };
 }
