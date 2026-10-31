@@ -19,6 +19,10 @@ export function localeOptionLabel(locale: Locale) {
   return `${LOCALE_NAMES[locale].flag} ${LOCALE_NAMES[locale].name}`;
 }
 
+export function localeShortLabel(locale: Locale) {
+  return `${LOCALE_NAMES[locale].flag} ${locale.toUpperCase()}`;
+}
+
 export function isLocale(value: unknown): value is Locale {
   return typeof value === "string" && (LOCALES as readonly string[]).includes(value);
 }

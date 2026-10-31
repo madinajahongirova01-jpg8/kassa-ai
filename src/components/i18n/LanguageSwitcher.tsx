@@ -2,7 +2,7 @@
 
 import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
-import { isLocale, localeCookie, localeOptionLabel, LOCALES, type Locale } from "@/lib/i18n/config";
+import { isLocale, LOCALE_NAMES, localeCookie, localeOptionLabel, localeShortLabel, LOCALES, type Locale } from "@/lib/i18n/config";
 
 // A full reload, not router.refresh(): every page and the client router cache must come back in the new language.
 function switchLocale(locale: Locale) {
@@ -17,7 +17,7 @@ const variants = {
 };
 
 /** The one language select of the site; every page header renders it at its right end. */
-export function LanguageSwitcher({ variant = "daftar", className }: { variant?: keyof typeof variants; className?: string }) {
+export function LanguageSwitcher({ variant = "daftar", compact = false, className }: { variant?: keyof typeof variants; compact?: boolean; className?: string }) {
   const current = useLocale();
   const t = useT();
 
@@ -34,8 +34,8 @@ export function LanguageSwitcher({ variant = "daftar", className }: { variant?: 
         className={cn("h-9 cursor-pointer appearance-none rounded-full pr-8 pl-3 text-sm font-semibold outline-none", variants[variant])}
       >
         {LOCALES.map((locale) => (
-          <option key={locale} value={locale} lang={locale}>
-            {localeOptionLabel(locale)}
+          <option key={locale} value={locale} lang={locale} title={compact ? LOCALE_NAMES[locale].name : undefined}>
+            {compact ? localeShortLabel(locale) : localeOptionLabel(locale)}
           </option>
         ))}
       </select>

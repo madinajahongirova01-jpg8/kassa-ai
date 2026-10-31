@@ -25,7 +25,7 @@ export function AppTopBar() {
           <SampleDataBadge />
           <SettingsLink compact />
           <LogoutButton compact />
-          <LanguageSwitcher />
+          <LanguageSwitcher compact />
         </div>
       </header>
     </>

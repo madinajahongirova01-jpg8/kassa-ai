@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
-import { LOCALE_NAMES, localeFromCookies, localeOptionLabel, LOCALES } from "@/lib/i18n/config";
+import { LOCALE_NAMES, localeFromCookies, localeOptionLabel, localeShortLabel, LOCALES } from "@/lib/i18n/config";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { createT } from "@/lib/i18n/translate";
 
@@ -54,6 +54,7 @@ function pageHasSwitcher(page: string): boolean {
 describe("language select options", () => {
   it("show a flag and the language's own name", () => {
     expect(LOCALES.map(localeOptionLabel)).toEqual(["🇹🇯 Тоҷикӣ", "🇷🇺 Русский", "🇬🇧 English"]);
+    expect(LOCALES.map(localeShortLabel)).toEqual(["🇹🇯 TG", "🇷🇺 RU", "🇬🇧 EN"]);
     for (const locale of LOCALES) expect(LOCALE_NAMES[locale].flag).toMatch(/^\p{Regional_Indicator}{2}$/u);
   });
 });
