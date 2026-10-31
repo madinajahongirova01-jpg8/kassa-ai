@@ -1,4 +1,5 @@
-const API_URL = (process.env.KASSA_API_URL ?? 'https://kassa-ai-api.onrender.com').replace(/\/+$/, '');
+const DEFAULT_API_URL = 'https://kassa-ai-api.onrender.com';
+const API_URL = (process.env.DEMO_API_URL?.trim() || DEFAULT_API_URL).replace(/\/+$/, '');
 const BUSINESS_TIME_ZONE = 'Asia/Dushanbe';
 const WAKE_ATTEMPTS = 12;
 const WAKE_DELAY_MS = 10_000;
@@ -32,7 +33,14 @@ interface CreatedRecord {
   id: string;
 }
 
-class SeedError extends Error {}
+class SeedError extends Error {
+  readonly status: number | undefined;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 const ENTRIES: SeedEntry[] = [
   { daysAgo: 6, kind: 'INCOME', category: 'SALE', amount: '1450', title: 'Фурӯш' },
@@ -78,9 +86,21 @@ const CUSTOMERS: SeedCustomer[] = [
 ];
 
 function requireEnv(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) throw new SeedError(`Set ${name} before running the script.`);
+  const value = process.env[name];
+  if (value === undefined || value.trim() === '') throw new SeedError(`Set ${name} before running the script.`);
   return value;
+}
+
+function maskEmail(email: string): string {
+  const [name = '', domain = ''] = email.split('@');
+  return `${name.slice(0, 2)}***@${domain}`;
+}
+
+function apiMessage(data: unknown): string {
+  if (typeof data !== 'object' || data === null) return '';
+  const message = 'message' in data && typeof data.message === 'string' ? data.message : '';
+  const details: unknown[] = 'details' in data && Array.isArray(data.details) ? data.details : [];
+  return [message, ...details.filter((item): item is string => typeof item === 'string')].filter(Boolean).join('; ');
 }
 
 function todayInBusinessTimeZone(): string {
@@ -109,28 +129,47 @@ async function request<T>(method: 'GET' | 'POST', path: string, token?: string, 
   });
   const data: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    const details = typeof data === 'object' && data !== null && 'details' in data ? JSON.stringify(data.details) : '';
-    throw new SeedError(`${method} ${path} failed with ${response.status} ${details}`.trim());
+    const message = apiMessage(data);
+    throw new SeedError(`${method} ${API_URL}${path} failed with ${response.status}${message ? `: ${message}` : ''}`, response.status);
   }
   return data as T;
 }
 
 async function wakeApi(): Promise<void> {
+  let lastError = '';
   for (let attempt = 1; attempt <= WAKE_ATTEMPTS; attempt += 1) {
     try {
       await request<unknown>('GET', '/health');
       console.log('API is awake.');
       return;
-    } catch {
-      console.log(`Waking the API (${attempt}/${WAKE_ATTEMPTS})...`);
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : 'unknown error';
+      console.log(`Waking the API at ${API_URL} (${attempt}/${WAKE_ATTEMPTS})...`);
       await sleep(WAKE_DELAY_MS);
     }
   }
-  throw new SeedError('The API did not wake up. Try again in a minute.');
+  throw new SeedError(`The API at ${API_URL} did not answer on /health (${lastError}). Check DEMO_API_URL or try again in a minute.`);
 }
 
 async function login(email: string, password: string): Promise<string> {
-  const result = await request<{ accessToken?: unknown }>('POST', '/auth/login', undefined, { email, password });
+  let result: { accessToken?: unknown };
+  try {
+    result = await request<{ accessToken?: unknown }>('POST', '/auth/login', undefined, { email, password });
+  } catch (error) {
+    if (error instanceof SeedError && error.status === 401) {
+      throw new SeedError(
+        [
+          error.message,
+          `The API at ${API_URL} did not accept this email and password.`,
+          '- Check that DEMO_API_URL points to the API where this account was created (default: the live API on Render).',
+          '- Put the password in single quotes so the shell does not change characters such as $, ` or !.',
+          '- Make sure the password has no extra spaces at the start or the end.',
+        ].join('\n'),
+        401,
+      );
+    }
+    throw error;
+  }
   if (typeof result.accessToken !== 'string') throw new SeedError('Login did not return a token.');
   console.log('Signed in.');
   return result.accessToken;
@@ -184,8 +223,11 @@ async function seedCustomers(token: string, today: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const email = requireEnv('DEMO_EMAIL');
+  const email = requireEnv('DEMO_EMAIL').trim().toLowerCase();
   const password = requireEnv('DEMO_PASSWORD');
+  console.log(`API: ${API_URL}${API_URL === DEFAULT_API_URL ? ' (default)' : ' (from DEMO_API_URL)'}`);
+  console.log(`Email: ${maskEmail(email)}`);
+  console.log(`Password: set, ${password.length} characters${password.trim() === password ? '' : ', has spaces at the start or the end'}`);
   await wakeApi();
   const token = await login(email, password);
   await ensureEmptyAccount(token);
