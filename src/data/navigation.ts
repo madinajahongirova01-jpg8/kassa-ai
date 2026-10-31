@@ -13,7 +13,7 @@ export const appNav: { labelKey: MessageKey; href: string }[] = [
   { labelKey: "nav.reports", href: "/app/reports" },
 ];
 
-export const liveDataRoutes = ["/app", "/app/new", "/app/transactions", "/app/debts", "/app/reports"];
+export const liveDataRoutes = ["/app", "/app/new", "/app/transactions", "/app/debts", "/app/reports", "/app/settings"];
 
 export const adminSidebarNav: NavItem[] = [
   { labelKey: "admin.overview", href: "/admin", icon: "analytics" },

@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { clientIp, errorResponse, jsonResponse, toSessionUser, type SessionUser } from "@/lib/api/route-helpers";
+import { clientIp, errorResponse, forwardMutation, jsonResponse, toSessionUser, type SessionUser } from "@/lib/api/route-helpers";
 import { apiRequest } from "@/lib/api/server";
 import { clearSessionCookie, readSessionToken } from "@/lib/session";
 
@@ -18,4 +18,8 @@ export async function GET(request: NextRequest) {
   const user = toSessionUser(result.data?.user);
   if (user === null) return errorResponse({ status: 502, message: "Unexpected API response" });
   return jsonResponse({ user });
+}
+
+export async function PATCH(request: NextRequest) {
+  return forwardMutation(request, "/auth/me", ["businessName", "name"], "PATCH");
 }
