@@ -146,9 +146,8 @@ export async function changePasswordSession(request: NextRequest) {
   }
 
   const session = readAuthResult(result.data);
-  if (session === null) return errorResponse({ status: 502, message: "Unexpected API response" });
-
   const response = jsonResponse({ changed: true });
-  setSessionCookie(response, session.accessToken, session.expiresIn);
+  if (session === null) clearSessionCookie(response);
+  else setSessionCookie(response, session.accessToken, session.expiresIn);
   return response;
 }
