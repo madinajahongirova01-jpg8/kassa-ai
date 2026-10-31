@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
 import { Recorder } from "@/components/sabt/Recorder";
 import { NewReceipt } from "@/components/sabt/NewReceipt";
+import { ReceiptImageButton } from "@/components/sabt/ReceiptImageButton";
 import { SabtSteps } from "@/components/sabt/SabtSteps";
 import { SaidCard } from "@/components/sabt/SaidCard";
 import { sabtDemo, sabtModes, type SabtMode } from "@/data/sabt";
@@ -279,6 +280,7 @@ export function SabtView() {
             </button>
           )}
         </div>
+        {confirmed && <ReceiptImageButton entries={entries} profit={profit} />}
         {saveError && (
           <p role="alert" className="mt-3 text-center text-sm font-semibold text-red">
             {saveError.message}

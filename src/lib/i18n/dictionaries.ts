@@ -179,6 +179,14 @@ const tg = {
       saving: "Сабт мешавад…",
       confirm: "Тасдиқ ✓",
     },
+    image: {
+      button: "Акси чек",
+      preparing: "Акс омода мешавад…",
+      shared: "Акси чек фиристода шуд.",
+      downloaded: "Акси чек захира шуд.",
+      failed: "Акс сохта нашуд. Боз кӯшиш кунед.",
+      shareTitle: "Чек — Kassa AI",
+    },
     errors: {
       invalid: "Маълумотро санҷед: ҳар сабт бояд ном ва маблағ дошта бошад.",
       session: "Сессия тамом шуд. Дубора дароед ва боз сабт кунед.",
@@ -891,6 +899,14 @@ const ru: Dictionary = {
       saving: "Сохраняем…",
       confirm: "Подтвердить ✓",
     },
+    image: {
+      button: "Фото чека",
+      preparing: "Готовим картинку…",
+      shared: "Картинка чека отправлена.",
+      downloaded: "Картинка чека сохранена.",
+      failed: "Не удалось сделать картинку. Попробуйте ещё раз.",
+      shareTitle: "Чек — Kassa AI",
+    },
     errors: {
       invalid: "Проверьте данные: у каждой записи должны быть название и сумма.",
       session: "Сессия закончилась. Войдите снова и сохраните запись ещё раз.",
@@ -1599,6 +1615,14 @@ const en: Dictionary = {
       savedNew: "Saved ✓ · New entry +",
       saving: "Saving…",
       confirm: "Confirm ✓",
+    },
+    image: {
+      button: "Receipt image",
+      preparing: "Preparing the image…",
+      shared: "Receipt image shared.",
+      downloaded: "Receipt image saved.",
+      failed: "Could not make the image. Try again.",
+      shareTitle: "Receipt — Kassa AI",
     },
     errors: {
       invalid: "Check the data: every entry needs a name and an amount.",
