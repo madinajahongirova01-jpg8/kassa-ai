@@ -141,6 +141,7 @@ const tg = {
       TRANSPORT: "роҳкиро",
       SALARY: "маош",
       SALE: "даромад",
+      RENT: "иҷора",
       OTHER: "дигар",
     },
     actions: {
@@ -335,6 +336,20 @@ const tg = {
       recordNotFound: "Сабт ёфт нашуд. Саҳифаро нав кунед.",
       checkData: "Маълумотро санҷед.",
       server: "Сервер ҳоло ҷавоб намедиҳад. Каме баъд боз кӯшиш кунед.",
+    },
+    payment: {
+      title: "Қабули пардохт",
+      amount: "Маблағи пардохт",
+      upTo: "то {max} сомонӣ",
+      confirm: "Тасдиқ",
+      cancel: "Бекор",
+      saved: "Пардохт сабт шуд.",
+      errors: {
+        required: "Маблағи пардохтро нависед.",
+        invalid: "Маблағро бо рақам нависед, масалан 50 ё 50.50.",
+        positive: "Пардохт бояд аз сифр зиёд бошад.",
+        tooMuch: "Пардохт набояд аз боқимонда ({max} смн) зиёд бошад.",
+      },
     },
     calc: {
       title: "Ҳисобкунак",
@@ -731,6 +746,7 @@ const ru: Dictionary = {
       TRANSPORT: "проезд",
       SALARY: "зарплата",
       SALE: "доход",
+      RENT: "аренда",
       OTHER: "другое",
     },
     actions: {
@@ -925,6 +941,20 @@ const ru: Dictionary = {
       recordNotFound: "Запись не найдена. Обновите страницу.",
       checkData: "Проверьте данные.",
       server: "Сервер сейчас не отвечает. Попробуйте чуть позже.",
+    },
+    payment: {
+      title: "Принять оплату",
+      amount: "Сумма оплаты",
+      upTo: "до {max} сомони",
+      confirm: "Подтвердить",
+      cancel: "Отмена",
+      saved: "Оплата записана.",
+      errors: {
+        required: "Введите сумму оплаты.",
+        invalid: "Введите сумму цифрами, например 50 или 50.50.",
+        positive: "Оплата должна быть больше нуля.",
+        tooMuch: "Оплата не может быть больше остатка ({max} смн).",
+      },
     },
     calc: {
       title: "Калькулятор",
@@ -1318,6 +1348,7 @@ const en: Dictionary = {
       TRANSPORT: "transport",
       SALARY: "wages",
       SALE: "income",
+      RENT: "rent",
       OTHER: "other",
     },
     actions: {
@@ -1512,6 +1543,20 @@ const en: Dictionary = {
       recordNotFound: "Record not found. Reload the page.",
       checkData: "Check the data.",
       server: "The server isn't responding. Try again a little later.",
+    },
+    payment: {
+      title: "Accept payment",
+      amount: "Payment amount",
+      upTo: "up to {max} TJS",
+      confirm: "Confirm",
+      cancel: "Cancel",
+      saved: "Payment recorded.",
+      errors: {
+        required: "Enter the payment amount.",
+        invalid: "Enter the amount in digits, for example 50 or 50.50.",
+        positive: "The payment must be more than zero.",
+        tooMuch: "The payment can't be more than the balance ({max} TJS).",
+      },
     },
     calc: {
       title: "Calculator",

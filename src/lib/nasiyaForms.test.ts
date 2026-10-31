@@ -1,12 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import type { PostResult } from "@/lib/api/client";
 import {
+  acceptPayment,
   createCustomer,
   createDebt,
   customerNameError,
   customerPhoneError,
   dueDateError,
   parseDebtAmount,
+  parsePaymentAmount,
+  paymentInputValue,
   somoniToDirams,
   toDebtPayload,
   updateCustomer,
@@ -225,5 +228,59 @@ describe("createDebt", () => {
       ok: false,
       error: "Кӯшишҳо зиёд шуданд. Каме сабр кунед ва боз кӯшиш кунед.",
     });
+  });
+});
+
+describe("paymentInputValue", () => {
+  it("writes the balance the way the owner types it", () => {
+    expect(paymentInputValue(12000)).toBe("120");
+    expect(paymentInputValue(12050)).toBe("120.50");
+    expect(paymentInputValue(5)).toBe("0.05");
+  });
+});
+
+describe("parsePaymentAmount", () => {
+  it("accepts the whole balance or less, with dirams", () => {
+    expect(parsePaymentAmount("120", 12000)).toEqual({ dirams: 12000 });
+    expect(parsePaymentAmount(" 50 ", 12000)).toEqual({ dirams: 5000 });
+    expect(parsePaymentAmount("50,5", 12000)).toEqual({ dirams: 5050 });
+    expect(parsePaymentAmount("0.01", 12000)).toEqual({ dirams: 1 });
+  });
+
+  it("refuses more than the balance", () => {
+    expect(parsePaymentAmount("120.01", 12000)).toEqual({ error: "Пардохт набояд аз боқимонда (120 смн) зиёд бошад." });
+    expect(parsePaymentAmount("200", 12050, "ru")).toEqual({ error: "Оплата не может быть больше остатка (120,50 смн)." });
+  });
+
+  it("refuses zero, negative, empty and non-numeric amounts", () => {
+    expect(parsePaymentAmount("0", 12000)).toEqual({ error: "Пардохт бояд аз сифр зиёд бошад." });
+    expect(parsePaymentAmount("0.00", 12000)).toEqual({ error: "Пардохт бояд аз сифр зиёд бошад." });
+    expect(parsePaymentAmount("-50", 12000)).toEqual({ error: "Пардохт бояд аз сифр зиёд бошад." });
+    expect(parsePaymentAmount("  ", 12000)).toEqual({ error: "Маблағи пардохтро нависед." });
+    expect(parsePaymentAmount("панҷоҳ", 12000)).toEqual({ error: "Маблағро бо рақам нависед, масалан 50 ё 50.50." });
+    expect(parsePaymentAmount("50.505", 12000)).toEqual({ error: "Маблағро бо рақам нависед, масалан 50 ё 50.50." });
+    expect(parsePaymentAmount("", 12000, "en")).toEqual({ error: "Enter the payment amount." });
+  });
+});
+
+describe("acceptPayment", () => {
+  it("posts a partial payment to the customer's payments in API amounts", async () => {
+    const { post, calls } = fakePost({ ok: true, data: { amount: "50.50" } });
+    const result = await acceptPayment(CUSTOMER_ID, "50.5", 12000, post);
+
+    expect(result).toEqual({ ok: true, data: { amount: "50.50" } });
+    expect(calls).toEqual([{ url: `/api/customers/${CUSTOMER_ID}/payments`, body: { amount: "50.50" } }]);
+  });
+
+  it("does not call the API for an amount above the balance or zero", async () => {
+    const { post, calls } = fakePost({ ok: true, data: {} });
+    expect(await acceptPayment(CUSTOMER_ID, "121", 12000, post)).toEqual({ ok: false, error: "Пардохт набояд аз боқимонда (120 смн) зиёд бошад." });
+    expect(await acceptPayment(CUSTOMER_ID, "0", 12000, post)).toEqual({ ok: false, error: "Пардохт бояд аз сифр зиёд бошад." });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("explains an overpayment the API refused", async () => {
+    const refused = fakePost({ ok: false, status: 422, details: ["remainingAmount: 30.00"] });
+    expect(await acceptPayment(CUSTOMER_ID, "50", 12000, refused.post)).toEqual({ ok: false, error: "Пардохт аз қарз зиёд аст — боқимонда 30.00 смн." });
   });
 });

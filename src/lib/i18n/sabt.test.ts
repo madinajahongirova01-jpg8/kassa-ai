@@ -131,7 +131,8 @@ describe("receipt notes", () => {
     const entries = parseSabt(sabtDemo.transcript);
     expect(entries.map((entry) => createT("ru")(sabtNoteKey(entry) as MessageKey))).toEqual(["товар для магазина", "проезд", "зарплата", "доход"]);
     expect(entries.map((entry) => createT("en")(sabtNoteKey(entry) as MessageKey))).toEqual(["goods for the shop", "transport", "wages", "income"]);
-    expect(sabtNoteKey({ category: "RENT" })).toBeUndefined();
+    expect(sabtNoteKey({ category: "RENT" })).toBe("sabt.notes.RENT");
+    expect([createT("tg")("sabt.notes.RENT"), createT("ru")("sabt.notes.RENT"), createT("en")("sabt.notes.RENT")]).toEqual(["иҷора", "аренда", "rent"]);
     expect(sabtNoteKey({ category: "UTILITIES" })).toBeUndefined();
   });
 });

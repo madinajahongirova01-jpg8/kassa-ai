@@ -6,8 +6,14 @@ function isAppPath(pathname: string) {
   return pathname === "/app" || pathname.startsWith("/app/");
 }
 
+function isAdminPath(pathname: string) {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (isAdminPath(pathname)) return NextResponse.redirect(new URL("/", request.url));
 
   // Optimistic check only: it sees whether a session cookie exists, not whether the token is valid.
   // The token itself is verified by the NestJS API on every data request (and by /api/auth/me).

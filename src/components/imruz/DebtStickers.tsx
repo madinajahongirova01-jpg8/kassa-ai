@@ -4,15 +4,12 @@ import Link from "next/link";
 import { HandNote } from "@/components/daftar/HandNote";
 import { Sticker, type StickerTape } from "@/components/daftar/Sticker";
 import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
-import { DemoBadge } from "@/components/ui/DemoBadge";
 import type { DebtCustomer } from "@/data/debts";
 import { cn } from "@/lib/cn";
-import { buildDebtRows, type DebtRow } from "@/lib/debts";
-import { useDebtState } from "@/lib/debtStore";
-import { formatDayMonth, formatSomoni } from "@/lib/format";
+import { buildDebtRows, debtTotals, openDebtorsByUrgency, type DebtRow } from "@/lib/debts";
+import { formatDayMonth, formatMoney } from "@/lib/format";
 import type { Locale } from "@/lib/i18n/config";
 import type { Plural, Translate } from "@/lib/i18n/translate";
-import { useDebtOverview } from "@/lib/useDebtOverview";
 
 const rotations = [
   { rotate: -1.5, tape: 3 },
@@ -36,20 +33,22 @@ function stickerLook(row: DebtRow, { t, plural, locale }: StickerText): { tape: 
   return { tape: "blue", tone: "muted", note: t("today.debts.noDue") };
 }
 
-function useDebtorRows() {
-  const { today, customers, events } = useDebtState();
-  return buildDebtRows(customers, events, today).filter((row) => row.balance > 0);
-}
-
 const plainTones = {
   pen: "text-pen",
   red: "text-red",
   muted: "text-ink-2",
 };
 
-export function DebtStickers({ limit = 3 }: { limit?: number }) {
-  const { totals } = useDebtOverview();
-  const rows = useDebtorRows().slice(0, limit);
+type DebtStickersProps = {
+  customers: DebtCustomer[];
+  today: string;
+  limit?: number;
+};
+
+export function DebtStickers({ customers, today, limit = 3 }: DebtStickersProps) {
+  const allRows = buildDebtRows(customers, [], today);
+  const totals = debtTotals(allRows);
+  const rows = openDebtorsByUrgency(allRows).slice(0, limit);
   const handNoteId = rows.find((row) => row.status === "overdue")?.customer.id;
   const t = useT();
   const plural = usePlural();
@@ -57,11 +56,8 @@ export function DebtStickers({ limit = 3 }: { limit?: number }) {
   return (
     <section className="flex flex-col gap-4">
       <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-display text-lg font-bold lg:text-xl">{t("today.debts.title")}</h2>
-          <DemoBadge />
-        </div>
-        <div className="mt-1.5 font-display text-[34px] leading-none font-extrabold text-pen">{formatSomoni(totals.total, { locale })}</div>
+        <h2 className="font-display text-lg font-bold lg:text-xl">{t("today.debts.title")}</h2>
+        <div className="mt-1.5 font-display text-[34px] leading-none font-extrabold text-pen">{formatMoney(totals.total, { locale })}</div>
         <div className="mt-1 text-sm text-ink-2">{plural("today.debts.people", totals.debtorCount)}</div>
       </div>
       {rows.length === 0 ? (
@@ -75,7 +71,7 @@ export function DebtStickers({ limit = 3 }: { limit?: number }) {
               <div className="flex items-baseline justify-between gap-3">
                 <span className="truncate text-[15px] font-bold">{shortName(row.customer)}</span>
                 <span className={cn("shrink-0 font-display text-xl font-bold", row.status === "overdue" && "text-red")}>
-                  {formatSomoni(row.balance, { unit: false, locale })}
+                  {formatMoney(row.balance, { unit: false, locale })}
                 </span>
               </div>
               {row.customer.id === handNoteId ? (

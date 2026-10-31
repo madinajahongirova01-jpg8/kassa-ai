@@ -5,6 +5,7 @@ import { NewEntryButton } from "@/components/imruz/NewEntryButton";
 import { TodayEntries } from "@/components/imruz/TodayEntries";
 import { TodaySummary } from "@/components/imruz/TodaySummary";
 import { loadTodayCashEntries } from "@/lib/api/cash-book";
+import { loadDebtBook } from "@/lib/api/debt-book";
 import { getT } from "@/lib/i18n/server";
 import { cashDaySummary } from "@/lib/todayCash";
 
@@ -18,7 +19,7 @@ export default async function ImruzPage() {
 }
 
 async function Imruz() {
-  const entries = await loadTodayCashEntries("/app");
+  const [entries, book] = await Promise.all([loadTodayCashEntries("/app"), loadDebtBook("/app", { withPayments: false })]);
   const summary = cashDaySummary(entries);
 
   return (
@@ -29,7 +30,7 @@ async function Imruz() {
       </div>
       <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-9">
         <TodayEntries entries={entries} />
-        <DebtStickers />
+        <DebtStickers customers={book.customers} today={book.today} />
       </div>
     </div>
   );

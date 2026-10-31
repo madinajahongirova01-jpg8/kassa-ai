@@ -1,17 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type Ref } from "react";
+import { useState, useTransition, type Ref } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
 import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
-import { postJson, requestErrorText } from "@/lib/api/client";
+import { PaymentForm } from "@/components/nasiya/NasiyaForms";
 import { cn } from "@/lib/cn";
 import { normalizePhone, phoneProblemText, reminderAmount, reminderText, smsHref, telHref } from "@/lib/contact";
 import { dayMonth, historyNote, lastPayment, type DebtRow } from "@/lib/debts";
 import { formatMoney } from "@/lib/format";
 import type { Locale } from "@/lib/i18n/config";
 import type { Plural, Translate } from "@/lib/i18n/translate";
-import { toApiAmount } from "@/lib/money";
 
 type LineText = { t: Translate; plural: Plural; locale: Locale };
 
@@ -43,8 +42,9 @@ type NasiyaSheetProps = {
 
 export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: NasiyaSheetProps) {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<{ customerId: string; text: string } | null>(null);
+  const [refreshing, startRefresh] = useTransition();
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const [paidId, setPaidId] = useState<string | null>(null);
   const [phoneNotice, setPhoneNotice] = useState<{ customerId: string; where: "call" | "sms" } | null>(null);
   const t = useT();
   const plural = usePlural();
@@ -60,18 +60,17 @@ export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: 
   const phoneProblem = phone.ok ? null : phoneProblemText(phone.reason, locale);
   const noticeAt = (where: "call" | "sms") => phoneProblem !== null && phoneNotice?.customerId === customer.id && phoneNotice.where === where;
 
-  // The whole remaining balance as one payment; the API splits it across the open debts atomically
-  // and refuses it (422) if it would exceed what is still owed.
-  async function acceptFullPayment() {
-    setPending(true);
-    setError(null);
-    const result = await postJson(`/api/customers/${customer.id}/payments`, { amount: toApiAmount(balance) });
-    setPending(false);
-    if (!result.ok) {
-      setError({ customerId: customer.id, text: requestErrorText(result.status, result.details, locale) });
-      return;
-    }
-    router.refresh();
+  const paying = payingId === customer.id;
+
+  function openPayment() {
+    setPaidId(null);
+    setPayingId(customer.id);
+  }
+
+  function paymentSaved() {
+    setPayingId(null);
+    setPaidId(customer.id);
+    startRefresh(() => router.refresh());
   }
 
   return (
@@ -126,11 +125,12 @@ export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: 
       <div className="flex gap-2.5">
         <button
           type="button"
-          disabled={paid || pending}
-          onClick={acceptFullPayment}
+          disabled={paid || paying || refreshing}
+          onClick={openPayment}
+          aria-expanded={paying}
           className="h-[46px] flex-1 rounded-tile border-[1.5px] border-ink bg-pen px-2 text-sm font-bold whitespace-nowrap text-card shadow-hard-sm active:translate-x-px active:translate-y-px active:shadow-none disabled:border-line-strong disabled:bg-line disabled:text-ink-3 disabled:shadow-none"
         >
-          {pending ? t("nasiya.saving") : t("nasiya.sheet.acceptPayment")}
+          {refreshing ? t("nasiya.saving") : t("nasiya.payment.title")}
         </button>
         {phone.ok ? (
           <a href={telHref(phone.phone)} className={cn(buttonClass, "h-[46px] rounded-tile")}>
@@ -147,9 +147,12 @@ export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: 
           {phoneProblem}
         </HandNote>
       )}
-      {error?.customerId === customer.id && (
-        <HandNote tone="red" role="alert" className="text-xl leading-tight">
-          {error.text}
+      {paying && !paid && (
+        <PaymentForm key={customer.id} customerId={customer.id} balance={balance} onPaid={paymentSaved} onCancel={() => setPayingId(null)} />
+      )}
+      {paidId === customer.id && !refreshing && (
+        <HandNote tone="green" role="status" className="text-xl leading-tight">
+          {t("nasiya.payment.saved")}
         </HandNote>
       )}
 

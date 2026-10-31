@@ -79,6 +79,11 @@ export function buildDebtRows(customers: DebtCustomer[], events: DebtEvent[], to
   });
 }
 
+export function openDebtorsByUrgency(rows: DebtRow[]): DebtRow[] {
+  const urgency = (row: DebtRow) => row.daysLeft ?? Number.POSITIVE_INFINITY;
+  return rows.filter((row) => row.balance > 0).sort((a, b) => urgency(a) - urgency(b) || b.balance - a.balance);
+}
+
 export function lastPayment(row: DebtRow) {
   return row.history.findLast((e) => e.type === "payment") ?? null;
 }

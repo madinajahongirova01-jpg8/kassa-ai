@@ -16,6 +16,7 @@ const noteKeys: Partial<Record<ApiCashCategory, MessageKey>> = {
   TRANSPORT: "sabt.notes.TRANSPORT",
   SALARY: "sabt.notes.SALARY",
   SALE: "sabt.notes.SALE",
+  RENT: "sabt.notes.RENT",
   OTHER: "sabt.notes.OTHER",
 };
 

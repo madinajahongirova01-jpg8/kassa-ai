@@ -1,10 +1,10 @@
-import { patchJson, postJson, type PostResult } from "@/lib/api/client";
+import { patchJson, postJson, requestErrorText, type PostResult } from "@/lib/api/client";
 import type { ApiCustomer, ApiDebt } from "@/lib/api/types";
 import { normalizePhone } from "@/lib/contact";
-import { formatNumber } from "@/lib/format";
+import { formatMoney, formatNumber } from "@/lib/format";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { createT } from "@/lib/i18n/translate";
-import { DIRAMS_PER_SOMONI, toApiAmount } from "@/lib/money";
+import { DIRAMS_PER_SOMONI, parseSomoniInput, toApiAmount } from "@/lib/money";
 
 export const MAX_CUSTOMER_NAME = 100;
 export const MAX_DEBT_NOTE = 500;
@@ -171,4 +171,35 @@ export async function createDebt(
   if ("error" in amount) return { ok: false, error: amount.error };
   const result = await post<ApiDebt>(`/api/customers/${encodeURIComponent(form.customerId)}/debts`, toDebtPayload(form, amount.dirams, today));
   return result.ok ? { ok: true, data: result.data } : { ok: false, error: debtErrorText(result.status, locale) };
+}
+
+export function paymentInputValue(dirams: number): string {
+  const whole = Math.floor(dirams / DIRAMS_PER_SOMONI);
+  const fraction = dirams % DIRAMS_PER_SOMONI;
+  return fraction === 0 ? String(whole) : `${whole}.${String(fraction).padStart(2, "0")}`;
+}
+
+export function parsePaymentAmount(text: string, balance: number, locale: Locale = DEFAULT_LOCALE): { dirams: number } | { error: string } {
+  const t = createT(locale);
+  const value = text.trim().replace(/\s/g, "");
+  if (!value) return { error: t("nasiya.payment.errors.required") };
+  if (value.startsWith("-")) return { error: t("nasiya.payment.errors.positive") };
+  const dirams = parseSomoniInput(value);
+  if (dirams === null) return { error: t("nasiya.payment.errors.invalid") };
+  if (dirams <= 0) return { error: t("nasiya.payment.errors.positive") };
+  if (dirams > balance) return { error: t("nasiya.payment.errors.tooMuch", { max: formatMoney(balance, { unit: false, locale }) }) };
+  return { dirams };
+}
+
+export async function acceptPayment(
+  customerId: string,
+  text: string,
+  balance: number,
+  post: Post = postJson,
+  locale: Locale = DEFAULT_LOCALE,
+): Promise<FormResult<unknown>> {
+  const amount = parsePaymentAmount(text, balance, locale);
+  if ("error" in amount) return { ok: false, error: amount.error };
+  const result = await post<unknown>(`/api/customers/${encodeURIComponent(customerId)}/payments`, { amount: toApiAmount(amount.dirams) });
+  return result.ok ? { ok: true, data: result.data } : { ok: false, error: requestErrorText(result.status, result.details, locale) };
 }
