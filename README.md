@@ -29,9 +29,13 @@ Kassa AI дафтари электронии хазина ва насия бар
 - Бақайдгирӣ, даромадан ва баромадан.
 - **Сабти нав:** фурӯш ва хароҷотро бо як матн менависед, масалан «фурӯш 1800, такси 30» ё «продажа 500» ё «sale 500». Матн бо забонҳои тоҷикӣ, русӣ ва англисӣ фаҳмида мешавад.
 - **Имрӯз:** чеки рӯз, даромад, хароҷот ва фоидаи рӯз; қарздорони воқеӣ, аввал онҳое, ки мӯҳлаташон гузаштааст.
-- **Насия:** муштариён, насияҳо, пардохти пурра ва қисман, насияҳои мӯҳлаташ гузашта, тағйир додани маълумоти муштарӣ, калкулятор, тугмаҳои занг, SMS ва Telegram.
+- **Таҳлили матн бо AI:** Google Gemini, бо қоидаҳо ҳамчун захира. AI танҳо вақте кор мекунад, ки дар сервер `GEMINI_API_KEY` бошад; бе калид матн бо қоидаҳо таҳлил мешавад. Бо AI матн барои таҳлил ба Google фиристода мешавад.
+- **Насия:** муштариён ва ҷустуҷӯи онҳо, насияҳо, пардохти пурра ва қисман, насияҳои мӯҳлаташ гузашта, тағйир додани маълумоти муштарӣ, калкулятор, тугмаҳои занг, SMS ва Telegram.
+- **Пардохт:** тарзи пардохт (нақд, корт, интиқол); тугмаи «Ҳамааш» тамоми боқимондаро бо як пахш мегузорад.
+- **Таҳрири насия:** маблағ, шарҳ ва мӯҳлати қарзро иваз кардан мумкин аст; пардохти хаторо бекор кардан мумкин аст. Таърих нигоҳ дошта мешавад: пардохти бекоршуда хатзада бо «Бекор шуд» нишон дода мешавад ва ба ҳисоб дохил намешавад.
 - **Дафтар:** ҳамаи сабтҳо, насияҳо ва пардохтҳо рӯз ба рӯз; CSV ва чоп.
-- **Ҳисобот:** ҳафта, моҳ, сол — даромад, хароҷот, фоида, диаграмма, хароҷот аз рӯи категория; CSV ва чоп.
+- **Ҳисобот:** ҳафта, моҳ, сол — даромад, хароҷот, фоида, диаграмма, хароҷот аз рӯи категория, насияи баргашта аз рӯи тарзи пардохт; CSV ва чоп.
+- **Насб дар телефон (PWA):** сайтро ҳамчун барнома ба экрани телефон гузоштан мумкин аст.
 - Интерфейс бо се забон: тоҷикӣ, русӣ, англисӣ.
 - Барои телефон мувофиқ аст.
 
@@ -42,7 +46,7 @@ Kassa AI дафтари электронии хазина ва насия бар
 - AI худаш ҳеҷ чиз сабт намекунад: сабт танҳо пас аз «Тасдиқ» мешавад. Насия ҳеҷ гоҳ ҳамчун хароҷот сабт намешавад.
 - Дар сайти зинда калиди Gemini ҳоло нест, бинобар ин матн бо қоидаҳо таҳлил мешавад.
 - Овоз — **санҷишӣ**: шинохтани овози худи браузер истифода мешавад; тоҷикӣ ҳоло боэътимод нест.
-- Акси чек **нест**.
+- Акси чек — **ба наздикӣ**.
 - Пардохти онлайни тарофаҳо **нест**.
 
 ### Технологияҳо
@@ -63,8 +67,8 @@ Kassa AI дафтари электронии хазина ва насия бар
 
 ### Тестҳо ва CI
 
-- Frontend: 242 тести Vitest.
-- API: 164 тести Jest (unit) ва 4 файли тестҳои e2e (69 блоки `it`, баъзеашон `it.each`) дар PostgreSQL-и воқеӣ.
+- Frontend: 292 тести Vitest.
+- API: 209 тести Jest (unit) ва 157 тести e2e дар 7 файл дар PostgreSQL-и воқеӣ.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) дар ҳар push ба `main` ва ҳар pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
   - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, тестҳои e2e (auth, муштариён, насия, пардохтҳо, хазина, ҳисобот), build.
@@ -169,9 +173,13 @@ Kassa AI — электронная тетрадь кассы и долгов д
 - Регистрация, вход и выход.
 - **Новая запись:** продажи и расходы одним текстом, например «фурӯш 1800, такси 30», «продажа 500» или «sale 500». Понимает таджикский, русский и английский.
 - **Сегодня:** чек за день, доход, расход и прибыль; реальные должники, сначала просроченные.
-- **Насия:** клиенты, долги, полная и частичная оплата, просрочки, редактирование клиента, калькулятор, кнопки звонка, SMS и Telegram.
+- **AI-разбор текста:** Google Gemini с запасным вариантом на правилах. AI работает, только если на сервере задан `GEMINI_API_KEY`; без ключа текст разбирается по правилам. С AI текст отправляется в Google для разбора.
+- **Насия:** клиенты и поиск по ним, долги, полная и частичная оплата, просрочки, редактирование клиента, калькулятор, кнопки звонка, SMS и Telegram.
+- **Оплата:** способ оплаты (нақд — наличные, корт — карта, интиқол — перевод); кнопка «Всё» («Ҳамааш») одним нажатием ставит весь остаток.
+- **Редактирование долгов:** можно изменить сумму, описание и срок долга и отменить ошибочную оплату. История сохраняется: отменённая оплата показывается зачёркнутой с пометкой «Отменена» («Бекор шуд») и не учитывается в расчётах.
 - **Дафтар:** все записи, долги и оплаты по дням; CSV и печать.
-- **Ҳисобот:** неделя, месяц, год — доход, расход, прибыль, график, расходы по категориям; CSV и печать.
+- **Ҳисобот:** неделя, месяц, год — доход, расход, прибыль, график, расходы по категориям, возвращённые долги по способам оплаты; CSV и печать.
+- **Установка на телефон (PWA):** сайт можно добавить на экран телефона как приложение.
 - Интерфейс на трёх языках: таджикский, русский, английский.
 - Адаптирован для телефона.
 
@@ -182,7 +190,7 @@ Kassa AI — электронная тетрадь кассы и долгов д
 - AI сам ничего не сохраняет: запись сохраняется только после «Тасдиқ». Долг никогда не сохраняется как расход.
 - На живом сайте ключа Gemini пока нет, поэтому текст разбирается по правилам.
 - Голос — **тестовый**: используется распознавание речи браузера; таджикский пока ненадёжен.
-- Фото чека — **нет**.
+- Фото чека — **скоро** («ба наздикӣ»).
 - Онлайн-оплаты тарифов — **нет**.
 
 ### Технологии
@@ -203,8 +211,8 @@ Kassa AI — электронная тетрадь кассы и долгов д
 
 ### Тесты и CI
 
-- Frontend: 242 теста Vitest.
-- API: 164 теста Jest (unit) и 4 файла e2e-тестов (69 блоков `it`, часть из них `it.each`) на настоящем PostgreSQL.
+- Frontend: 292 теста Vitest.
+- API: 209 тестов Jest (unit) и 157 e2e-тестов в 7 файлах на настоящем PostgreSQL.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) на каждый push в `main` и каждый pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
   - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e-тесты (auth, клиенты, долги, оплаты, касса, отчёты), build.
@@ -309,9 +317,13 @@ Many small business owners in Tajikistan keep track of money in a paper notebook
 - Sign up, sign in and sign out.
 - **New entry:** sales and expenses in one line of text, e.g. «фурӯш 1800, такси 30», «продажа 500» or "sale 500". Tajik, Russian and English are understood.
 - **Today:** the day's receipt, income, expenses and profit; real debtors, overdue ones first.
-- **Nasiya:** customers, debts, full and partial payments, overdue debts, editing a customer, a calculator, call, SMS and Telegram buttons.
+- **AI text parsing:** Google Gemini with a rules-based fallback. AI works only if `GEMINI_API_KEY` is set on the server; without a key the text is parsed by rules. With AI the text is sent to Google for parsing.
+- **Nasiya:** customers and customer search, debts, full and partial payments, overdue debts, editing a customer, a calculator, call, SMS and Telegram buttons.
+- **Payments:** payment method (cash, card, transfer); the "All" («Ҳамааш») button fills in the whole remaining balance with one tap.
+- **Editing debts:** change a debt's amount, description and due date, and cancel a payment made by mistake. The history is kept: a cancelled payment is shown crossed out and marked "Cancelled" («Бекор шуд»), and it no longer counts.
 - **Ledger (Daftar):** all entries, debts and payments day by day; CSV and print.
-- **Reports (Hisobot):** week, month, year — income, expenses, profit, a chart, expenses by category; CSV and print.
+- **Reports (Hisobot):** week, month, year — income, expenses, profit, a chart, expenses by category, repaid debts by payment method; CSV and print.
+- **Install on a phone (PWA):** the site can be added to the phone's home screen as an app.
 - Interface in three languages: Tajik, Russian, English.
 - Works on phones.
 
@@ -322,7 +334,7 @@ To be honest:
 - AI never saves anything by itself: entries are saved only after "Tasdiq" (confirm). A debt is never saved as an expense.
 - The live site has no Gemini key yet, so text is parsed by rules.
 - Voice is **in beta**: it uses the browser's own speech recognition; Tajik is not reliable yet.
-- Receipt photos are **not available**.
+- Receipt photos are **coming soon** («ба наздикӣ»).
 - Online payment for plans is **not available**.
 
 ### Technology
@@ -343,8 +355,8 @@ To be honest:
 
 ### Tests and CI
 
-- Frontend: 242 Vitest tests.
-- API: 164 Jest unit tests and 4 e2e test files (69 `it` blocks, some of them `it.each`) against a real PostgreSQL.
+- Frontend: 292 Vitest tests.
+- API: 209 Jest unit tests and 157 e2e tests in 7 files against a real PostgreSQL.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) on every push to `main` and every pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
   - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e tests (auth, customers, debts, payments, cash, reports), build.
