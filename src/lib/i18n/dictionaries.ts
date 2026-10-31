@@ -46,6 +46,22 @@ const tg = {
       title: "Сабтҳои имрӯз",
       empty: "Имрӯз ҳоло сабт нест.",
     },
+    start: {
+      title: "Аз чӣ сар кунем?",
+      done: "иҷро шуд",
+      entry: {
+        title: "Сабти аввал",
+        text: "Фурӯш ё хароҷоти имрӯзро бо як ҷумла нависед.",
+      },
+      debt: {
+        title: "Муштарии аввал ва насия",
+        text: "Касеро, ки қарз гирифт, илова кунед ва насияашро нависед.",
+      },
+      reports: {
+        title: "Ҳисоботро бинед",
+        text: "Фоидаи ҳафта ва моҳро дар як нигоҳ бинед.",
+      },
+    },
     debts: {
       title: "Ба шумо қарздоранд",
       people: { one: "{count} нафар", few: "{count} нафар", many: "{count} нафар", other: "{count} нафар" },
@@ -73,6 +89,13 @@ const tg = {
       photoTag: "Ба наздикӣ",
     },
     close: "Пӯшидан",
+    examples: {
+      hint: "Як ҷумла нависед — мо чек месозем.",
+      label: "Масалан:",
+      sale: "Фурӯш 500, такси 30",
+      flour: "2 халта орд 600",
+      wage: "Музди коргар 150",
+    },
     said: {
       write: "Нависед…",
       said: "Шумо гуфтед…",
@@ -178,7 +201,8 @@ const tg = {
     month: "Моҳ",
     search: "Ҷустуҷӯ",
     searchPlaceholder: "Ҷустуҷӯ: «орд», «такси»…",
-    emptyMonth: "дар ин моҳ ҳоло сабт нест",
+    emptyMonth: "Дар ин моҳ ҳоло сабт нест. Аввалин фурӯш ё хароҷотро нависед.",
+    emptyAction: "+ Сабти нав",
     noMatches: "ҳеҷ сабт ёфт нашуд",
     today: "Имрӯз, {date}",
     yesterday: "Дирӯз, {date}",
@@ -260,7 +284,7 @@ const tg = {
       dueTomorrow: "мӯҳлат — фардо",
       dueBy: "то {date}",
       stamp: "ПАРДОХТ ШУД",
-      empty: "ҳоло насия нест",
+      empty: "Ҳоло муштарӣ нест. Аввал муштариро илова кунед, баъд насияашро нависед.",
       noMatches: "Бо «{query}» касе ёфт нашуд. Ном ё рақамро санҷед.",
     },
     sheet: {
@@ -418,7 +442,8 @@ const tg = {
       year: "соли {year}",
       lastMonths: { one: "{count} моҳи охир", few: "{count} моҳи охир", many: "{count} моҳи охир", other: "{count} моҳи охир" },
       recentMonths: "моҳҳои охир",
-      empty: "ҳоло маълумот нест — даромад ва хароҷотро сабт кунед",
+      empty: "Ҳоло маълумот нест. Фурӯш ва хароҷотро нависед — ҳисобот худаш пайдо мешавад.",
+      emptyAction: "+ Сабти нав",
     },
     insights: {
       best: "Беҳтарин рӯз",
@@ -688,6 +713,22 @@ const ru: Dictionary = {
       title: "Записи за сегодня",
       empty: "Сегодня записей пока нет.",
     },
+    start: {
+      title: "С чего начать?",
+      done: "готово",
+      entry: {
+        title: "Первая запись",
+        text: "Напишите одной фразой сегодняшнюю продажу или расход.",
+      },
+      debt: {
+        title: "Первый клиент и долг",
+        text: "Добавьте того, кто взял в долг, и запишите его долг.",
+      },
+      reports: {
+        title: "Посмотрите отчёт",
+        text: "Прибыль за неделю и месяц — на одном экране.",
+      },
+    },
     debts: {
       title: "Вам должны",
       people: { one: "{count} человек", few: "{count} человека", many: "{count} человек", other: "{count} человека" },
@@ -715,6 +756,13 @@ const ru: Dictionary = {
       photoTag: "Скоро",
     },
     close: "Закрыть",
+    examples: {
+      hint: "Напишите одну фразу — мы составим чек.",
+      label: "Например:",
+      sale: "Продажа 500, такси 30",
+      flour: "2 мешка муки 600",
+      wage: "Зарплата работнику 150",
+    },
     said: {
       write: "Напишите…",
       said: "Вы сказали…",
@@ -820,7 +868,8 @@ const ru: Dictionary = {
     month: "Месяц",
     search: "Поиск",
     searchPlaceholder: "Поиск: название, категория, сумма…",
-    emptyMonth: "в этом месяце пока нет записей",
+    emptyMonth: "В этом месяце записей пока нет. Запишите первую продажу или расход.",
+    emptyAction: "+ Новая запись",
     noMatches: "ничего не найдено",
     today: "Сегодня, {date}",
     yesterday: "Вчера, {date}",
@@ -902,7 +951,7 @@ const ru: Dictionary = {
       dueTomorrow: "срок — завтра",
       dueBy: "до {date}",
       stamp: "ОПЛАЧЕНО",
-      empty: "пока долгов нет",
+      empty: "Клиентов пока нет. Сначала добавьте клиента, потом запишите его долг.",
       noMatches: "По запросу «{query}» никого нет. Проверьте имя или номер.",
     },
     sheet: {
@@ -1060,7 +1109,8 @@ const ru: Dictionary = {
       year: "{year} год",
       lastMonths: { one: "{count} последний месяц", few: "{count} последних месяца", many: "{count} последних месяцев", other: "{count} последних месяца" },
       recentMonths: "последние месяцы",
-      empty: "пока нет данных — записывайте доходы и расходы",
+      empty: "Данных пока нет. Записывайте продажи и расходы — отчёт появится сам.",
+      emptyAction: "+ Новая запись",
     },
     insights: {
       best: "Лучший день",
@@ -1327,6 +1377,22 @@ const en: Dictionary = {
       title: "Today's entries",
       empty: "No entries yet today.",
     },
+    start: {
+      title: "Where to start?",
+      done: "done",
+      entry: {
+        title: "First entry",
+        text: "Write today's sale or expense in one sentence.",
+      },
+      debt: {
+        title: "First customer and debt",
+        text: "Add someone who bought on credit and write down their debt.",
+      },
+      reports: {
+        title: "See the report",
+        text: "Your profit for the week and month at a glance.",
+      },
+    },
     debts: {
       title: "Owed to you",
       people: { one: "{count} person", few: "{count} people", many: "{count} people", other: "{count} people" },
@@ -1354,6 +1420,13 @@ const en: Dictionary = {
       photoTag: "Coming soon",
     },
     close: "Close",
+    examples: {
+      hint: "Write one sentence — we'll make the receipt.",
+      label: "For example:",
+      sale: "Sale 500, taxi 30",
+      flour: "2 bags of flour 600",
+      wage: "Worker wage 150",
+    },
     said: {
       write: "Type…",
       said: "You said…",
@@ -1459,7 +1532,8 @@ const en: Dictionary = {
     month: "Month",
     search: "Search",
     searchPlaceholder: "Search: name, category, amount…",
-    emptyMonth: "no entries this month yet",
+    emptyMonth: "No entries this month yet. Write down your first sale or expense.",
+    emptyAction: "+ New entry",
     noMatches: "nothing found",
     today: "Today, {date}",
     yesterday: "Yesterday, {date}",
@@ -1541,7 +1615,7 @@ const en: Dictionary = {
       dueTomorrow: "due tomorrow",
       dueBy: "due {date}",
       stamp: "PAID",
-      empty: "no debts yet",
+      empty: "No customers yet. Add a customer first, then write down their debt.",
       noMatches: "No one matches “{query}”. Check the name or number.",
     },
     sheet: {
@@ -1699,7 +1773,8 @@ const en: Dictionary = {
       year: "{year}",
       lastMonths: { one: "last {count} month", few: "last {count} months", many: "last {count} months", other: "last {count} months" },
       recentMonths: "recent months",
-      empty: "no data yet — record your income and expenses",
+      empty: "No data yet. Record your sales and expenses — the report will appear by itself.",
+      emptyAction: "+ New entry",
     },
     insights: {
       best: "Best day",

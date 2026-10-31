@@ -1,3 +1,4 @@
+import { EmptyAction } from "@/components/daftar/EmptyAction";
 import { HandNote } from "@/components/daftar/HandNote";
 import { Stamp } from "@/components/daftar/Stamp";
 import { Sticker, type StickerTape } from "@/components/daftar/Sticker";
@@ -99,9 +100,10 @@ type NasiyaStickersProps = {
   today: string;
   selectedId: string | undefined;
   onSelect: (id: string) => void;
+  onAddCustomer: () => void;
 };
 
-export function NasiyaStickers({ rows, empty, query, today, selectedId, onSelect }: NasiyaStickersProps) {
+export function NasiyaStickers({ rows, empty, query, today, selectedId, onSelect, onAddCustomer }: NasiyaStickersProps) {
   const t = useT();
   return (
     <div className="grid grid-cols-1 gap-x-[18px] gap-y-[22px] pt-2.5 lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-[repeat(3,minmax(0,1fr))] xl:grid-cols-3 xl:grid-rows-[repeat(2,minmax(0,1fr))]">
@@ -115,9 +117,12 @@ export function NasiyaStickers({ rows, empty, query, today, selectedId, onSelect
           onSelect={() => onSelect(row.customer.id)}
         />
       ))}
-      {rows.length === 0 && (
+      {rows.length === 0 && empty && (
+        <EmptyAction text={t("nasiya.sticker.empty")} action={t("nasiya.headline.newCustomer")} onAction={onAddCustomer} className="lg:col-span-full" />
+      )}
+      {rows.length === 0 && !empty && (
         <HandNote tone="muted" className="self-center text-center text-2xl">
-          {empty ? t("nasiya.sticker.empty") : t("nasiya.sticker.noMatches", { query: query.trim() })}
+          {t("nasiya.sticker.noMatches", { query: query.trim() })}
         </HandNote>
       )}
     </div>

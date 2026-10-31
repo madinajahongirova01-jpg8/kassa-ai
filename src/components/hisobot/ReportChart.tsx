@@ -1,3 +1,4 @@
+import { EmptyAction } from "@/components/daftar/EmptyAction";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
 import { useLocale, useT } from "@/components/i18n/I18nProvider";
@@ -22,11 +23,7 @@ export function ReportChart({ title, note, bars }: ReportChartProps) {
         <HandNote className="text-xl lg:text-[22px]">{note}</HandNote>
       </div>
       {bars.length === 0 ? (
-        <div role="status" className="flex flex-1 items-center justify-center">
-          <HandNote tone="muted" className="text-center text-2xl">
-            {t("report.chart.empty")}
-          </HandNote>
-        </div>
+        <EmptyAction text={t("report.chart.empty")} action={t("report.chart.emptyAction")} href="/app/new" className="flex-1 justify-center" />
       ) : (
         <>
           <div className="flex min-h-0 flex-1 items-end gap-2 border-b-[1.5px] border-ink px-1.5 sm:gap-5">

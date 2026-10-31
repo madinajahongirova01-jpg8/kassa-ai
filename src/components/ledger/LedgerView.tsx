@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { EmptyAction } from "@/components/daftar/EmptyAction";
 import { HandNote } from "@/components/daftar/HandNote";
 import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
 import { LedgerDays } from "@/components/ledger/LedgerDays";
@@ -48,7 +49,6 @@ export function LedgerView({ ledger }: { ledger: LedgerMonth }) {
   const locale = useLocale();
 
   const visible = entries.filter((entry) => matchesFilter(entry, filter) && matchesQuery(entry, query, locale));
-  const emptyText = entries.length === 0 ? t("ledger.emptyMonth") : t("ledger.noMatches");
 
   function changeMonth(next: string) {
     startLoading(() => router.push(`/app/transactions?month=${next}`));
@@ -112,7 +112,11 @@ export function LedgerView({ ledger }: { ledger: LedgerMonth }) {
             loading && "opacity-60",
           )}
         >
-          <LedgerDays days={groupLedgerByDay(visible, entries)} today={today} emptyText={emptyText} />
+          {entries.length === 0 ? (
+            <EmptyAction text={t("ledger.emptyMonth")} action={t("ledger.emptyAction")} href="/app/new" />
+          ) : (
+            <LedgerDays days={groupLedgerByDay(visible, entries)} today={today} emptyText={t("ledger.noMatches")} />
+          )}
         </div>
       </section>
 

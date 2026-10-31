@@ -16,6 +16,7 @@ import { saveErrorKey } from "@/lib/sabtText";
 import { speechErrorKey, useSpeechRecognition } from "@/lib/useSpeechRecognition";
 
 const PARSE_DELAY_MS = 700;
+const SABT_EXAMPLES = ["sale", "flour", "wage"] as const;
 
 export function SabtView() {
   const t = useT();
@@ -170,6 +171,24 @@ export function SabtView() {
           onText={changeText}
           textRef={textRef}
         />
+        {mode === "text" && !confirmed && !saving && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-ink-2">{t("sabt.examples.hint")}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold">{t("sabt.examples.label")}</span>
+              {SABT_EXAMPLES.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => changeText(t(`sabt.examples.${key}`))}
+                  className="h-9 rounded-full border-[1.5px] border-ink bg-card px-3.5 text-sm font-medium text-ink hover:text-pen"
+                >
+                  {t(`sabt.examples.${key}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {mode === "voice" &&
           (speech.supported ? (
             <Recorder recording={recording} seconds={seconds} onToggle={toggleRecording} />
