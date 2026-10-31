@@ -72,7 +72,7 @@ Kassa AI дафтари электронии хазина ва насия бар
 
 ### Тестҳо ва CI
 
-- Frontend: 326 тести Vitest.
+- Frontend: 345 тести Vitest.
 - API: 213 тести Jest (unit) ва 175 тести e2e дар 8 файл дар PostgreSQL-и воқеӣ.
 - Браузер: 4 сенарияи Playwright (Chromium) — бақайдгирӣ, сабти нав, насия бо пардохти қисман, забони RU ва экрани 390px.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) дар ҳар push ба `main` ва ҳар pull request:
@@ -225,7 +225,7 @@ Kassa AI — электронная тетрадь кассы и долгов д
 
 ### Тесты и CI
 
-- Frontend: 326 тестов Vitest.
+- Frontend: 345 тестов Vitest.
 - API: 213 тестов Jest (unit) и 175 e2e-тестов в 8 файлах на настоящем PostgreSQL.
 - Браузер: 4 сценария Playwright (Chromium) — регистрация, новая запись, долг с частичной оплатой, язык RU и экран 390px.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) на каждый push в `main` и каждый pull request:
@@ -378,7 +378,7 @@ To be honest:
 
 ### Tests and CI
 
-- Frontend: 326 Vitest tests.
+- Frontend: 345 Vitest tests.
 - API: 213 Jest unit tests and 175 e2e tests in 8 files against a real PostgreSQL.
 - Browser: 4 Playwright scenarios (Chromium) — sign-up, new entry, debt with a partial payment, Russian language and a 390px screen.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) on every push to `main` and every pull request:
