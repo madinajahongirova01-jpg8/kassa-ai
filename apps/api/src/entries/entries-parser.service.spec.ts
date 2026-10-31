@@ -52,6 +52,11 @@ describe('EntriesParserService', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it.each(['', '   '])('treats the empty key %p from the environment as no key', async (key) => {
+    expect(await service(key).parse(DEMO)).toEqual(rulesForDemo);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('returns AI lines in dirams when Gemini answers with valid data', async () => {
     fetchMock.mockResolvedValue(
       geminiReply({

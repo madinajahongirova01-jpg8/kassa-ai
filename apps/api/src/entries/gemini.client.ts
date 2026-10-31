@@ -43,11 +43,16 @@ export class GeminiClient {
   constructor(private readonly config: ConfigService<Env, true>) {}
 
   get enabled(): boolean {
-    return this.config.get('GEMINI_API_KEY', { infer: true }) !== undefined;
+    return this.apiKey() !== undefined;
+  }
+
+  private apiKey(): string | undefined {
+    const key = this.config.get('GEMINI_API_KEY', { infer: true })?.trim();
+    return key === undefined || key === '' ? undefined : key;
   }
 
   async extract(text: string): Promise<unknown> {
-    const key = this.config.get('GEMINI_API_KEY', { infer: true });
+    const key = this.apiKey();
     if (key === undefined) throw new GeminiError('network');
     const model = this.config.get('GEMINI_MODEL', { infer: true });
 
