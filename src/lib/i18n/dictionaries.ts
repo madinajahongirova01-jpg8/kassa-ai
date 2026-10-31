@@ -261,7 +261,7 @@ const tg = {
       dueBy: "то {date}",
       stamp: "ПАРДОХТ ШУД",
       empty: "ҳоло насия нест",
-      noMatches: "касе ёфт нашуд",
+      noMatches: "Бо «{query}» касе ёфт нашуд. Ном ё рақамро санҷед.",
     },
     sheet: {
       label: "Варақи {name}",
@@ -868,7 +868,7 @@ const ru: Dictionary = {
       dueBy: "до {date}",
       stamp: "ОПЛАЧЕНО",
       empty: "пока долгов нет",
-      noMatches: "никого не найдено",
+      noMatches: "По запросу «{query}» никого нет. Проверьте имя или номер.",
     },
     sheet: {
       label: "Карточка: {name}",
@@ -1472,7 +1472,7 @@ const en: Dictionary = {
       dueBy: "due {date}",
       stamp: "PAID",
       empty: "no debts yet",
-      noMatches: "no one found",
+      noMatches: "No one matches “{query}”. Check the name or number.",
     },
     sheet: {
       label: "{name}'s sheet",

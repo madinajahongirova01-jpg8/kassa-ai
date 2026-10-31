@@ -43,14 +43,25 @@ export function matchesStatus(status: DebtStatus, filter: StatusFilter) {
   return filter === "all" || status === filter;
 }
 
+const TJ_PREFIX = "992";
+const PHONE_QUERY = /^[\d\s+()-]+$/;
+
+function foldText(text: string) {
+  return text.toLocaleLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ").trim();
+}
+
+function localDigits(digits: string) {
+  return digits.startsWith(TJ_PREFIX) ? digits.slice(TJ_PREFIX.length) : digits;
+}
+
 export function matchesQuery(customer: DebtCustomer, query: string) {
-  const q = query.trim().toLowerCase();
+  const q = foldText(query);
   if (!q) return true;
+  if (!PHONE_QUERY.test(q)) return foldText(customer.name).includes(q);
+  const phone = customer.phone.replace(/\D/g, "");
+  if (!phone) return false;
   const digits = q.replace(/\D/g, "");
-  return (
-    customer.name.toLowerCase().includes(q) ||
-    (digits.length > 0 && customer.phone.replace(/\D/g, "").includes(digits))
-  );
+  return phone.includes(digits) || localDigits(phone).includes(localDigits(digits));
 }
 
 export type DebtRow = {

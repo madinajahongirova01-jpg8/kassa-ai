@@ -95,12 +95,13 @@ function DebtSticker({ row, today, index, selected, onSelect }: DebtStickerProps
 type NasiyaStickersProps = {
   rows: DebtRow[];
   empty: boolean;
+  query: string;
   today: string;
   selectedId: string | undefined;
   onSelect: (id: string) => void;
 };
 
-export function NasiyaStickers({ rows, empty, today, selectedId, onSelect }: NasiyaStickersProps) {
+export function NasiyaStickers({ rows, empty, query, today, selectedId, onSelect }: NasiyaStickersProps) {
   const t = useT();
   return (
     <div className="grid grid-cols-1 gap-x-[18px] gap-y-[22px] pt-2.5 lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-[repeat(3,minmax(0,1fr))] xl:grid-cols-3 xl:grid-rows-[repeat(2,minmax(0,1fr))]">
@@ -116,7 +117,7 @@ export function NasiyaStickers({ rows, empty, today, selectedId, onSelect }: Nas
       ))}
       {rows.length === 0 && (
         <HandNote tone="muted" className="self-center text-center text-2xl">
-          {empty ? t("nasiya.sticker.empty") : t("nasiya.sticker.noMatches")}
+          {empty ? t("nasiya.sticker.empty") : t("nasiya.sticker.noMatches", { query: query.trim() })}
         </HandNote>
       )}
     </div>

@@ -87,7 +87,7 @@ export function NasiyaView({ book }: { book: DebtBook }) {
           </HandNote>
         )}
         <NasiyaFilters counts={statusCounts(rows)} filter={filter} onFilter={setFilter} query={query} onQuery={setQuery} />
-        <NasiyaStickers rows={visible} empty={rows.length === 0} today={today} selectedId={selected?.customer.id} onSelect={select} />
+        <NasiyaStickers rows={visible} empty={rows.length === 0} query={query} today={today} selectedId={selected?.customer.id} onSelect={select} />
       </section>
       {selected && (
         <NasiyaSheet
