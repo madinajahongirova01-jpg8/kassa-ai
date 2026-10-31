@@ -23,6 +23,7 @@ export function PlanCard({ plan, t }: { plan: Plan; t: Translate }) {
       <div className="mt-6 border-t-[1.5px] border-dashed border-ink/30 pt-5">
         <div className={cn("font-display leading-none font-extrabold tracking-[-0.03em]", numeric ? "text-[56px]" : "text-[34px]")}>{price}</div>
         <div className="mt-2 font-mono text-sm font-semibold">{t(`pricing.plans.${plan.id}.period`)}</div>
+        {numeric && <div className={cn("mt-1 text-xs", plan.main ? "text-[#4a4416]" : "text-ink-3")}>{t("pricing.planned")}</div>}
       </div>
       {plan.id === "ogoz" && <HandNote className="mt-4 -rotate-2 text-xl">{t("pricing.tryNote")}</HandNote>}
     </article>

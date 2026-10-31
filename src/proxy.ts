@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { LOCALE_COOKIE, resolveLocale } from "@/lib/i18n/config";
+import { LOCALE_COOKIE, LOCALES, localeCookie, resolveLocale, type Locale } from "@/lib/i18n/config";
 import { SESSION_COOKIE } from "@/lib/session";
 
 function isAppPath(pathname: string) {
@@ -10,10 +10,21 @@ function isAdminPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
+function localeOfPath(pathname: string): Locale | undefined {
+  return LOCALES.find((locale) => pathname === `/${locale}` || pathname === `/${locale}/`);
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isAdminPath(pathname)) return NextResponse.redirect(new URL("/", request.url));
+
+  const chosen = localeOfPath(pathname);
+  if (chosen) {
+    const response = NextResponse.redirect(new URL("/", request.url));
+    response.headers.append("Set-Cookie", localeCookie(chosen));
+    return response;
+  }
 
   // Optimistic check only: it sees whether a session cookie exists, not whether the token is valid.
   // The token itself is verified by the NestJS API on every data request (and by /api/auth/me).

@@ -24,7 +24,7 @@ describe("Landing and Pricing texts", () => {
 
   it("keep the original Tajik texts", () => {
     const t = createT("tg");
-    expect(t("landing.hero.marker")).toBe("менависад.");
+    expect(t("landing.hero.marker")).toBe("ҳисоб мекунад.");
     expect(t("landing.steps.title")).toBe("Се қадам — ва дафтар тайёр");
     expect(t("landing.openBook")).toBe("Дафтарро кушоед");
     expect(`${t("pricing.titleBefore")}${t("pricing.titleMarker")}${t("pricing.titleAfter")}`).toBe("Тарофаи худро интихоб кунед.");

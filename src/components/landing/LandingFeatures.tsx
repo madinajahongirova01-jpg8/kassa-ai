@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
 import { Marker } from "@/components/daftar/Marker";
 import { Sticker } from "@/components/daftar/Sticker";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 import { todayEntries, weekProfit } from "@/data/imruz";
 import { cn } from "@/lib/cn";
 import { formatSomoni } from "@/lib/format";
@@ -25,7 +26,10 @@ function Feature({ href, tab, title, text, open, children }: FeatureProps) {
       href={href}
       className="group flex flex-col rounded-sheet border-[1.5px] border-ink bg-card p-5 text-ink shadow-hard transition-transform hover:-translate-y-0.5 hover:text-ink lg:p-6"
     >
-      <span className="self-start rounded-full bg-ink px-3 py-1 text-xs font-semibold text-card">{tab}</span>
+      <span className="flex flex-wrap items-center justify-between gap-2">
+        <span className="rounded-full bg-ink px-3 py-1 text-xs font-semibold text-card">{tab}</span>
+        <DemoBadge />
+      </span>
       <h3 className="mt-3 font-display text-xl font-bold">{title}</h3>
       <p className="mt-1 text-sm text-ink-2">{text}</p>
       <div className="mt-5 flex flex-1 flex-col justify-end">{children}</div>

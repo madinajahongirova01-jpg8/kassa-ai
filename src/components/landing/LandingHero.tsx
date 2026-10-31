@@ -6,6 +6,7 @@ import { Marker } from "@/components/daftar/Marker";
 import { Receipt, ReceiptDivider } from "@/components/daftar/Receipt";
 import { Stamp } from "@/components/daftar/Stamp";
 import { Highlighted } from "@/components/sabt/SaidCard";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 import { sabtDemo } from "@/data/sabt";
 import { cn } from "@/lib/cn";
 import { formatDayMonth, formatSomoni } from "@/lib/format";
@@ -52,7 +53,10 @@ export async function LandingHero() {
           <span className="absolute -top-3.5 right-4 rotate-3 rounded-lg border-[1.5px] border-ink bg-marker px-2.5 py-0.5 font-hand text-xl font-semibold">
             {plural("sabt.said.found", entries.length)}
           </span>
-          <div className="text-xs font-semibold tracking-wider text-ink-3 uppercase">{t("landing.hero.youSaid")}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold tracking-wider text-ink-3 uppercase">{t("landing.hero.youSaid")}</span>
+            <DemoBadge />
+          </div>
           <p className="mt-2 font-display text-lg leading-[1.7] font-medium lg:text-xl">
             «<Highlighted text={sabtDemo.transcript} entries={entries} />»
           </p>

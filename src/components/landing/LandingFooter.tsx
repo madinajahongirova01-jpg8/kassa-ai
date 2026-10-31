@@ -20,6 +20,9 @@ export async function LandingFooter() {
         <Link href="/app/new" className="text-ink hover:text-pen">
           {t("nav.newEntry")}
         </Link>
+        <Link href="/pricing" className="text-ink hover:text-pen">
+          {t("pricing.note")}
+        </Link>
       </nav>
     </footer>
   );

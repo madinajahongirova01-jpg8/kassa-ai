@@ -40,7 +40,7 @@ const tg = {
     },
     newEntry: {
       write: "Нависед",
-      voiceSoon: "Овоз — ба наздикӣ",
+      voiceSoon: "Овоз — санҷишӣ",
     },
     entries: {
       title: "Сабтҳои имрӯз",
@@ -422,21 +422,21 @@ const tg = {
     },
     openBook: "Дафтарро кушоед",
     hero: {
-      note: "Шумо гап мезанед…",
-      marker: "менависад.",
+      note: "Шумо менависед…",
+      marker: "ҳисоб мекунад.",
       text: "Дафтари рақамӣ барои дӯкон ва тиҷорати хурд. Пули даромад, пули рафт ва насияро бо матн сабт кунед — Kassa суммаҳоро ҷудо мекунад ва чек месозад.",
-      soon: "Овоз ва акси чек — ба наздикӣ.",
+      soon: "Овоз — санҷишӣ, акси чек — ба наздикӣ.",
       write: "Нависед",
-      sample: "Намунаро бинед",
-      sampleNote: "Дар саҳифаҳо ҳоло маълумоти намунавӣ нишон дода мешавад.",
-      youSaid: "Шумо гуфтед",
+      sample: "Ройгон санҷед",
+      sampleNote: "Бақайдгирӣ кунед ва ройгон санҷед.",
+      youSaid: "Шумо навиштед",
     },
     steps: {
       title: "Се қадам — ва дафтар тайёр",
       note: "ягон қалам лозим нашуд :)",
       talk: {
-        title: "Шумо гап мезанед",
-        note: "ё матн менависед, ё акси чекро мефиристед",
+        title: "Шумо менависед",
+        note: "як ҷумла бо матн; овоз — санҷишӣ",
       },
       count: {
         title: "Kassa ҳисоб мекунад",
@@ -485,22 +485,23 @@ const tg = {
     titleBefore: "Тарофаи ",
     titleMarker: "худро",
     titleAfter: " интихоб кунед.",
-    intro: "Аз 7 рӯзи ройгон оғоз кунед. Нарх бо сомонӣ ва барои як моҳ нишон дода шудааст.",
+    intro: "Инҳо нархҳои пешбинӣ мебошанд: бо сомонӣ ва барои як моҳ. Ҳоло пардохт нест.",
     paymentTitle: "Пардохт ҳоло фаъол нест",
-    paymentText: "Пардохти онлайн ҳанӯз пайваст нашудааст. Ҳоло барномаро бо маълумоти намунавӣ дида метавонед.",
+    paymentText: "Пардохти онлайн ҳанӯз пайваст нашудааст. Бақайдгирӣ кунед ва ройгон санҷед.",
     featuresTitle: "Дар барнома чӣ ҳаст",
-    featuresNote: "ҳамаашро ҳозир дида метавонед",
+    featuresNote: "бақайдгирӣ кунед ва ройгон санҷед",
     nav: {
       label: "Менюи сайт",
       home: "Асосӣ",
     },
     mainBadge: "тарофаи асосӣ",
     tryNote: "аввал санҷед, баъд қарор диҳед",
+    planned: "нархи пешбинӣ",
     plans: {
       ogoz: {
         name: "Оғоз",
         price: "Ройгон",
-        period: "7 рӯз",
+        period: "барои санҷиш",
         audience: "Барои санҷиш ва шинос шудан бо барнома",
       },
       tijorat: {
@@ -570,7 +571,7 @@ const tg = {
       loginInvalid: "Почта ва паролро санҷед.",
       forbidden: "Дархост рад шуд. Саҳифаро нав кунед ва боз кӯшиш кунед.",
       server: "Сервер ҳоло ҷавоб намедиҳад. Каме баъд боз кӯшиш кунед.",
-      sessionLost: "Браузер сессияро нигоҳ надошт. Cookie-ҳоро иҷозат диҳед ва сайтро аз ҳамон суроға (масалан http://localhost:3000) кушоед.",
+      sessionLost: "Браузер сессияро нигоҳ надошт. Cookie-ҳоро иҷозат диҳед, саҳифаро нав кунед ва боз дароед.",
     },
   },
   admin: {
@@ -645,7 +646,7 @@ const ru: Dictionary = {
     },
     newEntry: {
       write: "Напишите",
-      voiceSoon: "Голос — скоро",
+      voiceSoon: "Голос — тест",
     },
     entries: {
       title: "Записи за сегодня",
@@ -1027,21 +1028,21 @@ const ru: Dictionary = {
     },
     openBook: "Открыть журнал",
     hero: {
-      note: "Вы говорите…",
-      marker: "записывает.",
+      note: "Вы пишете…",
+      marker: "считает.",
       text: "Цифровая тетрадь для магазина и малого бизнеса. Записывайте доходы, расходы и долги текстом — Kassa разберёт суммы и составит чек.",
-      soon: "Голос и фото чека — скоро.",
+      soon: "Голос — тест, фото чека — скоро.",
       write: "Написать",
-      sample: "Посмотреть пример",
-      sampleNote: "Сейчас на страницах показаны демо-данные.",
-      youSaid: "Вы сказали",
+      sample: "Попробовать бесплатно",
+      sampleNote: "Зарегистрируйтесь и попробуйте бесплатно.",
+      youSaid: "Вы написали",
     },
     steps: {
       title: "Три шага — и журнал готов",
       note: "ручка не понадобилась :)",
       talk: {
-        title: "Вы говорите",
-        note: "или пишете текст, или отправляете фото чека",
+        title: "Вы пишете",
+        note: "одна фраза текстом; голос — в тесте",
       },
       count: {
         title: "Kassa считает",
@@ -1090,22 +1091,23 @@ const ru: Dictionary = {
     titleBefore: "Выберите ",
     titleMarker: "свой",
     titleAfter: " тариф.",
-    intro: "Начните с 7 бесплатных дней. Цены указаны в сомони за один месяц.",
+    intro: "Это планируемые цены: в сомони за один месяц. Сейчас оплаты нет.",
     paymentTitle: "Оплата пока не работает",
-    paymentText: "Онлайн-оплата ещё не подключена. Пока можно посмотреть приложение на демо-данных.",
+    paymentText: "Онлайн-оплата ещё не подключена. Зарегистрируйтесь и попробуйте бесплатно.",
     featuresTitle: "Что есть в приложении",
-    featuresNote: "всё это можно посмотреть уже сейчас",
+    featuresNote: "зарегистрируйтесь и попробуйте бесплатно",
     nav: {
       label: "Меню сайта",
       home: "Главная",
     },
     mainBadge: "основной тариф",
     tryNote: "сначала попробуйте, потом решайте",
+    planned: "планируемая цена",
     plans: {
       ogoz: {
         name: "Старт",
         price: "Бесплатно",
-        period: "7 дней",
+        period: "для знакомства",
         audience: "Чтобы попробовать приложение и познакомиться с ним",
       },
       tijorat: {
@@ -1175,7 +1177,7 @@ const ru: Dictionary = {
       loginInvalid: "Проверьте почту и пароль.",
       forbidden: "Запрос отклонён. Обновите страницу и попробуйте снова.",
       server: "Сервер сейчас не отвечает. Попробуйте чуть позже.",
-      sessionLost: "Браузер не сохранил сессию. Разрешите cookie и откройте сайт с того же адреса (например, http://localhost:3000).",
+      sessionLost: "Браузер не сохранил сессию. Разрешите cookie, обновите страницу и войдите снова.",
     },
   },
   admin: {
@@ -1247,7 +1249,7 @@ const en: Dictionary = {
     },
     newEntry: {
       write: "Type it",
-      voiceSoon: "Voice — coming soon",
+      voiceSoon: "Voice — beta",
     },
     entries: {
       title: "Today's entries",
@@ -1629,21 +1631,21 @@ const en: Dictionary = {
     },
     openBook: "Open the ledger",
     hero: {
-      note: "You talk…",
-      marker: "writes it down.",
+      note: "You write…",
+      marker: "does the math.",
       text: "A digital cash book for shops and small businesses. Record money in, money out and debts as text — Kassa picks out the amounts and builds a receipt.",
-      soon: "Voice and receipt photos — coming soon.",
+      soon: "Voice is in beta, receipt photos are coming soon.",
       write: "Write it",
-      sample: "See the demo",
-      sampleNote: "The pages show sample data for now.",
-      youSaid: "You said",
+      sample: "Try it free",
+      sampleNote: "Sign up and try it for free.",
+      youSaid: "You wrote",
     },
     steps: {
       title: "Three steps — and the ledger is done",
       note: "no pen needed :)",
       talk: {
-        title: "You talk",
-        note: "or type text, or send a receipt photo",
+        title: "You write",
+        note: "one sentence of text; voice is in beta",
       },
       count: {
         title: "Kassa does the math",
@@ -1692,22 +1694,23 @@ const en: Dictionary = {
     titleBefore: "Choose ",
     titleMarker: "your",
     titleAfter: " plan.",
-    intro: "Start with 7 free days. Prices are in somoni per month.",
+    intro: "These are planned prices in somoni per month. There is no payment yet.",
     paymentTitle: "Payments aren't active yet",
-    paymentText: "Online payment isn't connected yet. For now you can explore the app with sample data.",
+    paymentText: "Online payment isn't connected yet. Sign up and try it for free.",
     featuresTitle: "What's in the app",
-    featuresNote: "you can see all of it right now",
+    featuresNote: "sign up and try it for free",
     nav: {
       label: "Site menu",
       home: "Home",
     },
     mainBadge: "main plan",
     tryNote: "try first, decide later",
+    planned: "planned price",
     plans: {
       ogoz: {
         name: "Start",
         price: "Free",
-        period: "7 days",
+        period: "to try it out",
         audience: "To try the app and get to know it",
       },
       tijorat: {
@@ -1777,7 +1780,7 @@ const en: Dictionary = {
       loginInvalid: "Check the email and password.",
       forbidden: "The request was rejected. Reload the page and try again.",
       server: "The server isn't responding. Try again a little later.",
-      sessionLost: "The browser didn't keep the session. Allow cookies and open the site from the same address (for example http://localhost:3000).",
+      sessionLost: "The browser didn't keep the session. Allow cookies, reload the page and sign in again.",
     },
   },
   admin: {
