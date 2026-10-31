@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { apiRequest, nearestForwardedIp, type ApiError } from "@/lib/api/server";
+import { apiRequest, nearestForwardedIp, SLOW_REQUEST_TIMEOUT_MS, type ApiError } from "@/lib/api/server";
 import { clearSessionCookie, readSessionToken, setSessionCookie } from "@/lib/session";
 
 export type SessionUser = {
@@ -96,7 +96,12 @@ export async function startSession(request: NextRequest, path: "/auth/login" | "
   if (body === null) return errorResponse({ status: 400, message: "Expected a JSON object" });
 
   const payload = Object.fromEntries(fields.filter((field) => body[field] !== undefined).map((field) => [field, body[field]]));
-  const result = await apiRequest<Partial<AuthResult> | null>(path, { method: "POST", body: payload, clientIp: clientIp(request) });
+  const result = await apiRequest<Partial<AuthResult> | null>(path, {
+    method: "POST",
+    body: payload,
+    clientIp: clientIp(request),
+    timeoutMs: SLOW_REQUEST_TIMEOUT_MS,
+  });
   if (!result.ok) return errorResponse(result.error);
 
   const accessToken = result.data?.accessToken;

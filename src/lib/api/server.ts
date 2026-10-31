@@ -4,6 +4,7 @@
 import { isIP } from "node:net";
 
 const REQUEST_TIMEOUT_MS = 10_000;
+export const SLOW_REQUEST_TIMEOUT_MS = 50_000;
 
 export type ApiError = {
   status: number;
@@ -18,6 +19,7 @@ type ApiRequest = {
   body?: unknown;
   token?: string;
   clientIp?: string;
+  timeoutMs?: number;
 };
 
 export function nearestForwardedIp(forwardedFor: string | null): string | undefined {
@@ -51,7 +53,7 @@ function readError(status: number, body: unknown): ApiError {
   return { status, message: "Request failed" };
 }
 
-export async function apiRequest<T>(path: string, { method = "GET", body, token, clientIp }: ApiRequest = {}): Promise<ApiResult<T>> {
+export async function apiRequest<T>(path: string, { method = "GET", body, token, clientIp, timeoutMs = REQUEST_TIMEOUT_MS }: ApiRequest = {}): Promise<ApiResult<T>> {
   const baseUrl = apiBaseUrl();
   if (baseUrl === null) {
     console.error("KASSA_API_URL is missing or is not an http(s) URL");
@@ -71,13 +73,17 @@ export async function apiRequest<T>(path: string, { method = "GET", body, token,
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
       redirect: "error",
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
-  } catch {
-    return { ok: false, error: { status: 503, message: "API is unavailable" } };
+  } catch (error) {
+    const timedOut = error instanceof DOMException && error.name === "TimeoutError";
+    return { ok: false, error: timedOut ? { status: 504, message: "API timed out" } : { status: 503, message: "API is unavailable" } };
   }
 
   const data: unknown = response.status === 204 ? null : await response.json().catch(() => null);
+  if (response.status === 502 || response.status === 503 || response.status === 504) {
+    return { ok: false, error: { status: 503, message: "API is unavailable" } };
+  }
   if (!response.ok) return { ok: false, error: readError(response.status, data) };
   return { ok: true, status: response.status, data: data as T };
 }

@@ -572,6 +572,7 @@ const tg = {
       forbidden: "Дархост рад шуд. Саҳифаро нав кунед ва боз кӯшиш кунед.",
       server: "Сервер ҳоло ҷавоб намедиҳад. Каме баъд боз кӯшиш кунед.",
       sessionLost: "Браузер сессияро нигоҳ надошт. Cookie-ҳоро иҷозат диҳед, саҳифаро нав кунед ва боз дароед.",
+      waking: "Сервер бедор шуда истодааст, 30–60 сония интизор шавед ва боз кӯшиш кунед.",
     },
   },
   admin: {
@@ -1178,6 +1179,7 @@ const ru: Dictionary = {
       forbidden: "Запрос отклонён. Обновите страницу и попробуйте снова.",
       server: "Сервер сейчас не отвечает. Попробуйте чуть позже.",
       sessionLost: "Браузер не сохранил сессию. Разрешите cookie, обновите страницу и войдите снова.",
+      waking: "Сервер просыпается, подождите 30–60 секунд и попробуйте снова.",
     },
   },
   admin: {
@@ -1781,6 +1783,7 @@ const en: Dictionary = {
       forbidden: "The request was rejected. Reload the page and try again.",
       server: "The server isn't responding. Try again a little later.",
       sessionLost: "The browser didn't keep the session. Allow cookies, reload the page and sign in again.",
+      waking: "The server is waking up. Wait 30–60 seconds and try again.",
     },
   },
   admin: {

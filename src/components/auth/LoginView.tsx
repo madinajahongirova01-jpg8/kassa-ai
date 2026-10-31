@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
 import { PasswordInput } from "@/components/daftar/PasswordInput";
 import { useT } from "@/components/i18n/I18nProvider";
-import { authErrorKey, type AuthMode as Mode } from "@/lib/authText";
+import { authenticate, SESSION_TIMEOUT_MS, wakeApi } from "@/lib/authRequest";
+import type { AuthMode as Mode } from "@/lib/authText";
 import { cn } from "@/lib/cn";
 
 type SessionUser = { id: string; email: string; name: string | null; businessName: string | null };
@@ -43,10 +44,12 @@ export function LoginView() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
+  const submitting = useRef(false);
 
   useEffect(() => {
     let active = true;
-    fetch("/api/auth/me", { cache: "no-store" })
+    void wakeApi();
+    fetch("/api/auth/me", { cache: "no-store", signal: AbortSignal.timeout(SESSION_TIMEOUT_MS) })
       .then((response) => (response.ok ? response.json() : null))
       .then((body: { user?: SessionUser } | null) => active && setUser(body?.user ?? null))
       .catch(() => active && setUser(null));
@@ -62,31 +65,19 @@ export function LoginView() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setPending(true);
     setError(null);
     const body = mode === "login" ? { email, password } : { email, password, businessName, ...(name.trim() ? { name } : {}) };
-    try {
-      const response = await fetch(`/api/auth/${mode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!response.ok) {
-        setError(t(authErrorKey(response.status, mode)));
-        setPending(false);
-        return;
-      }
-      const session = await fetch("/api/auth/me", { cache: "no-store" });
-      if (!session.ok) {
-        setError(t("auth.errors.sessionLost"));
-        setPending(false);
-        return;
-      }
+    const outcome = await authenticate({ mode, body, onWaking: () => setError(t("auth.errors.waking")) });
+    submitting.current = false;
+    if (outcome.ok) {
       router.replace(nextPath());
-    } catch {
-      setError(t(authErrorKey(0, mode)));
-      setPending(false);
+      return;
     }
+    setError(t(outcome.key));
+    setPending(false);
   }
 
   async function logout() {
