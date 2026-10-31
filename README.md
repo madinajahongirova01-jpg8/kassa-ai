@@ -66,14 +66,19 @@ Kassa AI дафтари электронии хазина ва насия бар
 - Маблағҳо бо дирам (адади бутун) нигоҳ дошта мешаванд.
 - Насия ва пардохт дар транзаксияи база сабт мешаванд.
 - `/health` танҳо `{"status":"ok"}` медиҳад, бе маълумот ва бе база.
+- Баъди иваз кардани парол ҳамаи сессияҳои кӯҳна (дар дигар дастгоҳҳо низ) бекор мешаванд; сессияи ҷорӣ токени нав мегирад ва кор мекунад.
+- Сарлавҳаҳои амниятии сайт: Content-Security-Policy (танҳо манбаъҳои худи сайт), Strict-Transport-Security, X-Content-Type-Options, Referrer-Policy, Permissions-Policy (микрофон танҳо барои худи сайт, камера манъ), X-Frame-Options: DENY.
+- Dependabot ҳар ҳафта навсозиҳои npm (frontend ва API) ва GitHub Actions-ро месанҷад.
 
 ### Тестҳо ва CI
 
-- Frontend: 318 тести Vitest.
-- API: 209 тести Jest (unit) ва 173 тести e2e дар 8 файл дар PostgreSQL-и воқеӣ.
+- Frontend: 326 тести Vitest.
+- API: 213 тести Jest (unit) ва 175 тести e2e дар 8 файл дар PostgreSQL-и воқеӣ.
+- Браузер: 4 сенарияи Playwright (Chromium) — бақайдгирӣ, сабти нав, насия бо пардохти қисман, забони RU ва экрани 390px.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) дар ҳар push ба `main` ва ҳар pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
-  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, тестҳои e2e (auth, профил ва парол, муштариён, насия, пардохтҳо, хазина, ҳисобот), build.
+  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, тестҳои e2e (auth, профил ва парол, муштариён, насия, пардохтҳо, хазина, ҳисобот), build;
+  - browser (баъди frontend ва API): PostgreSQL 17, build-и API ва frontend, Chromium аз кэш, `npm run test:browser`. Gemini, Render ва Vercel истифода намешаванд.
 
 ### Оғоз дар компютер
 
@@ -108,9 +113,10 @@ npm run dev
 npm run lint && npx tsc --noEmit && npm test && npm run build
 cd apps/api && npm run lint && npm run typecheck && npm test && npm run build
 cd apps/api && npm run test:e2e
+npx playwright install chromium && npm run test:browser
 ```
 
-`test:e2e` базаи алоҳидаи `TEST_DATABASE_URL`-ро талаб мекунад.
+`test:e2e` базаи алоҳидаи `TEST_DATABASE_URL`-ро талаб мекунад. `test:browser` ба frontend (3000) ва API (3001)-и аллакай кушода пайваст мешавад.
 
 ### Deploy
 
@@ -131,7 +137,8 @@ cd apps/api && npm run test:e2e
 │   ├── prisma/          # schema.prisma ва миграцияҳо
 │   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
 │   └── test/            # Тестҳои e2e
-└── .github/workflows/   # CI
+├── e2e/                 # Тестҳои браузерӣ (Playwright)
+└── .github/             # CI ва Dependabot
 ```
 
 ### Нақша
@@ -212,14 +219,19 @@ Kassa AI — электронная тетрадь кассы и долгов д
 - Деньги хранятся в дирамах (целые числа).
 - Долги и оплаты записываются в транзакции базы.
 - `/health` отдаёт только `{"status":"ok"}`, без данных и без обращения к базе.
+- После смены пароля все старые сессии (в том числе на других устройствах) перестают работать; текущая сессия получает новый токен и продолжает работать.
+- Заголовки безопасности сайта: Content-Security-Policy (только источники самого сайта), Strict-Transport-Security, X-Content-Type-Options, Referrer-Policy, Permissions-Policy (микрофон только для самого сайта, камера запрещена), X-Frame-Options: DENY.
+- Dependabot раз в неделю проверяет обновления npm (frontend и API) и GitHub Actions.
 
 ### Тесты и CI
 
-- Frontend: 318 тестов Vitest.
-- API: 209 тестов Jest (unit) и 173 e2e-теста в 8 файлах на настоящем PostgreSQL.
+- Frontend: 326 тестов Vitest.
+- API: 213 тестов Jest (unit) и 175 e2e-тестов в 8 файлах на настоящем PostgreSQL.
+- Браузер: 4 сценария Playwright (Chromium) — регистрация, новая запись, долг с частичной оплатой, язык RU и экран 390px.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) на каждый push в `main` и каждый pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
-  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e-тесты (auth, профиль и пароль, клиенты, долги, оплаты, касса, отчёты), build.
+  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e-тесты (auth, профиль и пароль, клиенты, долги, оплаты, касса, отчёты), build;
+  - browser (после frontend и API): PostgreSQL 17, сборка API и frontend, Chromium из кэша, `npm run test:browser`. Gemini, Render и Vercel не используются.
 
 ### Локальный запуск
 
@@ -254,9 +266,10 @@ npm run dev
 npm run lint && npx tsc --noEmit && npm test && npm run build
 cd apps/api && npm run lint && npm run typecheck && npm test && npm run build
 cd apps/api && npm run test:e2e
+npx playwright install chromium && npm run test:browser
 ```
 
-Для `test:e2e` нужна отдельная база `TEST_DATABASE_URL`.
+Для `test:e2e` нужна отдельная база `TEST_DATABASE_URL`. `test:browser` подключается к уже запущенным frontend (3000) и API (3001).
 
 ### Деплой
 
@@ -277,7 +290,8 @@ cd apps/api && npm run test:e2e
 │   ├── prisma/          # schema.prisma и миграции
 │   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
 │   └── test/            # e2e-тесты
-└── .github/workflows/   # CI
+├── e2e/                 # Браузерные тесты (Playwright)
+└── .github/             # CI и Dependabot
 ```
 
 ### План
@@ -358,14 +372,19 @@ To be honest:
 - Money is stored in dirams (integers).
 - Debts and payments are written in database transactions.
 - `/health` returns only `{"status":"ok"}`, with no data and no database access.
+- Changing the password ends every older session (other devices included); the current session gets a new token and keeps working.
+- Site security headers: Content-Security-Policy (same-origin sources only), Strict-Transport-Security, X-Content-Type-Options, Referrer-Policy, Permissions-Policy (microphone for the site itself only, camera off), X-Frame-Options: DENY.
+- Dependabot checks npm (frontend and API) and GitHub Actions updates every week.
 
 ### Tests and CI
 
-- Frontend: 318 Vitest tests.
-- API: 209 Jest unit tests and 173 e2e tests in 8 files against a real PostgreSQL.
+- Frontend: 326 Vitest tests.
+- API: 213 Jest unit tests and 175 e2e tests in 8 files against a real PostgreSQL.
+- Browser: 4 Playwright scenarios (Chromium) — sign-up, new entry, debt with a partial payment, Russian language and a 390px screen.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) on every push to `main` and every pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
-  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e tests (auth, profile and password, customers, debts, payments, cash, reports), build.
+  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e tests (auth, profile and password, customers, debts, payments, cash, reports), build;
+  - browser (after frontend and API): PostgreSQL 17, API and frontend builds, cached Chromium, `npm run test:browser`. No Gemini, Render or Vercel.
 
 ### Running locally
 
@@ -400,9 +419,10 @@ Then open http://localhost:3000/login.
 npm run lint && npx tsc --noEmit && npm test && npm run build
 cd apps/api && npm run lint && npm run typecheck && npm test && npm run build
 cd apps/api && npm run test:e2e
+npx playwright install chromium && npm run test:browser
 ```
 
-`test:e2e` needs a separate `TEST_DATABASE_URL` database.
+`test:e2e` needs a separate `TEST_DATABASE_URL` database. `test:browser` uses the frontend (3000) and API (3001) that are already running.
 
 ### Deployment
 
@@ -423,7 +443,8 @@ cd apps/api && npm run test:e2e
 │   ├── prisma/          # schema.prisma and migrations
 │   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
 │   └── test/            # e2e tests
-└── .github/workflows/   # CI
+├── e2e/                 # Browser tests (Playwright)
+└── .github/             # CI and Dependabot
 ```
 
 ### Roadmap
