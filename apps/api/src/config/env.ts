@@ -11,11 +11,17 @@ export interface Env {
   AUTH_THROTTLE_LIMIT: number;
   AUTH_THROTTLE_TTL_SECONDS: number;
   TRUST_PROXY: string[];
+  GEMINI_API_KEY: string | undefined;
+  GEMINI_MODEL: string;
+  ENTRY_PARSE_THROTTLE_LIMIT: number;
+  ENTRY_PARSE_THROTTLE_TTL_SECONDS: number;
 }
 
 const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
 const MIN_JWT_SECRET_LENGTH = 32;
 const PLACEHOLDER_JWT_SECRET = 'replace-with-a-random-string-of-at-least-32-characters';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+const GEMINI_MODEL_PATTERN = /^[a-z0-9][a-z0-9.-]{1,63}$/;
 const TRUST_PROXY_NAMES: readonly string[] = ['loopback', 'linklocal', 'uniquelocal'];
 
 function isTrustProxyEntry(entry: string): boolean {
@@ -105,6 +111,12 @@ export function validateEnv(config: Record<string, unknown>): Env {
   const authThrottleLimit = readPositiveInteger(config, 'AUTH_THROTTLE_LIMIT', 10, errors);
   const authThrottleTtl = readPositiveInteger(config, 'AUTH_THROTTLE_TTL_SECONDS', 60, errors);
   const trustProxy = readTrustProxy(config, errors);
+  const geminiModel = readString(config, 'GEMINI_MODEL') ?? DEFAULT_GEMINI_MODEL;
+  if (!GEMINI_MODEL_PATTERN.test(geminiModel)) {
+    errors.push('GEMINI_MODEL must be a model id such as ' + DEFAULT_GEMINI_MODEL);
+  }
+  const parseThrottleLimit = readPositiveInteger(config, 'ENTRY_PARSE_THROTTLE_LIMIT', 20, errors);
+  const parseThrottleTtl = readPositiveInteger(config, 'ENTRY_PARSE_THROTTLE_TTL_SECONDS', 60, errors);
 
   if (errors.length > 0 || nodeEnv === undefined || databaseUrl === undefined || jwtSecret === undefined) {
     throw new Error(`Invalid environment configuration:\n- ${errors.join('\n- ')}`);
@@ -119,5 +131,9 @@ export function validateEnv(config: Record<string, unknown>): Env {
     AUTH_THROTTLE_LIMIT: authThrottleLimit,
     AUTH_THROTTLE_TTL_SECONDS: authThrottleTtl,
     TRUST_PROXY: trustProxy,
+    GEMINI_API_KEY: readString(config, 'GEMINI_API_KEY'),
+    GEMINI_MODEL: geminiModel,
+    ENTRY_PARSE_THROTTLE_LIMIT: parseThrottleLimit,
+    ENTRY_PARSE_THROTTLE_TTL_SECONDS: parseThrottleTtl,
   };
 }

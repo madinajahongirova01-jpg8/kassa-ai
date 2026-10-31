@@ -19,7 +19,22 @@ describe('validateEnv', () => {
       AUTH_THROTTLE_LIMIT: 10,
       AUTH_THROTTLE_TTL_SECONDS: 60,
       TRUST_PROXY: ['loopback'],
+      GEMINI_API_KEY: undefined,
+      GEMINI_MODEL: 'gemini-3.5-flash-lite',
+      ENTRY_PARSE_THROTTLE_LIMIT: 20,
+      ENTRY_PARSE_THROTTLE_TTL_SECONDS: 60,
     });
+  });
+
+  it('reads the optional Gemini settings', () => {
+    const result = validateEnv({ ...validConfig, GEMINI_API_KEY: ' key-value ', GEMINI_MODEL: 'gemini-3.8-flash' });
+    expect(result.GEMINI_API_KEY).toBe('key-value');
+    expect(result.GEMINI_MODEL).toBe('gemini-3.8-flash');
+    expect(validateEnv({ ...validConfig, GEMINI_API_KEY: '   ' }).GEMINI_API_KEY).toBeUndefined();
+  });
+
+  it('rejects a Gemini model id that is not a plain name', () => {
+    expect(() => validateEnv({ ...validConfig, GEMINI_MODEL: '../files?key=x' })).toThrow('GEMINI_MODEL');
   });
 
   it('applies defaults for optional values', () => {

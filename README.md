@@ -37,7 +37,10 @@ Kassa AI дафтари электронии хазина ва насия бар
 
 Ростқавлона:
 
-- Матн **бо қоидаҳо** (regex) таҳлил мешавад, **бе AI**.
+- Матн дар сервер таҳлил мешавад. Агар дар сервер калиди Google Gemini (`GEMINI_API_KEY`) бошад, матн барои таҳлил ба **Google Gemini** фиристода мешавад. Дар нақшаи ройгони Gemini, Google метавонад ин матнро барои беҳтар кардани хизматҳояш истифода барад.
+- Бе калид, ҳангоми хато, тайм-аут (8 сония) ё ҷавоби нодурусти AI матн **бо қоидаҳо** (regex) таҳлил мешавад. Дар болои чек ҳамеша навишта мешавад: «AI фаҳмид» ё «Бо қоидаҳо ҳисоб шуд».
+- AI худаш ҳеҷ чиз сабт намекунад: сабт танҳо пас аз «Тасдиқ» мешавад. Насия ҳеҷ гоҳ ҳамчун хароҷот сабт намешавад.
+- Дар сайти зинда калиди Gemini ҳоло нест, бинобар ин матн бо қоидаҳо таҳлил мешавад.
 - Овоз — **санҷишӣ**: шинохтани овози худи браузер истифода мешавад; тоҷикӣ ҳоло боэътимод нест.
 - Акси чек **нест**.
 - Пардохти онлайни тарофаҳо **нест**.
@@ -106,7 +109,7 @@ cd apps/api && npm run test:e2e
 ### Deploy
 
 - **Vercel** — frontend аз решаи лоиҳа. Тағйирёбанда: `KASSA_API_URL`.
-- **Render** — API аз `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Тағйирёбандаҳо: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`.
+- **Render** — API аз `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Тағйирёбандаҳо: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (ихтиёрӣ; пешфарз `gemini-3.5-flash-lite`).
 - **Neon** — PostgreSQL; сатри пайваст ба `DATABASE_URL`-и Render меравад.
 
 ### Сохтор
@@ -120,7 +123,7 @@ cd apps/api && npm run test:e2e
 │   └── proxy.ts         # Забон, ҳимояи /app
 ├── apps/api/            # Backend (NestJS)
 │   ├── prisma/          # schema.prisma ва миграцияҳо
-│   ├── src/             # auth, customers, debts, cash-entries, reports, health
+│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
 │   └── test/            # Тестҳои e2e
 └── .github/workflows/   # CI
 ```
@@ -131,7 +134,6 @@ cd apps/api && npm run test:e2e
 
 - овоз бо забони тоҷикӣ;
 - акси чек;
-- таҳлили матн бо AI;
 - боти Telegram;
 - ёдраскунӣ дар бораи насия;
 - пардохти тарофаҳо.
@@ -175,7 +177,10 @@ Kassa AI — электронная тетрадь кассы и долгов д
 
 Честно:
 
-- Текст разбирается **по правилам** (regex), **без AI**.
+- Текст разбирается на сервере. Если на сервере задан ключ Google Gemini (`GEMINI_API_KEY`), текст отправляется на разбор в **Google Gemini**. На бесплатном тарифе Gemini Google может использовать этот текст для улучшения своих сервисов.
+- Без ключа, при ошибке, таймауте (8 секунд) или неверном ответе AI текст разбирается **по правилам** (regex). Над чеком всегда написано: «Разобрал AI» или «Посчитано по правилам».
+- AI сам ничего не сохраняет: запись сохраняется только после «Тасдиқ». Долг никогда не сохраняется как расход.
+- На живом сайте ключа Gemini пока нет, поэтому текст разбирается по правилам.
 - Голос — **тестовый**: используется распознавание речи браузера; таджикский пока ненадёжен.
 - Фото чека — **нет**.
 - Онлайн-оплаты тарифов — **нет**.
@@ -244,7 +249,7 @@ cd apps/api && npm run test:e2e
 ### Деплой
 
 - **Vercel** — frontend из корня проекта. Переменная: `KASSA_API_URL`.
-- **Render** — API из `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Переменные: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`.
+- **Render** — API из `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Переменные: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (необязательно; по умолчанию `gemini-3.5-flash-lite`).
 - **Neon** — PostgreSQL; строка подключения идёт в `DATABASE_URL` на Render.
 
 ### Структура
@@ -258,7 +263,7 @@ cd apps/api && npm run test:e2e
 │   └── proxy.ts         # Язык, защита /app
 ├── apps/api/            # Backend (NestJS)
 │   ├── prisma/          # schema.prisma и миграции
-│   ├── src/             # auth, customers, debts, cash-entries, reports, health
+│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
 │   └── test/            # e2e-тесты
 └── .github/workflows/   # CI
 ```
@@ -269,7 +274,6 @@ cd apps/api && npm run test:e2e
 
 - голос на таджикском;
 - фото чека;
-- разбор текста с AI;
 - Telegram-бот;
 - напоминания о долгах;
 - оплата тарифов.
@@ -313,7 +317,10 @@ Many small business owners in Tajikistan keep track of money in a paper notebook
 
 To be honest:
 
-- Text is parsed **by rules** (regex), **without AI**.
+- Text is parsed on the server. If the server has a Google Gemini key (`GEMINI_API_KEY`), the text is sent to **Google Gemini** for parsing. On Gemini's free tier Google may use this text to improve its services.
+- Without a key, or on an error, a timeout (8 seconds) or an invalid AI answer, the text is parsed **by rules** (regex). The receipt always says which one: "Understood by AI" or "Counted by rules".
+- AI never saves anything by itself: entries are saved only after "Tasdiq" (confirm). A debt is never saved as an expense.
+- The live site has no Gemini key yet, so text is parsed by rules.
 - Voice is **in beta**: it uses the browser's own speech recognition; Tajik is not reliable yet.
 - Receipt photos are **not available**.
 - Online payment for plans is **not available**.
@@ -382,7 +389,7 @@ cd apps/api && npm run test:e2e
 ### Deployment
 
 - **Vercel** — the frontend from the project root. Variable: `KASSA_API_URL`.
-- **Render** — the API from `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`.
+- **Render** — the API from `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (optional; defaults to `gemini-3.5-flash-lite`).
 - **Neon** — PostgreSQL; its connection string goes into `DATABASE_URL` on Render.
 
 ### Structure
@@ -396,7 +403,7 @@ cd apps/api && npm run test:e2e
 │   └── proxy.ts         # Language, /app protection
 ├── apps/api/            # Backend (NestJS)
 │   ├── prisma/          # schema.prisma and migrations
-│   ├── src/             # auth, customers, debts, cash-entries, reports, health
+│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
 │   └── test/            # e2e tests
 └── .github/workflows/   # CI
 ```
@@ -407,7 +414,6 @@ These are plans, with no dates:
 
 - voice in Tajik;
 - receipt photos;
-- AI text parsing;
 - a Telegram bot;
 - debt reminders;
 - payment for plans.

@@ -142,7 +142,12 @@ const tg = {
       SALARY: "маош",
       SALE: "даромад",
       RENT: "иҷора",
+      UTILITIES: "барқ, об, газ",
       OTHER: "дигар",
+    },
+    parsedBy: {
+      ai: "AI фаҳмид",
+      rules: "Бо қоидаҳо ҳисоб шуд",
     },
     actions: {
       edit: "Ислоҳ",
@@ -766,7 +771,12 @@ const ru: Dictionary = {
       SALARY: "зарплата",
       SALE: "доход",
       RENT: "аренда",
+      UTILITIES: "коммунальные",
       OTHER: "другое",
+    },
+    parsedBy: {
+      ai: "Разобрал AI",
+      rules: "Посчитано по правилам",
     },
     actions: {
       edit: "Исправить",
@@ -1387,7 +1397,12 @@ const en: Dictionary = {
       SALARY: "wages",
       SALE: "income",
       RENT: "rent",
+      UTILITIES: "utilities",
       OTHER: "other",
+    },
+    parsedBy: {
+      ai: "Understood by AI",
+      rules: "Counted by rules",
     },
     actions: {
       edit: "Edit",

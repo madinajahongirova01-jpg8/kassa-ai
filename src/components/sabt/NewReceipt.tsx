@@ -8,7 +8,7 @@ import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
 import { formatSomoni } from "@/lib/format";
 import { cashSabtEntries, debtSabtEntries, type SabtEntry } from "@/lib/sabt";
-import { sabtNoteKey } from "@/lib/sabtText";
+import { receiptNoteKey } from "@/lib/sabtText";
 import { useBusinessNow } from "@/lib/useBusinessNow";
 
 type NewReceiptProps = {
@@ -25,7 +25,7 @@ export function NewReceipt({ entries, profit, confirmed, onEditRow }: NewReceipt
   const cash = cashSabtEntries(entries);
   const debts = debtSabtEntries(entries);
   const noteText = (entry: SabtEntry) => {
-    const key = sabtNoteKey(entry);
+    const key = receiptNoteKey(entry);
     return key ? t(key) : entry.note;
   };
   return (

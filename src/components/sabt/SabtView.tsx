@@ -11,9 +11,12 @@ import { SaidCard } from "@/components/sabt/SaidCard";
 import { sabtDemo, sabtModes, type SabtMode } from "@/data/sabt";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
-import { canSaveSabt, cashSabtEntries, MAX_SABT_AMOUNT, parseSabt, sabtProfit, toCashEntriesPayload } from "@/lib/sabt";
+import { canSaveSabt, cashSabtEntries, MAX_SABT_AMOUNT, sabtProfit, toCashEntriesPayload } from "@/lib/sabt";
+import { parseOnServer, rulesResult, shouldAskServer, type ParsedText } from "@/lib/sabtParse";
 import { saveErrorKey } from "@/lib/sabtText";
 import { speechErrorKey, useSpeechRecognition } from "@/lib/useSpeechRecognition";
+
+const PARSE_DELAY_MS = 700;
 
 function PhotoDrop({ fileName, onFile }: { fileName: string | null; onFile: (name: string) => void }) {
   const t = useT();
@@ -41,10 +44,28 @@ export function SabtView() {
   const speech = useSpeechRecognition("tg-TJ", changeText);
   const recording = speech.listening;
 
-  const entries = useMemo(() => parseSabt(text), [text]);
+  const [parsed, setParsed] = useState<{ text: string; result: ParsedText } | null>(null);
+  const local = useMemo(() => rulesResult(text), [text]);
+  const current = parsed?.text === text ? parsed.result : local;
+  const entries = current.entries;
   const profit = sabtProfit(entries);
   const cashCount = cashSabtEntries(entries).length;
   const isDemo = text === sabtDemo.transcript;
+  const parsedText = parsed?.text;
+
+  useEffect(() => {
+    if (isDemo || recording || confirmed || parsedText === text || !shouldAskServer(text)) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void parseOnServer(text).then((result) => {
+        if (!cancelled) setParsed({ text, result });
+      });
+    }, PARSE_DELAY_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [text, parsedText, isDemo, recording, confirmed]);
 
   useEffect(() => {
     if (!recording) return;
@@ -189,6 +210,11 @@ export function SabtView() {
       </section>
 
       <section className="flex flex-col lg:pt-1">
+        {text.trim() && (
+          <p role="status" className="mb-3 text-center text-xs font-semibold text-ink-2">
+            {current.source === "ai" ? t("sabt.parsedBy.ai") : t("sabt.parsedBy.rules")}
+          </p>
+        )}
         <NewReceipt entries={entries} profit={profit} confirmed={confirmed} onEditRow={edit} />
         <div className="mt-[26px] flex gap-3">
           <button

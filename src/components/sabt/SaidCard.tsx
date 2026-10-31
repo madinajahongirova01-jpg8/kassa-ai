@@ -10,7 +10,9 @@ import type { SabtEntry } from "@/lib/sabt";
 export function Highlighted({ text, entries }: { text: string; entries: SabtEntry[] }) {
   const parts = [];
   let cursor = 0;
-  for (const entry of entries) {
+  const marked = entries.filter((entry) => entry.end > entry.start).sort((a, b) => a.start - b.start);
+  for (const entry of marked) {
+    if (entry.start < cursor) continue;
     parts.push(text.slice(cursor, entry.start));
     parts.push(
       <span

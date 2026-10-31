@@ -24,3 +24,7 @@ const noteKeys: Partial<Record<ApiCashCategory, MessageKey>> = {
 export function sabtNoteKey(entry: Pick<SabtEntry, "category">): MessageKey | undefined {
   return noteKeys[entry.category];
 }
+
+export function receiptNoteKey(entry: Pick<SabtEntry, "category">): MessageKey | undefined {
+  return entry.category === "UTILITIES" ? "sabt.notes.UTILITIES" : sabtNoteKey(entry);
+}

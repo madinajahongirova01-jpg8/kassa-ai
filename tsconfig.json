@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@kassa/sabt-rules": ["./apps/api/src/entries/rules/sabt-rules.ts"]
     }
   },
   "include": [
