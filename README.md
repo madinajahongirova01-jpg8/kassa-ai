@@ -27,6 +27,8 @@ Kassa AI дафтари электронии хазина ва насия бар
 ### Чӣ кор мекунад ҳозир
 
 - Бақайдгирӣ, даромадан ва баромадан.
+- **Танзимот:** иваз кардани номи тиҷорат ва ном; иваз кардани парол.
+- **Ёрӣ барои корбари нав:** дар «Имрӯз» карточкаи «Аз чӣ сар кунем?» бо се қадам; дар «Сабти нав» намунаҳои тайёр; дар саҳифаҳои холӣ — як маслиҳат ва тугма.
 - **Сабти нав:** фурӯш ва хароҷотро бо як матн менависед, масалан «фурӯш 1800, такси 30» ё «продажа 500» ё «sale 500». Матн бо забонҳои тоҷикӣ, русӣ ва англисӣ фаҳмида мешавад.
 - **Имрӯз:** чеки рӯз, даромад, хароҷот ва фоидаи рӯз; қарздорони воқеӣ, аввал онҳое, ки мӯҳлаташон гузаштааст.
 - **Таҳлили матн бо AI:** Google Gemini, бо қоидаҳо ҳамчун захира. AI танҳо вақте кор мекунад, ки дар сервер `GEMINI_API_KEY` бошад; бе калид матн бо қоидаҳо таҳлил мешавад. Бо AI матн барои таҳлил ба Google фиристода мешавад.
@@ -67,11 +69,11 @@ Kassa AI дафтари электронии хазина ва насия бар
 
 ### Тестҳо ва CI
 
-- Frontend: 292 тести Vitest.
-- API: 209 тести Jest (unit) ва 157 тести e2e дар 7 файл дар PostgreSQL-и воқеӣ.
+- Frontend: 318 тести Vitest.
+- API: 209 тести Jest (unit) ва 173 тести e2e дар 8 файл дар PostgreSQL-и воқеӣ.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) дар ҳар push ба `main` ва ҳар pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
-  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, тестҳои e2e (auth, муштариён, насия, пардохтҳо, хазина, ҳисобот), build.
+  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, тестҳои e2e (auth, профил ва парол, муштариён, насия, пардохтҳо, хазина, ҳисобот), build.
 
 ### Оғоз дар компютер
 
@@ -171,6 +173,8 @@ Kassa AI — электронная тетрадь кассы и долгов д
 ### Что умеет сейчас
 
 - Регистрация, вход и выход.
+- **Настройки:** изменение названия бизнеса и имени; смена пароля.
+- **Помощь новому пользователю:** на «Сегодня» карточка «С чего начать?» с тремя шагами; в «Новой записи» готовые примеры; на пустых страницах — одна подсказка и кнопка.
 - **Новая запись:** продажи и расходы одним текстом, например «фурӯш 1800, такси 30», «продажа 500» или «sale 500». Понимает таджикский, русский и английский.
 - **Сегодня:** чек за день, доход, расход и прибыль; реальные должники, сначала просроченные.
 - **AI-разбор текста:** Google Gemini с запасным вариантом на правилах. AI работает, только если на сервере задан `GEMINI_API_KEY`; без ключа текст разбирается по правилам. С AI текст отправляется в Google для разбора.
@@ -211,11 +215,11 @@ Kassa AI — электронная тетрадь кассы и долгов д
 
 ### Тесты и CI
 
-- Frontend: 292 теста Vitest.
-- API: 209 тестов Jest (unit) и 157 e2e-тестов в 7 файлах на настоящем PostgreSQL.
+- Frontend: 318 тестов Vitest.
+- API: 209 тестов Jest (unit) и 173 e2e-теста в 8 файлах на настоящем PostgreSQL.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) на каждый push в `main` и каждый pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
-  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e-тесты (auth, клиенты, долги, оплаты, касса, отчёты), build.
+  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e-тесты (auth, профиль и пароль, клиенты, долги, оплаты, касса, отчёты), build.
 
 ### Локальный запуск
 
@@ -315,6 +319,8 @@ Many small business owners in Tajikistan keep track of money in a paper notebook
 ### What it does now
 
 - Sign up, sign in and sign out.
+- **Settings:** change the business name and your name; change the password.
+- **Help for new users:** a "Where to start?" card with three steps on Today; ready examples on New entry; a hint and a button on empty pages.
 - **New entry:** sales and expenses in one line of text, e.g. «фурӯш 1800, такси 30», «продажа 500» or "sale 500". Tajik, Russian and English are understood.
 - **Today:** the day's receipt, income, expenses and profit; real debtors, overdue ones first.
 - **AI text parsing:** Google Gemini with a rules-based fallback. AI works only if `GEMINI_API_KEY` is set on the server; without a key the text is parsed by rules. With AI the text is sent to Google for parsing.
@@ -355,11 +361,11 @@ To be honest:
 
 ### Tests and CI
 
-- Frontend: 292 Vitest tests.
-- API: 209 Jest unit tests and 157 e2e tests in 7 files against a real PostgreSQL.
+- Frontend: 318 Vitest tests.
+- API: 209 Jest unit tests and 173 e2e tests in 8 files against a real PostgreSQL.
 - GitHub Actions ([ci.yml](.github/workflows/ci.yml)) on every push to `main` and every pull request:
   - frontend: `npm ci`, lint, typecheck, Vitest, build;
-  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e tests (auth, customers, debts, payments, cash, reports), build.
+  - API: PostgreSQL 17, `npm ci`, Prisma generate, lint, typecheck, Jest, `prisma migrate deploy`, e2e tests (auth, profile and password, customers, debts, payments, cash, reports), build.
 
 ### Running locally
 
