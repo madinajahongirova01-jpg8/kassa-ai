@@ -59,18 +59,31 @@ export function PaymentForm({ customerId, balance, onPaid, onCancel }: PaymentFo
         hint={t("nasiya.payment.upTo", { max: formatMoney(balance, { unit: false, locale }) })}
         error={fieldError ?? undefined}
       >
-        <input
-          id={amountId}
-          inputMode="decimal"
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          readOnly={pending}
-          autoComplete="off"
-          autoFocus
-          aria-invalid={Boolean(fieldError)}
-          aria-describedby={fieldError ? `${amountId}-error` : undefined}
-          className={fieldClass}
-        />
+        <div className="flex gap-2">
+          <input
+            id={amountId}
+            inputMode="decimal"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            readOnly={pending}
+            autoComplete="off"
+            autoFocus
+            aria-invalid={Boolean(fieldError)}
+            aria-describedby={fieldError ? `${amountId}-error` : undefined}
+            className={cn(fieldClass, "min-w-0 flex-1")}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setAmount(paymentInputValue(balance));
+              setFieldError(null);
+            }}
+            disabled={pending}
+            className="h-11 shrink-0 rounded-xl border-[1.5px] border-ink bg-card px-3 text-sm font-semibold whitespace-nowrap text-ink hover:text-pen disabled:text-ink-3"
+          >
+            {t("nasiya.payment.all")}
+          </button>
+        </div>
       </Field>
       <fieldset className="flex flex-col gap-1.5" disabled={pending}>
         <legend className="mb-1.5 text-sm font-semibold">{t("nasiya.payment.method")}</legend>

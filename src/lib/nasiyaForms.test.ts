@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { PostResult } from "@/lib/api/client";
+import { createT } from "@/lib/i18n/translate";
 import {
   acceptPayment,
   createCustomer,
@@ -236,6 +237,20 @@ describe("paymentInputValue", () => {
     expect(paymentInputValue(12000)).toBe("120");
     expect(paymentInputValue(12050)).toBe("120.50");
     expect(paymentInputValue(5)).toBe("0.05");
+  });
+});
+
+describe("pay all button", () => {
+  it("fills the whole remaining balance and the form accepts it", () => {
+    for (const balance of [12000, 12050, 5, 1_000_000_000]) {
+      expect(parsePaymentAmount(paymentInputValue(balance), balance)).toEqual({ dirams: balance });
+    }
+  });
+
+  it("has a short label in every language", () => {
+    expect(createT("tg")("nasiya.payment.all")).toBe("Ҳамааш");
+    expect(createT("ru")("nasiya.payment.all")).toBe("Всё");
+    expect(createT("en")("nasiya.payment.all")).toBe("All");
   });
 });
 
