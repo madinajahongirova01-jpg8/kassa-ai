@@ -588,6 +588,16 @@ const tg = {
     status: "Ҳолат:",
     notifications: "Огоҳиномаҳо",
   },
+  pwa: {
+    installTitle: "Kassa AI-ро ба телефон насб кунед",
+    installText: "Аз экрани асосӣ мисли барнома кушоед.",
+    install: "Насб кардан",
+    iosSteps: "Дар Safari тугмаи «Поделиться» ⎋-ро пахш кунед, баъд «На экран „Домой“».",
+    close: "Пӯшидан",
+    offlineTitle: "Интернет нест",
+    offlineText: "Пайвастро санҷед ва боз кӯшиш кунед. Маълумоти шумо дар сервер бехатар аст.",
+    retry: "Боз кӯшиш кардан",
+  },
   pages: {
     home: "Ба саҳифаи асосӣ",
     notFound: {
@@ -1195,6 +1205,16 @@ const ru: Dictionary = {
     status: "Статус:",
     notifications: "Уведомления",
   },
+  pwa: {
+    installTitle: "Установите Kassa AI на телефон",
+    installText: "Открывайте с главного экрана, как приложение.",
+    install: "Установить",
+    iosSteps: "В Safari нажмите «Поделиться» ⎋, затем «На экран „Домой“».",
+    close: "Закрыть",
+    offlineTitle: "Нет интернета",
+    offlineText: "Проверьте подключение и попробуйте снова. Ваши данные в безопасности на сервере.",
+    retry: "Попробовать снова",
+  },
   pages: {
     home: "На главную",
     notFound: {
@@ -1798,6 +1818,16 @@ const en: Dictionary = {
     searchSoon: "Search — coming soon",
     status: "Status:",
     notifications: "Notifications",
+  },
+  pwa: {
+    installTitle: "Install Kassa AI on your phone",
+    installText: "Open it from the home screen like an app.",
+    install: "Install",
+    iosSteps: "In Safari tap Share ⎋, then “Add to Home Screen”.",
+    close: "Close",
+    offlineTitle: "No internet",
+    offlineText: "Check your connection and try again. Your data is safe on the server.",
+    retry: "Try again",
   },
   pages: {
     home: "Go to the home page",
