@@ -8,7 +8,7 @@ async function horizontalOverflow(page: Page) {
 test("switching to Russian changes the texts and phone screens never scroll sideways", async ({ page }) => {
   await register(page);
 
-  await page.getByLabel(tg("lang.label"), { exact: true }).first().selectOption("ru");
+  await page.getByRole("combobox", { name: tg("lang.label"), exact: true }).filter({ visible: true }).first().selectOption("ru");
   await expect(page.getByRole("heading", { name: ru("today.start.title"), exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: tg("today.start.title"), exact: true })).toHaveCount(0);
 
@@ -18,5 +18,5 @@ test("switching to Russian changes the texts and phone screens never scroll side
     await expect(page.locator("main").first()).toBeVisible();
     expect(await horizontalOverflow(page), path).toBeLessThanOrEqual(0);
   }
-  await expect(page.getByLabel(ru("lang.label"), { exact: true }).first()).toHaveValue("ru");
+  await expect(page.getByRole("combobox", { name: ru("lang.label"), exact: true }).filter({ visible: true }).first()).toHaveValue("ru");
 });

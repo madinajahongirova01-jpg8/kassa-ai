@@ -1,17 +1,19 @@
 import { expect, test } from "@playwright/test";
-import { money, register, tg } from "./helpers";
+import { money, openWith, register, tg } from "./helpers";
 
 test("a partial card payment lowers the customer's debt", async ({ page }) => {
   const customer = "Раҳим Каримов";
   await register(page);
 
   await page.goto("/app/debts");
-  await page.getByRole("button", { name: tg("nasiya.headline.newCustomer"), exact: true }).first().click();
-  await page.getByLabel(tg("nasiya.forms.customerName"), { exact: true }).fill(customer);
+  const nameField = page.getByLabel(tg("nasiya.forms.customerName"), { exact: true });
+  await openWith(page.getByRole("button", { name: tg("nasiya.headline.newCustomer"), exact: true }).first(), nameField);
+  await nameField.fill(customer);
   await page.getByRole("button", { name: tg("nasiya.forms.addCustomer"), exact: true }).click();
   await expect(page.getByText(tg("nasiya.notices.customerAdded"), { exact: true })).toBeVisible();
 
-  await page.getByRole("button", { name: tg("nasiya.headline.newDebt"), exact: true }).click();
+  await openWith(page.getByRole("button", { name: tg("nasiya.headline.newDebt"), exact: true }), page.locator("#debt-customer"));
+  await page.locator("#debt-customer").selectOption({ label: customer });
   await page.locator("#debt-amount").fill("500");
   await page.getByRole("button", { name: tg("nasiya.forms.recordDebt"), exact: true }).click();
   await expect(page.getByText(tg("nasiya.notices.debtAdded"), { exact: true })).toBeVisible();
