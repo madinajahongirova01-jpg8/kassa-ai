@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { HandNote } from "@/components/daftar/HandNote";
 import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
 import { Recorder } from "@/components/sabt/Recorder";
 import { NewReceipt } from "@/components/sabt/NewReceipt";
@@ -18,17 +17,6 @@ import { speechErrorKey, useSpeechRecognition } from "@/lib/useSpeechRecognition
 
 const PARSE_DELAY_MS = 700;
 
-function PhotoDrop({ fileName, onFile }: { fileName: string | null; onFile: (name: string) => void }) {
-  const t = useT();
-  return (
-    <label className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-ink-3 bg-card/60 px-4 text-center text-ink-2 hover:border-pen">
-      <input type="file" accept="image/*" className="sr-only" onChange={(event) => event.target.files?.[0] && onFile(event.target.files[0].name)} />
-      <span className="font-display text-base font-bold text-ink">{fileName ?? t("sabt.photo.choose")}</span>
-      <HandNote className="text-xl">{fileName ? t("sabt.photo.accepted") : t("sabt.photo.drop")}</HandNote>
-    </label>
-  );
-}
-
 export function SabtView() {
   const t = useT();
   const plural = usePlural();
@@ -37,7 +25,6 @@ export function SabtView() {
   const [text, setText] = useState(sabtDemo.transcript);
   const [seconds, setSeconds] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
-  const [photo, setPhoto] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<{ status: number; message: string } | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
@@ -173,20 +160,16 @@ export function SabtView() {
           </Link>
         </div>
 
-        {mode === "photo" ? (
-          <PhotoDrop fileName={photo} onFile={setPhoto} />
-        ) : (
-          <SaidCard
-            mode={mode}
-            text={text}
-            entries={entries}
-            demo={isDemo}
-            listening={recording}
-            locked={confirmed || saving}
-            onText={changeText}
-            textRef={textRef}
-          />
-        )}
+        <SaidCard
+          mode={mode}
+          text={text}
+          entries={entries}
+          demo={isDemo}
+          listening={recording}
+          locked={confirmed || saving}
+          onText={changeText}
+          textRef={textRef}
+        />
         {mode === "voice" &&
           (speech.supported ? (
             <Recorder recording={recording} seconds={seconds} onToggle={toggleRecording} />

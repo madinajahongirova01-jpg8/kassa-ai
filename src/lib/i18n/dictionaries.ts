@@ -73,11 +73,6 @@ const tg = {
       photoTag: "Ба наздикӣ",
     },
     close: "Пӯшидан",
-    photo: {
-      choose: "Акси чекро интихоб кунед",
-      accepted: "акс қабул шуд — дар намуна чек аз матн сохта мешавад",
-      drop: "ё ба ин ҷо кашед",
-    },
     said: {
       write: "Нависед…",
       said: "Шумо гуфтед…",
@@ -454,7 +449,7 @@ const tg = {
     hero: {
       note: "Шумо менависед…",
       marker: "ҳисоб мекунад.",
-      text: "Дафтари рақамӣ барои дӯкон ва тиҷорати хурд. Пули даромад, пули рафт ва насияро бо матн сабт кунед — Kassa суммаҳоро ҷудо мекунад ва чек месозад.",
+      text: "Дафтари рақамӣ барои дӯкон ва тиҷорати хурд. Пули даромад ва пули рафтро бо як ҷумла сабт кунед — Kassa суммаҳоро ҷудо мекунад ва чек месозад. Насияро дар дафтари насия нигоҳ доред.",
       soon: "Овоз — санҷишӣ, акси чек — ба наздикӣ.",
       write: "Нависед",
       sample: "Ройгон санҷед",
@@ -720,11 +715,6 @@ const ru: Dictionary = {
       photoTag: "Скоро",
     },
     close: "Закрыть",
-    photo: {
-      choose: "Выберите фото чека",
-      accepted: "фото принято — в демо чек строится из текста",
-      drop: "или перетащите сюда",
-    },
     said: {
       write: "Напишите…",
       said: "Вы сказали…",
@@ -1101,7 +1091,7 @@ const ru: Dictionary = {
     hero: {
       note: "Вы пишете…",
       marker: "считает.",
-      text: "Цифровая тетрадь для магазина и малого бизнеса. Записывайте доходы, расходы и долги текстом — Kassa разберёт суммы и составит чек.",
+      text: "Цифровая тетрадь для магазина и малого бизнеса. Записывайте доходы и расходы одной фразой — Kassa разберёт суммы и составит чек. Долги ведите в тетради насии.",
       soon: "Голос — тест, фото чека — скоро.",
       write: "Написать",
       sample: "Попробовать бесплатно",
@@ -1364,11 +1354,6 @@ const en: Dictionary = {
       photoTag: "Coming soon",
     },
     close: "Close",
-    photo: {
-      choose: "Choose a receipt photo",
-      accepted: "photo received — in the demo the receipt is built from the text",
-      drop: "or drag it here",
-    },
     said: {
       write: "Type…",
       said: "You said…",
@@ -1745,7 +1730,7 @@ const en: Dictionary = {
     hero: {
       note: "You write…",
       marker: "does the math.",
-      text: "A digital cash book for shops and small businesses. Record money in, money out and debts as text — Kassa picks out the amounts and builds a receipt.",
+      text: "A digital cash book for shops and small businesses. Record money in and money out in one sentence — Kassa picks out the amounts and builds a receipt. Keep debts in the nasiya book.",
       soon: "Voice is in beta, receipt photos are coming soon.",
       write: "Write it",
       sample: "Try it free",
