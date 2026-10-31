@@ -87,7 +87,7 @@ export function ReportView({ data }: { data: ReportData }) {
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         <ReportChart title={report.chartTitle} note={report.chartNote} bars={report.bars} />
-        <ReportInsights best={report.best} worst={report.worst} debtGiven={report.debtGiven} debtReturned={report.debtReturned} />
+        <ReportInsights best={report.best} worst={report.worst} debtGiven={report.debtGiven} debtReturned={report.debtReturned} debtReturnedByMethod={report.debtReturnedByMethod} />
       </div>
     </div>
   );

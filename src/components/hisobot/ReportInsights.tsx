@@ -1,4 +1,5 @@
 import { useLocale, useT } from "@/components/i18n/I18nProvider";
+import { PAYMENT_METHODS, type AmountByMethod } from "@/data/debts";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
 import type { Locale } from "@/lib/i18n/config";
@@ -26,9 +27,10 @@ type ReportInsightsProps = {
   worst: DayStat | null;
   debtGiven: number;
   debtReturned: number;
+  debtReturnedByMethod: AmountByMethod;
 };
 
-export function ReportInsights({ best, worst, debtGiven, debtReturned }: ReportInsightsProps) {
+export function ReportInsights({ best, worst, debtGiven, debtReturned, debtReturnedByMethod }: ReportInsightsProps) {
   const t = useT();
   const locale = useLocale();
   const stats: Stat[] = [
@@ -48,6 +50,19 @@ export function ReportInsights({ best, worst, debtGiven, debtReturned }: ReportI
         {stats.map((stat) => (
           <StatCard key={stat.label} stat={stat} />
         ))}
+      </div>
+      <div className="rounded-tile border-[1.5px] border-ink bg-card px-3 py-3 lg:px-3.5">
+        <div className="text-xs text-ink-2">{t("report.insights.byMethod")}</div>
+        <dl className="mt-2 grid grid-cols-3 gap-2.5">
+          {PAYMENT_METHODS.map((method) => (
+            <div key={method} className="min-w-0">
+              <dt className="text-xs text-ink-2">{t(`nasiya.methods.${method}`)}</dt>
+              <dd className={cn("mt-0.5 font-display text-base font-bold lg:text-lg", debtReturnedByMethod[method] > 0 ? "text-pen" : "text-ink-3")}>
+                {formatMoney(debtReturnedByMethod[method], { unit: false, locale })}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );

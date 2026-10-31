@@ -20,7 +20,7 @@ import {
 const TODAY = "2026-10-30";
 
 function apiDay(date: string, overrides: Partial<ApiReportDay> = {}): ApiReportDay {
-  return { date, income: "0.00", expense: "0.00", profit: "0.00", salesCount: 0, debtGiven: "0.00", debtReturned: "0.00", ...overrides };
+  return { date, income: "0.00", expense: "0.00", profit: "0.00", salesCount: 0, debtGiven: "0.00", debtReturned: "0.00", debtReturnedByMethod: { CASH: "0.00", CARD: "0.00", TRANSFER: "0.00" }, ...overrides };
 }
 
 function summary(days: ApiReportDay[]): ApiReportSummary {
@@ -30,6 +30,7 @@ function summary(days: ApiReportDay[]): ApiReportSummary {
     today: TODAY,
     days,
     expenseByCategory: [],
+    debtReturnedByMethod: { CASH: "0.00", CARD: "0.00", TRANSFER: "0.00" },
     totals: { income: "0.00", expense: "0.00", profit: "0.00", salesCount: 0, entriesCount: 0, debtGiven: "0.00", debtReturned: "0.00" },
   };
 }
@@ -37,12 +38,12 @@ function summary(days: ApiReportDay[]): ApiReportSummary {
 const sample = summary([
   apiDay("2026-01-10", { income: "500.00", expense: "200.00" }),
   apiDay("2026-08-05", { income: "1000.00", expense: "400.00" }),
-  apiDay("2026-09-15", { income: "800.00", expense: "300.00", debtReturned: "40.00" }),
+  apiDay("2026-09-15", { income: "800.00", expense: "300.00", debtReturned: "40.00", debtReturnedByMethod: { CASH: "40.00", CARD: "0.00", TRANSFER: "0.00" } }),
   apiDay("2026-10-02", { income: "1250.50", expense: "250.25" }),
   apiDay("2026-10-20", { debtGiven: "120.00" }),
-  apiDay("2026-10-25", { income: "300.00", expense: "500.00", debtReturned: "70.00" }),
+  apiDay("2026-10-25", { income: "300.00", expense: "500.00", debtReturned: "70.00", debtReturnedByMethod: { CASH: "20.00", CARD: "50.00", TRANSFER: "0.00" } }),
   apiDay("2026-10-29", { income: "900.00", expense: "100.00" }),
-  apiDay("2026-10-30", { income: "200.00", debtReturned: "30.00" }),
+  apiDay("2026-10-30", { income: "200.00", debtReturned: "30.00", debtReturnedByMethod: { CASH: "0.00", CARD: "0.00", TRANSFER: "30.00" } }),
 ]);
 
 function data(): ReportData {
@@ -51,8 +52,17 @@ function data(): ReportData {
 
 describe("toReportDays", () => {
   it("turns API amounts into dirams and calculates profit without debts", () => {
-    expect(toReportDays(summary([apiDay("2026-10-30", { income: "1250.50", expense: "250.25", debtGiven: "100.00", debtReturned: "70.00" })]))).toEqual([
-      { date: "2026-10-30", income: 125_050, expense: 25_025, profit: 100_025, debtGiven: 10_000, debtReturned: 7_000, hasCash: true },
+    expect(toReportDays(summary([apiDay("2026-10-30", { income: "1250.50", expense: "250.25", debtGiven: "100.00", debtReturned: "70.00", debtReturnedByMethod: { CASH: "10.50", CARD: "59.50", TRANSFER: "0.00" } })]))).toEqual([
+      {
+        date: "2026-10-30",
+        income: 125_050,
+        expense: 25_025,
+        profit: 100_025,
+        debtGiven: 10_000,
+        debtReturned: 7_000,
+        debtReturnedByMethod: { CASH: 1_050, CARD: 5_950, TRANSFER: 0 },
+        hasCash: true,
+      },
     ]);
   });
 
@@ -86,6 +96,9 @@ describe("periods", () => {
   it("debt repayments are counted separately and do not raise profit", () => {
     const month = buildPeriodReport(data(), "month");
     expect(month).toMatchObject({ debtGiven: 12_000, debtReturned: 10_000 });
+    expect(month.debtReturnedByMethod).toEqual({ CASH: 2_000, CARD: 5_000, TRANSFER: 3_000 });
+    expect(buildPeriodReport(data(), "year").debtReturnedByMethod).toEqual({ CASH: 6_000, CARD: 5_000, TRANSFER: 3_000 });
+    expect(buildPeriodReport(data(), "week").debtReturnedByMethod).toEqual({ CASH: 2_000, CARD: 5_000, TRANSFER: 3_000 });
     expect(periodTotals(month.days).profit).toBe(180_025);
   });
 

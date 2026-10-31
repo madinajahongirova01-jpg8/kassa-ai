@@ -1,4 +1,5 @@
 import { patchJson, postJson, requestErrorText, type PostResult } from "@/lib/api/client";
+import type { PaymentMethod } from "@/data/debts";
 import type { ApiCustomer, ApiDebt } from "@/lib/api/types";
 import { normalizePhone } from "@/lib/contact";
 import { formatMoney, formatNumber } from "@/lib/format";
@@ -191,15 +192,17 @@ export function parsePaymentAmount(text: string, balance: number, locale: Locale
   return { dirams };
 }
 
+export type PaymentInput = { amount: string; method: PaymentMethod };
+
 export async function acceptPayment(
   customerId: string,
-  text: string,
+  { amount: text, method }: PaymentInput,
   balance: number,
   post: Post = postJson,
   locale: Locale = DEFAULT_LOCALE,
 ): Promise<FormResult<unknown>> {
   const amount = parsePaymentAmount(text, balance, locale);
   if ("error" in amount) return { ok: false, error: amount.error };
-  const result = await post<unknown>(`/api/customers/${encodeURIComponent(customerId)}/payments`, { amount: toApiAmount(amount.dirams) });
+  const result = await post<unknown>(`/api/customers/${encodeURIComponent(customerId)}/payments`, { amount: toApiAmount(amount.dirams), method });
   return result.ok ? { ok: true, data: result.data } : { ok: false, error: requestErrorText(result.status, result.details, locale) };
 }

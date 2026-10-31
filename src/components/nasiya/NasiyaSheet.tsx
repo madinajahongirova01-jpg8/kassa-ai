@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type Ref } from "react";
 import { HandNote } from "@/components/daftar/HandNote";
 import { useLocale, usePlural, useT } from "@/components/i18n/I18nProvider";
-import { PaymentForm } from "@/components/nasiya/NasiyaForms";
+import { PaymentForm } from "@/components/nasiya/PaymentForm";
 import { cn } from "@/lib/cn";
 import { normalizePhone, phoneProblemText, reminderAmount, reminderText, smsHref, telHref } from "@/lib/contact";
 import { dayMonth, historyNote, lastPayment, type DebtRow } from "@/lib/debts";
@@ -111,7 +111,10 @@ export function NasiyaSheet({ row, today, businessName, editing, onEdit, ref }: 
         {history.map((event) => (
           <li key={event.id} className="flex gap-3.5 border-b border-grid py-[9px]">
             <span className="w-12 shrink-0 text-ink-3">{dayMonth(event.date, today, locale)}</span>
-            <span className="min-w-0 flex-1">{historyNote(event, locale)}</span>
+            <span className="min-w-0 flex-1">
+              {historyNote(event, locale)}
+              {event.type === "payment" && event.method && <span className="text-ink-3"> · {t(`nasiya.methods.${event.method}`)}</span>}
+            </span>
             <span className={cn("font-bold", event.type === "payment" && "text-green")}>{formatMoney(event.amount, { unit: false, locale })}</span>
           </li>
         ))}

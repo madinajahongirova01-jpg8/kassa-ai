@@ -2,12 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { calendarDateFilter } from '../common/date-range.dto';
 import { formatCalendarDate, parseCalendarDate, todayInBusinessTimeZone } from '../common/dates';
 import { formatDirams } from '../common/money';
-import { CashCategory, CashEntryKind } from '../generated/prisma/enums';
+import { CashCategory, CashEntryKind, PaymentMethod } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportSummaryQueryDto } from './dto/report-summary-query.dto';
 
 export const MAX_REPORT_DAYS = 366;
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+export type AmountByMethod = Record<PaymentMethod, string>;
 
 export interface ReportDayResponse {
   date: string;
@@ -17,6 +19,7 @@ export interface ReportDayResponse {
   salesCount: number;
   debtGiven: string;
   debtReturned: string;
+  debtReturnedByMethod: AmountByMethod;
 }
 
 export interface ReportSummaryResponse {
@@ -27,6 +30,7 @@ export interface ReportSummaryResponse {
   /** Only days that have at least one entry, debt or payment, oldest first. */
   days: ReportDayResponse[];
   expenseByCategory: { category: CashCategory; amount: string }[];
+  debtReturnedByMethod: AmountByMethod;
   totals: {
     income: string;
     expense: string;
@@ -38,12 +42,28 @@ export interface ReportSummaryResponse {
   };
 }
 
+type MethodSums = Record<PaymentMethod, number>;
+
 interface DayTotals {
   income: number;
   expense: number;
   salesCount: number;
   debtGiven: number;
-  debtReturned: number;
+  debtReturned: MethodSums;
+}
+
+const METHODS = Object.values(PaymentMethod);
+
+function emptyMethodSums(): MethodSums {
+  return { CASH: 0, CARD: 0, TRANSFER: 0 };
+}
+
+function methodTotal(sums: MethodSums): number {
+  return METHODS.reduce((total, method) => total + sums[method], 0);
+}
+
+function formatMethodSums(sums: MethodSums): AmountByMethod {
+  return { CASH: formatDirams(sums.CASH), CARD: formatDirams(sums.CARD), TRANSFER: formatDirams(sums.TRANSFER) };
 }
 
 /**
@@ -82,7 +102,7 @@ export class ReportsService {
         _sum: { amountDirams: true },
       }),
       this.prisma.payment.groupBy({
-        by: ['paidOn'],
+        by: ['paidOn', 'method'],
         where: { ownerId, paidOn: range },
         _sum: { amountDirams: true },
       }),
@@ -93,7 +113,7 @@ export class ReportsService {
       const key = formatCalendarDate(date);
       let totals = byDay.get(key);
       if (totals === undefined) {
-        totals = { income: 0, expense: 0, salesCount: 0, debtGiven: 0, debtReturned: 0 };
+        totals = { income: 0, expense: 0, salesCount: 0, debtGiven: 0, debtReturned: emptyMethodSums() };
         byDay.set(key, totals);
       }
       return totals;
@@ -114,8 +134,11 @@ export class ReportsService {
     for (const row of debts) {
       day(row.occurredOn).debtGiven += row._sum.amountDirams ?? 0;
     }
+    const returnedByMethod = emptyMethodSums();
     for (const row of payments) {
-      day(row.paidOn).debtReturned += row._sum.amountDirams ?? 0;
+      const sum = row._sum.amountDirams ?? 0;
+      day(row.paidOn).debtReturned[row.method] += sum;
+      returnedByMethod[row.method] += sum;
     }
 
     const sorted = [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b));
@@ -134,12 +157,14 @@ export class ReportsService {
         profit: formatDirams(totals.income - totals.expense),
         salesCount: totals.salesCount,
         debtGiven: formatDirams(totals.debtGiven),
-        debtReturned: formatDirams(totals.debtReturned),
+        debtReturned: formatDirams(methodTotal(totals.debtReturned)),
+        debtReturnedByMethod: formatMethodSums(totals.debtReturned),
       })),
       expenseByCategory: categories
         .map((row) => ({ category: row.category, dirams: row._sum.amountDirams ?? 0 }))
         .sort((a, b) => b.dirams - a.dirams || a.category.localeCompare(b.category))
         .map((row) => ({ category: row.category, amount: formatDirams(row.dirams) })),
+      debtReturnedByMethod: formatMethodSums(returnedByMethod),
       totals: {
         income: formatDirams(income),
         expense: formatDirams(expense),
@@ -147,7 +172,7 @@ export class ReportsService {
         salesCount: total((t) => t.salesCount),
         entriesCount,
         debtGiven: formatDirams(total((t) => t.debtGiven)),
-        debtReturned: formatDirams(total((t) => t.debtReturned)),
+        debtReturned: formatDirams(methodTotal(returnedByMethod)),
       },
     };
   }

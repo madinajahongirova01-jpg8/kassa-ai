@@ -1,5 +1,9 @@
 // Response shapes of the NestJS API (apps/api). Amounts are somoni strings such as "150.50".
 
+import type { PaymentMethod } from "@/data/debts";
+
+export type ApiAmountByMethod = Record<PaymentMethod, string>;
+
 export type ApiMe = {
   user: { id: string; email: string; name: string | null; businessName: string | null };
 };
@@ -32,6 +36,7 @@ export type ApiPaymentListItem = {
   id: string;
   debtId: string;
   amount: string;
+  method: PaymentMethod;
   paidOn: string;
   note: string | null;
   createdAt: string;
@@ -64,6 +69,7 @@ export type ApiReportDay = {
   salesCount: number;
   debtGiven: string;
   debtReturned: string;
+  debtReturnedByMethod: ApiAmountByMethod;
 };
 
 export type ApiReportSummary = {
@@ -72,6 +78,7 @@ export type ApiReportSummary = {
   today: string;
   days: ApiReportDay[];
   expenseByCategory: { category: ApiCashCategory; amount: string }[];
+  debtReturnedByMethod: ApiAmountByMethod;
   totals: {
     income: string;
     expense: string;

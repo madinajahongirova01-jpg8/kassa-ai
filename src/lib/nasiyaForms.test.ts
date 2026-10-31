@@ -266,21 +266,21 @@ describe("parsePaymentAmount", () => {
 describe("acceptPayment", () => {
   it("posts a partial payment to the customer's payments in API amounts", async () => {
     const { post, calls } = fakePost({ ok: true, data: { amount: "50.50" } });
-    const result = await acceptPayment(CUSTOMER_ID, "50.5", 12000, post);
+    const result = await acceptPayment(CUSTOMER_ID, { amount: "50.5", method: "CARD" }, 12000, post);
 
     expect(result).toEqual({ ok: true, data: { amount: "50.50" } });
-    expect(calls).toEqual([{ url: `/api/customers/${CUSTOMER_ID}/payments`, body: { amount: "50.50" } }]);
+    expect(calls).toEqual([{ url: `/api/customers/${CUSTOMER_ID}/payments`, body: { amount: "50.50", method: "CARD" } }]);
   });
 
   it("does not call the API for an amount above the balance or zero", async () => {
     const { post, calls } = fakePost({ ok: true, data: {} });
-    expect(await acceptPayment(CUSTOMER_ID, "121", 12000, post)).toEqual({ ok: false, error: "Пардохт набояд аз боқимонда (120 смн) зиёд бошад." });
-    expect(await acceptPayment(CUSTOMER_ID, "0", 12000, post)).toEqual({ ok: false, error: "Пардохт бояд аз сифр зиёд бошад." });
+    expect(await acceptPayment(CUSTOMER_ID, { amount: "121", method: "CASH" }, 12000, post)).toEqual({ ok: false, error: "Пардохт набояд аз боқимонда (120 смн) зиёд бошад." });
+    expect(await acceptPayment(CUSTOMER_ID, { amount: "0", method: "CASH" }, 12000, post)).toEqual({ ok: false, error: "Пардохт бояд аз сифр зиёд бошад." });
     expect(calls).toHaveLength(0);
   });
 
   it("explains an overpayment the API refused", async () => {
     const refused = fakePost({ ok: false, status: 422, details: ["remainingAmount: 30.00"] });
-    expect(await acceptPayment(CUSTOMER_ID, "50", 12000, refused.post)).toEqual({ ok: false, error: "Пардохт аз қарз зиёд аст — боқимонда 30.00 смн." });
+    expect(await acceptPayment(CUSTOMER_ID, { amount: "50", method: "TRANSFER" }, 12000, refused.post)).toEqual({ ok: false, error: "Пардохт аз қарз зиёд аст — боқимонда 30.00 смн." });
   });
 });

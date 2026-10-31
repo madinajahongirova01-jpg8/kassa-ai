@@ -4,7 +4,7 @@ import { calendarDateFilter, DateRangePageQueryDto } from '../common/date-range.
 import { formatDirams } from '../common/money';
 import { decodeCursor, DEFAULT_PAGE_SIZE, Page, toPage } from '../common/pagination';
 import { CUSTOMER_NOT_FOUND_MESSAGE, CustomersService } from '../customers/customers.service';
-import { DebtStatus } from '../generated/prisma/enums';
+import { DebtStatus, PaymentMethod } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { allocatePayment, applyPayment } from './debt-calculations';
 import {
@@ -123,7 +123,14 @@ export class DebtsService {
       }
 
       const payment = await tx.payment.create({
-        data: { ownerId, debtId, amountDirams: dto.amount, paidOn: parseCalendarDate(paidOn), note: dto.note ?? null },
+        data: {
+          ownerId,
+          debtId,
+          amountDirams: dto.amount,
+          method: dto.method ?? PaymentMethod.CASH,
+          paidOn: parseCalendarDate(paidOn),
+          note: dto.note ?? null,
+        },
       });
       const updated = await tx.debt.update({
         where: { id: debtId },
@@ -226,6 +233,7 @@ export class DebtsService {
             ownerId,
             debtId: part.debtId,
             amountDirams: part.amountDirams,
+            method: dto.method ?? PaymentMethod.CASH,
             paidOn: parseCalendarDate(paidOn),
             note: dto.note ?? null,
           },

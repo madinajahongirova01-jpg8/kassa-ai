@@ -341,6 +341,7 @@ const tg = {
       title: "Қабули пардохт",
       amount: "Маблағи пардохт",
       upTo: "то {max} сомонӣ",
+      method: "Тарзи пардохт",
       confirm: "Тасдиқ",
       cancel: "Бекор",
       saved: "Пардохт сабт шуд.",
@@ -350,6 +351,11 @@ const tg = {
         positive: "Пардохт бояд аз сифр зиёд бошад.",
         tooMuch: "Пардохт набояд аз боқимонда ({max} смн) зиёд бошад.",
       },
+    },
+    methods: {
+      CASH: "Нақд",
+      CARD: "Корт",
+      TRANSFER: "Интиқол",
     },
     calc: {
       title: "Ҳисобкунак",
@@ -403,6 +409,7 @@ const tg = {
       fewDays: "барои муқоиса рӯзҳо кам",
       debtReturned: "Насия баргашт",
       debtGiven: "насия дода шуд: {amount}",
+      byMethod: "Насия баргашт бо тарзи пардохт",
     },
     csv: {
       date: "Сана",
@@ -958,6 +965,7 @@ const ru: Dictionary = {
       title: "Принять оплату",
       amount: "Сумма оплаты",
       upTo: "до {max} сомони",
+      method: "Способ оплаты",
       confirm: "Подтвердить",
       cancel: "Отмена",
       saved: "Оплата записана.",
@@ -967,6 +975,11 @@ const ru: Dictionary = {
         positive: "Оплата должна быть больше нуля.",
         tooMuch: "Оплата не может быть больше остатка ({max} смн).",
       },
+    },
+    methods: {
+      CASH: "Наличные",
+      CARD: "Карта",
+      TRANSFER: "Перевод",
     },
     calc: {
       title: "Калькулятор",
@@ -1020,6 +1033,7 @@ const ru: Dictionary = {
       fewDays: "мало дней для сравнения",
       debtReturned: "Долги вернули",
       debtGiven: "выдано в долг: {amount}",
+      byMethod: "Возврат долгов по способу оплаты",
     },
     csv: {
       date: "Дата",
@@ -1572,6 +1586,7 @@ const en: Dictionary = {
       title: "Accept payment",
       amount: "Payment amount",
       upTo: "up to {max} TJS",
+      method: "Payment method",
       confirm: "Confirm",
       cancel: "Cancel",
       saved: "Payment recorded.",
@@ -1581,6 +1596,11 @@ const en: Dictionary = {
         positive: "The payment must be more than zero.",
         tooMuch: "The payment can't be more than the balance ({max} TJS).",
       },
+    },
+    methods: {
+      CASH: "Cash",
+      CARD: "Card",
+      TRANSFER: "Transfer",
     },
     calc: {
       title: "Calculator",
@@ -1634,6 +1654,7 @@ const en: Dictionary = {
       fewDays: "too few days to compare",
       debtReturned: "Debts repaid",
       debtGiven: "lent: {amount}",
+      byMethod: "Debt repayments by method",
     },
     csv: {
       date: "Date",

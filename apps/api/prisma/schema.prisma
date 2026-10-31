@@ -73,14 +73,21 @@ model Debt {
   @@map("debts")
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+}
+
 model Payment {
-  id           String   @id @default(uuid()) @db.Uuid
-  ownerId      String   @map("owner_id") @db.Uuid
-  debtId       String   @map("debt_id") @db.Uuid
-  amountDirams Int      @map("amount_dirams")
-  paidOn       DateTime @map("paid_on") @db.Date
+  id           String        @id @default(uuid()) @db.Uuid
+  ownerId      String        @map("owner_id") @db.Uuid
+  debtId       String        @map("debt_id") @db.Uuid
+  amountDirams Int           @map("amount_dirams")
+  method       PaymentMethod @default(CASH)
+  paidOn       DateTime      @map("paid_on") @db.Date
   note         String?
-  createdAt    DateTime @default(now()) @map("created_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
 
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   debt  Debt @relation(fields: [debtId, ownerId], references: [id, ownerId], onDelete: NoAction)

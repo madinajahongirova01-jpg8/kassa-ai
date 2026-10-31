@@ -34,6 +34,7 @@ interface ReportSummaryBody {
     salesCount: number;
     debtGiven: string;
     debtReturned: string;
+    debtReturnedByMethod: Record<'CASH' | 'CARD' | 'TRANSFER', string>;
   }[];
   expenseByCategory: { category: string; amount: string }[];
   totals: Record<string, string | number>;
@@ -237,6 +238,7 @@ describe('Cash entries and reports (e2e)', () => {
           salesCount: 1,
           debtGiven: '110.00',
           debtReturned: '0.00',
+          debtReturnedByMethod: { CASH: '0.00', CARD: '0.00', TRANSFER: '0.00' },
         },
         {
           date: '2026-01-11',
@@ -246,6 +248,7 @@ describe('Cash entries and reports (e2e)', () => {
           salesCount: 0,
           debtGiven: '0.00',
           debtReturned: '40.50',
+          debtReturnedByMethod: { CASH: '40.50', CARD: '0.00', TRANSFER: '0.00' },
         },
         {
           date: '2026-01-12',
@@ -255,6 +258,7 @@ describe('Cash entries and reports (e2e)', () => {
           salesCount: 1,
           debtGiven: '0.00',
           debtReturned: '0.00',
+          debtReturnedByMethod: { CASH: '0.00', CARD: '0.00', TRANSFER: '0.00' },
         },
       ]);
       expect(body.expenseByCategory).toEqual([

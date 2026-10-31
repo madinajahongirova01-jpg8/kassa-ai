@@ -1,5 +1,6 @@
+import { PAYMENT_METHODS, type AmountByMethod } from "@/data/debts";
 import type { ReportBar, ReportPeriod } from "@/data/hisobot";
-import type { ApiReportSummary } from "@/lib/api/types";
+import type { ApiAmountByMethod, ApiReportSummary } from "@/lib/api/types";
 import { addDays, monthKey, monthStart, weekdayIndex } from "@/lib/dates";
 import { formatDayMonth, formatMoney, monthName, weekdayName } from "@/lib/format";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
@@ -13,6 +14,7 @@ export type ReportDay = {
   profit: number;
   debtGiven: number;
   debtReturned: number;
+  debtReturnedByMethod: AmountByMethod;
   hasCash: boolean;
 };
 
@@ -39,6 +41,7 @@ export type PeriodReport = {
   worst: DayStat | null;
   debtGiven: number;
   debtReturned: number;
+  debtReturnedByMethod: AmountByMethod;
   days: ReportDay[];
 };
 
@@ -47,6 +50,18 @@ const CHART_MONTHS = 6;
 
 export function reportRange(today: string): { from: string; to: string } {
   return { from: monthStart(today, -MONTHS_BACK), to: today };
+}
+
+function methodDirams(amounts: ApiAmountByMethod): AmountByMethod {
+  return { CASH: toDirams(amounts.CASH), CARD: toDirams(amounts.CARD), TRANSFER: toDirams(amounts.TRANSFER) };
+}
+
+export function sumByMethod(days: ReportDay[]): AmountByMethod {
+  const sums: AmountByMethod = { CASH: 0, CARD: 0, TRANSFER: 0 };
+  for (const day of days) {
+    for (const method of PAYMENT_METHODS) sums[method] += day.debtReturnedByMethod[method];
+  }
+  return sums;
 }
 
 export function toReportDays(summary: ApiReportSummary): ReportDay[] {
@@ -60,6 +75,7 @@ export function toReportDays(summary: ApiReportSummary): ReportDay[] {
       profit: income - expense,
       debtGiven: toDirams(day.debtGiven),
       debtReturned: toDirams(day.debtReturned),
+      debtReturnedByMethod: methodDirams(day.debtReturnedByMethod),
       hasCash: income > 0 || expense > 0,
     };
   });
@@ -170,6 +186,7 @@ export function buildPeriodReport(data: ReportData, period: ReportPeriod, locale
     worst,
     debtGiven: sumOf(days, (day) => day.debtGiven),
     debtReturned: sumOf(days, (day) => day.debtReturned),
+    debtReturnedByMethod: sumByMethod(days),
     days,
   };
 

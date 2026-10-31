@@ -1,7 +1,7 @@
 import { formatCalendarDate } from '../common/dates';
 import { formatDirams } from '../common/money';
 import { Debt, Payment } from '../generated/prisma/client';
-import { DebtStatus } from '../generated/prisma/enums';
+import { DebtStatus, PaymentMethod } from '../generated/prisma/enums';
 import { remainingDirams } from './debt-calculations';
 
 // Amounts are serialized as somoni strings with two decimals, e.g. "150.50".
@@ -9,6 +9,7 @@ export interface PaymentResponse {
   id: string;
   debtId: string;
   amount: string;
+  method: PaymentMethod;
   paidOn: string;
   note: string | null;
   createdAt: Date;
@@ -68,6 +69,7 @@ export function toPaymentResponse(payment: Payment): PaymentResponse {
     id: payment.id,
     debtId: payment.debtId,
     amount: formatDirams(payment.amountDirams),
+    method: payment.method,
     paidOn: formatCalendarDate(payment.paidOn),
     note: payment.note,
     createdAt: payment.createdAt,

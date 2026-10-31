@@ -15,7 +15,16 @@ function leaves(node: object): string[] {
 }
 
 function day(date: string, income: number, expense: number, debtGiven = 0, debtReturned = 0): ReportDay {
-  return { date, income, expense, profit: income - expense, debtGiven, debtReturned, hasCash: income > 0 || expense > 0 };
+  return {
+    date,
+    income,
+    expense,
+    profit: income - expense,
+    debtGiven,
+    debtReturned,
+    debtReturnedByMethod: { CASH: debtReturned, CARD: 0, TRANSFER: 0 },
+    hasCash: income > 0 || expense > 0,
+  };
 }
 
 const data = {

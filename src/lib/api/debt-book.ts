@@ -27,6 +27,7 @@ export function toPaymentEvent(payment: ApiPaymentListItem): DebtEvent {
     amount: -toDirams(payment.amount),
     date: payment.paidOn,
     time: businessTime(payment.createdAt),
+    method: payment.method,
   };
 }
 

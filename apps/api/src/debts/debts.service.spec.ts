@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { CustomersService } from '../customers/customers.service';
 import { Debt, Payment } from '../generated/prisma/client';
-import { DebtStatus } from '../generated/prisma/enums';
+import { DebtStatus, PaymentMethod } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { DebtsService } from './debts.service';
 
@@ -32,7 +32,7 @@ interface DebtUpdateArgs {
 }
 
 interface PaymentCreateArgs {
-  data: Pick<Payment, 'ownerId' | 'debtId' | 'amountDirams' | 'paidOn' | 'note'>;
+  data: Pick<Payment, 'ownerId' | 'debtId' | 'amountDirams' | 'method' | 'paidOn' | 'note'>;
 }
 
 describe('DebtsService', () => {
@@ -119,6 +119,28 @@ describe('DebtsService', () => {
       expect(tx.debt.update.mock.calls[0][0].data).toEqual({ paidDirams: 2_550, status: DebtStatus.PARTIALLY_PAID });
       expect(result.debt).toMatchObject({ paidAmount: '25.50', remainingAmount: '74.50', status: 'PARTIALLY_PAID' });
       expect(result.payment).toMatchObject({ amount: '25.50', paidOn: '2026-01-11' });
+    });
+
+    it('saves cash as the default payment method', async () => {
+      tx.debt.findUniqueOrThrow.mockResolvedValue(buildDebt());
+
+      const result = await service.addPayment(OWNER_ID, DEBT_ID, { amount: 1_000, paidOn: '2026-01-11' });
+
+      expect(tx.payment.create.mock.calls[0][0].data.method).toBe(PaymentMethod.CASH);
+      expect(result.payment.method).toBe(PaymentMethod.CASH);
+    });
+
+    it('saves the chosen payment method', async () => {
+      tx.debt.findUniqueOrThrow.mockResolvedValue(buildDebt());
+
+      const result = await service.addPayment(OWNER_ID, DEBT_ID, {
+        amount: 1_000,
+        paidOn: '2026-01-11',
+        method: PaymentMethod.TRANSFER,
+      });
+
+      expect(tx.payment.create.mock.calls[0][0].data.method).toBe(PaymentMethod.TRANSFER);
+      expect(result.payment.method).toBe(PaymentMethod.TRANSFER);
     });
 
     it('marks the debt as paid when the remaining amount is paid', async () => {

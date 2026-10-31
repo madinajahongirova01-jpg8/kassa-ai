@@ -1,5 +1,11 @@
 export type DebtEventType = "debt" | "payment";
 
+export type PaymentMethod = "CASH" | "CARD" | "TRANSFER";
+
+export const PAYMENT_METHODS: PaymentMethod[] = ["CASH", "CARD", "TRANSFER"];
+
+export type AmountByMethod = Record<PaymentMethod, number>;
+
 /** Amounts are integer dirams. */
 export type DebtCustomer = {
   id: string;
@@ -23,6 +29,7 @@ export type DebtEvent = {
   amount: number;
   date: string;
   time: string;
+  method?: PaymentMethod;
 };
 
 export type DebtBook = {

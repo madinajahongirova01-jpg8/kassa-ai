@@ -57,6 +57,7 @@ const payment: ApiPaymentListItem = {
   id: "pay",
   debtId: "debt",
   amount: "50.00",
+  method: "CASH",
   paidOn: "2026-10-25",
   note: null,
   createdAt: "2026-10-25T10:00:00.000Z",

@@ -110,6 +110,19 @@ describe('DTO validation', () => {
     it('rejects a missing amount', async () => {
       expect((await validationDetails(CreatePaymentDto, { paidOn: '2026-01-15' })).length).toBeGreaterThan(0);
     });
+
+    it('accepts every payment method', async () => {
+      for (const method of ['CASH', 'CARD', 'TRANSFER']) {
+        expect(await validate(CreatePaymentDto, { amount: 10, method })).toEqual({ amount: 1_000, method });
+      }
+    });
+
+    it('rejects an unknown payment method', async () => {
+      expect(await validationDetails(CreatePaymentDto, { amount: 10, method: 'CRYPTO' })).toEqual([
+        'method must be one of: CASH, CARD, TRANSFER',
+      ]);
+      expect((await validationDetails(CreatePaymentDto, { amount: 10, method: 'cash' })).length).toBe(1);
+    });
   });
 
   describe('ListDebtsQueryDto', () => {

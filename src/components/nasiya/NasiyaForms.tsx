@@ -7,15 +7,11 @@ import type { DebtCustomer } from "@/data/debts";
 import { patchJson, postJson } from "@/lib/api/client";
 import type { ApiCustomer } from "@/lib/api/types";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/format";
 import {
-  acceptPayment,
   createCustomer,
   createDebt,
   MAX_CUSTOMER_NAME,
   MAX_DEBT_NOTE,
-  parsePaymentAmount,
-  paymentInputValue,
   updateCustomer,
   validateCustomer,
   validateDebt,
@@ -25,10 +21,10 @@ import {
   type FormResult,
 } from "@/lib/nasiyaForms";
 
-const fieldClass =
+export const fieldClass =
   "h-11 w-full rounded-xl border-[1.5px] border-ink bg-card px-3.5 text-[15px] text-ink outline-none placeholder:text-ink-3 focus:border-pen aria-invalid:border-red";
 
-function Field({ id, label, hint, error, children }: { id: string; label: string; hint?: string; error?: string; children: ReactNode }) {
+export function Field({ id, label, hint, error, children }: { id: string; label: string; hint?: string; error?: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-semibold">
@@ -85,7 +81,7 @@ function FormShell({ title, onSubmit, onClose, pending, submitText, error, child
   );
 }
 
-function useSubmitGuard() {
+export function useSubmitGuard() {
   const busy = useRef(false);
   const [pending, setPending] = useState(false);
   async function run(task: () => Promise<void>) {
@@ -321,92 +317,5 @@ export function NewDebtForm({ customers, initialCustomerId, today, onCreated, on
         />
       </Field>
     </FormShell>
-  );
-}
-
-type PaymentFormProps = {
-  customerId: string;
-  balance: number;
-  onPaid: () => void;
-  onCancel: () => void;
-};
-
-export function PaymentForm({ customerId, balance, onPaid, onCancel }: PaymentFormProps) {
-  const t = useT();
-  const locale = useLocale();
-  const [amount, setAmount] = useState(() => paymentInputValue(balance));
-  const [fieldError, setFieldError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { pending, run } = useSubmitGuard();
-  const amountId = `payment-amount-${customerId}`;
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const parsed = parsePaymentAmount(amount, balance, locale);
-    setError(null);
-    if ("error" in parsed) {
-      setFieldError(parsed.error);
-      return;
-    }
-    setFieldError(null);
-    void run(async () => {
-      const result = await acceptPayment(customerId, amount, balance, postJson, locale);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      onPaid();
-    });
-  }
-
-  return (
-    <form
-      noValidate
-      onSubmit={submit}
-      aria-label={t("nasiya.payment.title")}
-      className="flex flex-col gap-3 rounded-tile border-[1.5px] border-ink bg-card px-3.5 py-3.5 shadow-hard-sm print:hidden"
-    >
-      <Field
-        id={amountId}
-        label={t("nasiya.payment.amount")}
-        hint={t("nasiya.payment.upTo", { max: formatMoney(balance, { unit: false, locale }) })}
-        error={fieldError ?? undefined}
-      >
-        <input
-          id={amountId}
-          inputMode="decimal"
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          readOnly={pending}
-          autoComplete="off"
-          autoFocus
-          aria-invalid={Boolean(fieldError)}
-          aria-describedby={fieldError ? `${amountId}-error` : undefined}
-          className={fieldClass}
-        />
-      </Field>
-      {error && (
-        <HandNote tone="red" role="alert" className="text-xl leading-tight">
-          {error}
-        </HandNote>
-      )}
-      <div className="flex gap-2.5">
-        <button
-          type="submit"
-          disabled={pending}
-          className="h-[46px] flex-1 rounded-tile border-[1.5px] border-ink bg-pen px-2 text-sm font-bold whitespace-nowrap text-card shadow-hard-sm active:translate-x-px active:translate-y-px active:shadow-none disabled:border-line-strong disabled:bg-line disabled:text-ink-3 disabled:shadow-none"
-        >
-          {pending ? t("nasiya.saving") : t("nasiya.payment.confirm")}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={pending}
-          className="h-[46px] flex-1 rounded-tile border-[1.5px] border-ink bg-card px-2 text-sm font-semibold whitespace-nowrap text-ink hover:text-pen disabled:text-ink-3"
-        >
-          {t("nasiya.payment.cancel")}
-        </button>
-      </div>
-    </form>
   );
 }
