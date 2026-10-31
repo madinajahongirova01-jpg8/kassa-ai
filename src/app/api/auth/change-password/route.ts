@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
-import { forwardMutation } from "@/lib/api/route-helpers";
+import { changePasswordSession } from "@/lib/api/route-helpers";
+
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
-  return forwardMutation(request, "/auth/change-password", ["currentPassword", "newPassword"]);
+  return changePasswordSession(request);
 }

@@ -12,6 +12,14 @@ import { hashPassword, verifyPassword } from './password';
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid email or password';
 const UNIQUE_CONSTRAINT_VIOLATION = 'P2002';
 
+export function toEpochSeconds(date: Date): number {
+  return Math.floor(date.getTime() / 1000);
+}
+
+export function sessionsValidFrom(user: Pick<User, 'passwordChangedAt'>): number {
+  return user.passwordChangedAt === null ? 0 : toEpochSeconds(user.passwordChangedAt);
+}
+
 export function toPublicUser(user: User): PublicUser {
   return {
     id: user.id,
@@ -65,13 +73,19 @@ export class AuthService {
     return this.issueToken(user);
   }
 
-  async findPublicUserById(id: string): Promise<PublicUser | null> {
+  async findSessionUser(id: string, issuedAt: number): Promise<PublicUser | null> {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    return user === null ? null : toPublicUser(user);
+    if (user === null || issuedAt < sessionsValidFrom(user)) {
+      return null;
+    }
+    return toPublicUser(user);
   }
 
-  private async issueToken(user: User): Promise<AuthResult> {
-    const payload: JwtPayload = { sub: user.id };
+  async issueToken(user: User): Promise<AuthResult> {
+    const payload: JwtPayload = {
+      sub: user.id,
+      iat: Math.max(toEpochSeconds(new Date()), sessionsValidFrom(user)),
+    };
     return {
       accessToken: await this.jwt.signAsync(payload),
       tokenType: 'Bearer',

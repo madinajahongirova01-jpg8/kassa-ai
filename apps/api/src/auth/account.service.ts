@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { toPublicUser } from './auth.service';
-import { PublicUser } from './auth.types';
+import { AuthService, sessionsValidFrom, toEpochSeconds, toPublicUser } from './auth.service';
+import { ChangePasswordResult, PublicUser } from './auth.types';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { hashPassword, verifyPassword } from './password';
@@ -15,7 +15,10 @@ function invalid(...details: string[]): BadRequestException {
 
 @Injectable()
 export class AccountService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auth: AuthService,
+  ) {}
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<{ user: PublicUser }> {
     if (dto.businessName === undefined && dto.name === undefined) {
@@ -28,8 +31,11 @@ export class AccountService {
     return { user: toPublicUser(user) };
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ changed: true }> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<ChangePasswordResult> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true, passwordChangedAt: true },
+    });
     if (user === null) {
       throw new NotFoundException('User not found');
     }
@@ -39,7 +45,11 @@ export class AccountService {
     if (dto.newPassword === dto.currentPassword) {
       throw invalid(SAME_NEW_PASSWORD);
     }
-    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(dto.newPassword) } });
-    return { changed: true };
+    const validFromSeconds = Math.max(toEpochSeconds(new Date()), sessionsValidFrom(user)) + 1;
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await hashPassword(dto.newPassword), passwordChangedAt: new Date(validFromSeconds * 1000) },
+    });
+    return { changed: true, ...(await this.auth.issueToken(updated)) };
   }
 }

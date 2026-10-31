@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } f
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { AccountService } from './account.service';
 import { AuthService } from './auth.service';
-import type { AuthResult, PublicUser } from './auth.types';
+import type { AuthResult, ChangePasswordResult, PublicUser } from './auth.types';
 import { CurrentUser } from './current-user.decorator';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
@@ -46,7 +46,7 @@ export class AuthController {
   @Post('change-password')
   @UseGuards(ThrottlerGuard, JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  changePassword(@CurrentUser() user: PublicUser, @Body() dto: ChangePasswordDto): Promise<{ changed: true }> {
+  changePassword(@CurrentUser() user: PublicUser, @Body() dto: ChangePasswordDto): Promise<ChangePasswordResult> {
     return this.account.changePassword(user.id, dto);
   }
 }

@@ -90,13 +90,37 @@ describe('Profile and password (e2e)', () => {
   });
 
   describe('POST /auth/change-password', () => {
-    it('changes the password: the old one stops working, the new one works and the session stays', async () => {
+    it('changes the password: the old one stops working, the new one works and the session gets a new token', async () => {
       const response = await changePassword({ currentPassword: PASSWORD, newPassword: NEW_PASSWORD }).expect(200);
 
-      expect(response.body).toEqual({ changed: true });
+      const body = response.body as { changed: boolean; accessToken: string } & UserBody;
+      expect(body).toMatchObject({ changed: true, tokenType: 'Bearer', user: { email: EMAIL } });
+      expect(body.accessToken).not.toBe(token);
       await login(PASSWORD).expect(401);
-      await login(NEW_PASSWORD).expect(200);
-      await api().get('/auth/me').auth(token, { type: 'bearer' }).expect(200);
+      const fresh = await login(NEW_PASSWORD).expect(200);
+      await api().get('/auth/me').auth((fresh.body as { accessToken: string }).accessToken, { type: 'bearer' }).expect(200);
+      await api().get('/auth/me').auth(body.accessToken, { type: 'bearer' }).expect(200);
+    });
+
+    it('rejects every token issued before the password change', async () => {
+      const otherDevice = ((await login(PASSWORD).expect(200)).body as { accessToken: string }).accessToken;
+
+      await changePassword({ currentPassword: PASSWORD, newPassword: NEW_PASSWORD }).expect(200);
+
+      const stale = await api().get('/auth/me').auth(token, { type: 'bearer' }).expect(401);
+      expect((stale.body as ErrorResponse).message).toBe('Missing or invalid access token');
+      await api().get('/auth/me').auth(otherDevice, { type: 'bearer' }).expect(401);
+      await api().get('/customers').auth(otherDevice, { type: 'bearer' }).expect(401);
+      await changePassword({ currentPassword: NEW_PASSWORD, newPassword: PASSWORD }, otherDevice).expect(401);
+    });
+
+    it('keeps working after two password changes in a row', async () => {
+      const first = await changePassword({ currentPassword: PASSWORD, newPassword: NEW_PASSWORD }).expect(200);
+      const firstToken = (first.body as { accessToken: string }).accessToken;
+      const second = await changePassword({ currentPassword: NEW_PASSWORD, newPassword: PASSWORD }, firstToken).expect(200);
+
+      await api().get('/auth/me').auth(firstToken, { type: 'bearer' }).expect(401);
+      await api().get('/auth/me').auth((second.body as { accessToken: string }).accessToken, { type: 'bearer' }).expect(200);
     });
 
     it('refuses a wrong current password with a clear message', async () => {

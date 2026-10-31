@@ -32,11 +32,16 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const payload = await this.verify(token);
-    if (payload === undefined || typeof payload.sub !== 'string' || !isUUID(payload.sub)) {
+    if (
+      payload === undefined ||
+      typeof payload.sub !== 'string' ||
+      !isUUID(payload.sub) ||
+      typeof payload.iat !== 'number'
+    ) {
       throw new UnauthorizedException(UNAUTHORIZED_MESSAGE);
     }
 
-    const user = await this.auth.findPublicUserById(payload.sub);
+    const user = await this.auth.findSessionUser(payload.sub, payload.iat);
     if (user === null) {
       throw new UnauthorizedException(UNAUTHORIZED_MESSAGE);
     }

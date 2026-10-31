@@ -17,6 +17,11 @@ export interface AuthResult {
 
 export interface JwtPayload {
   sub: string;
+  iat: number;
+}
+
+export interface ChangePasswordResult extends AuthResult {
+  changed: true;
 }
 
 export interface AuthenticatedRequest extends Request {

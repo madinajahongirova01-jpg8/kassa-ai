@@ -53,6 +53,16 @@ export function toSessionUser(user: SessionUser | undefined): SessionUser | null
   };
 }
 
+export function readAuthResult(data: Partial<AuthResult> | null): AuthResult | null {
+  const accessToken = data?.accessToken;
+  const expiresIn = data?.expiresIn;
+  const user = toSessionUser(data?.user);
+  if (typeof accessToken !== "string" || typeof expiresIn !== "number" || !Number.isInteger(expiresIn) || expiresIn <= 0 || user === null) {
+    return null;
+  }
+  return { accessToken, tokenType: "Bearer", expiresIn, user };
+}
+
 export function clientIp(request: NextRequest): string | undefined {
   return nearestForwardedIp(request.headers.get("x-forwarded-for"));
 }
@@ -104,14 +114,41 @@ export async function startSession(request: NextRequest, path: "/auth/login" | "
   });
   if (!result.ok) return errorResponse(result.error);
 
-  const accessToken = result.data?.accessToken;
-  const expiresIn = result.data?.expiresIn;
-  const user = toSessionUser(result.data?.user);
-  if (typeof accessToken !== "string" || typeof expiresIn !== "number" || !Number.isInteger(expiresIn) || expiresIn <= 0 || user === null) {
-    return errorResponse({ status: 502, message: "Unexpected API response" });
+  const session = readAuthResult(result.data);
+  if (session === null) return errorResponse({ status: 502, message: "Unexpected API response" });
+
+  const response = jsonResponse({ user: session.user }, result.status);
+  setSessionCookie(response, session.accessToken, session.expiresIn);
+  return response;
+}
+
+export async function changePasswordSession(request: NextRequest) {
+  const rejected = rejectCrossOrigin(request);
+  if (rejected) return rejected;
+
+  const token = readSessionToken(request);
+  if (!token) return errorResponse({ status: 401, message: "Not signed in" });
+
+  const body = await readJsonObject(request);
+  if (body === null) return errorResponse({ status: 400, message: "Expected a JSON object" });
+
+  const result = await apiRequest<Partial<AuthResult> | null>("/auth/change-password", {
+    method: "POST",
+    body: { currentPassword: body.currentPassword, newPassword: body.newPassword },
+    token,
+    clientIp: clientIp(request),
+    timeoutMs: SLOW_REQUEST_TIMEOUT_MS,
+  });
+  if (!result.ok) {
+    const response = errorResponse(result.error);
+    if (result.error.status === 401) clearSessionCookie(response);
+    return response;
   }
 
-  const response = jsonResponse({ user }, result.status);
-  setSessionCookie(response, accessToken, expiresIn);
+  const session = readAuthResult(result.data);
+  if (session === null) return errorResponse({ status: 502, message: "Unexpected API response" });
+
+  const response = jsonResponse({ changed: true });
+  setSessionCookie(response, session.accessToken, session.expiresIn);
   return response;
 }

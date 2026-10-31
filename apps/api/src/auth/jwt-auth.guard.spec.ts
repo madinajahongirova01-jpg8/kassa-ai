@@ -35,28 +35,38 @@ describe('extractBearerToken', () => {
 
 describe('JwtAuthGuard', () => {
   const jwt = new JwtService({ secret: SECRET, verifyOptions: { algorithms: ['HS256'] } });
-  let findPublicUserById: jest.Mock<Promise<PublicUser | null>, [string]>;
+  let findSessionUser: jest.Mock<Promise<PublicUser | null>, [string, number]>;
   let guard: JwtAuthGuard;
 
   beforeEach(() => {
-    findPublicUserById = jest.fn<Promise<PublicUser | null>, [string]>();
-    guard = new JwtAuthGuard(jwt, { findPublicUserById } as unknown as AuthService);
+    findSessionUser = jest.fn<Promise<PublicUser | null>, [string, number]>();
+    guard = new JwtAuthGuard(jwt, { findSessionUser } as unknown as AuthService);
   });
 
   it('attaches the user for a valid token', async () => {
-    findPublicUserById.mockResolvedValue(USER);
+    findSessionUser.mockResolvedValue(USER);
     const token = await jwt.signAsync({ sub: USER.id });
     const request: Partial<AuthenticatedRequest> = { headers: { authorization: `Bearer ${token}` } };
 
     await expect(guard.canActivate(contextFor(request))).resolves.toBe(true);
     expect(request.user).toEqual(USER);
+    expect(findSessionUser).toHaveBeenCalledWith(USER.id, expect.any(Number));
+  });
+
+  it('rejects a token without an issue time', async () => {
+    const token = await jwt.signAsync({ sub: USER.id }, { noTimestamp: true });
+
+    await expect(
+      guard.canActivate(contextFor({ headers: { authorization: `Bearer ${token}` } })),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(findSessionUser).not.toHaveBeenCalled();
   });
 
   it('rejects a request without a token', async () => {
     await expect(guard.canActivate(contextFor({ headers: {} }))).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
-    expect(findPublicUserById).not.toHaveBeenCalled();
+    expect(findSessionUser).not.toHaveBeenCalled();
   });
 
   it('rejects a token signed with another secret', async () => {
@@ -67,7 +77,7 @@ describe('JwtAuthGuard', () => {
     await expect(
       guard.canActivate(contextFor({ headers: { authorization: `Bearer ${forged}` } })),
     ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(findPublicUserById).not.toHaveBeenCalled();
+    expect(findSessionUser).not.toHaveBeenCalled();
   });
 
   it('rejects an expired token', async () => {
@@ -84,11 +94,11 @@ describe('JwtAuthGuard', () => {
     await expect(
       guard.canActivate(contextFor({ headers: { authorization: `Bearer ${token}` } })),
     ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(findPublicUserById).not.toHaveBeenCalled();
+    expect(findSessionUser).not.toHaveBeenCalled();
   });
 
-  it('rejects a token for a user that no longer exists', async () => {
-    findPublicUserById.mockResolvedValue(null);
+  it('rejects a token for a user that no longer exists or changed the password since', async () => {
+    findSessionUser.mockResolvedValue(null);
     const token = await jwt.signAsync({ sub: USER.id });
 
     await expect(

@@ -26,6 +26,7 @@ function buildUser(overrides: Partial<User> = {}): User {
     name: 'Owner',
     businessName: 'Shop',
     passwordHash: 'not-a-real-hash',
+    passwordChangedAt: null,
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -141,20 +142,47 @@ describe('AuthService', () => {
     });
   });
 
-  describe('findPublicUserById', () => {
+  describe('findSessionUser', () => {
+    const USER_ID = '7f9c2c1e-3b0a-4c39-9a51-0d4f3f7d2a10';
+    const CHANGED_AT = new Date('2026-06-01T12:00:00.000Z');
+    const CHANGED_AT_SECONDS = CHANGED_AT.getTime() / 1000;
+
     it('returns the profile without the password hash', async () => {
       users.findUnique.mockResolvedValue(buildUser());
 
-      const user = await service.findPublicUserById('7f9c2c1e-3b0a-4c39-9a51-0d4f3f7d2a10');
+      const user = await service.findSessionUser(USER_ID, CHANGED_AT_SECONDS);
 
       expect(user).not.toBeNull();
       expect(user).not.toHaveProperty('passwordHash');
+      expect(user).not.toHaveProperty('passwordChangedAt');
     });
 
     it('returns null for a missing user', async () => {
       users.findUnique.mockResolvedValue(null);
 
-      await expect(service.findPublicUserById('7f9c2c1e-3b0a-4c39-9a51-0d4f3f7d2a10')).resolves.toBeNull();
+      await expect(service.findSessionUser(USER_ID, CHANGED_AT_SECONDS)).resolves.toBeNull();
+    });
+
+    it('rejects a token issued before the last password change', async () => {
+      users.findUnique.mockResolvedValue(buildUser({ passwordChangedAt: CHANGED_AT }));
+
+      await expect(service.findSessionUser(USER_ID, CHANGED_AT_SECONDS - 1)).resolves.toBeNull();
+    });
+
+    it('accepts a token issued at or after the last password change', async () => {
+      users.findUnique.mockResolvedValue(buildUser({ passwordChangedAt: CHANGED_AT }));
+
+      await expect(service.findSessionUser(USER_ID, CHANGED_AT_SECONDS)).resolves.not.toBeNull();
+    });
+  });
+
+  describe('issueToken', () => {
+    it('never dates a token before the last password change', async () => {
+      const changedAt = new Date(Date.now() + 5000);
+      const result = await service.issueToken(buildUser({ passwordChangedAt: changedAt }));
+
+      const payload = await jwt.verifyAsync<JwtPayload>(result.accessToken);
+      expect(payload.iat).toBe(Math.floor(changedAt.getTime() / 1000));
     });
   });
 });
