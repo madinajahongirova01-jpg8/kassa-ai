@@ -140,7 +140,7 @@ cd apps/api && npm run test:e2e
 
 ### Муаллиф
 
-Zarina
+Мадина Ҷаҳонгирова
 
 ---
 
@@ -278,7 +278,7 @@ cd apps/api && npm run test:e2e
 
 ### Автор
 
-Zarina
+Мадина Ҷаҳонгирова
 
 ---
 
@@ -416,4 +416,4 @@ Prices on `/pricing` are planned prices.
 
 ### Author
 
-Zarina
+Madina Jahongirova
