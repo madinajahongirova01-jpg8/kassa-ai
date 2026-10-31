@@ -12,7 +12,7 @@ export default defineConfig({
   retries: isCI ? 1 : 0,
   timeout: 60_000,
   expect: { timeout: 15_000 },
-  reporter: isCI ? [["list"], ["html", { open: "never" }]] : "list",
+  reporter: isCI ? [["github"], ["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: WEB_URL,
     trace: "retain-on-failure",
