@@ -14,6 +14,7 @@ import { canSaveSabt, cashSabtEntries, MAX_SABT_AMOUNT, sabtProfit, toCashEntrie
 import { parseOnServer, rulesResult, shouldAskServer, type ParsedText } from "@/lib/sabtParse";
 import { saveErrorKey } from "@/lib/sabtText";
 import { speechErrorKey, useSpeechRecognition } from "@/lib/useSpeechRecognition";
+import { canChooseVoiceLanguage, recognitionLang, VOICE_LANGUAGES, type VoiceLanguage } from "@/lib/voice";
 
 const PARSE_DELAY_MS = 700;
 const SABT_EXAMPLES = ["sale", "flour", "wage"] as const;
@@ -29,7 +30,9 @@ export function SabtView() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<{ status: number; message: string } | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
-  const speech = useSpeechRecognition("tg-TJ", changeText);
+  const [voiceLanguage, setVoiceLanguage] = useState<VoiceLanguage>("ru");
+  const [spoken, setSpoken] = useState(false);
+  const speech = useSpeechRecognition(recognitionLang(locale, voiceLanguage), changeText, speechEnded);
   const recording = speech.listening;
 
   const [parsed, setParsed] = useState<{ text: string; result: ParsedText } | null>(null);
@@ -71,6 +74,17 @@ export function SabtView() {
     speech.start();
   }
 
+  function speechEnded() {
+    if (!text.trim() || text === sabtDemo.transcript) return;
+    setSpoken(true);
+    setMode("text");
+  }
+
+  function chooseMode(next: SabtMode) {
+    setSpoken(false);
+    setMode(next);
+  }
+
   function edit() {
     setConfirmed(false);
     setMode("text");
@@ -84,6 +98,7 @@ export function SabtView() {
   }
 
   function startNew() {
+    setSpoken(false);
     changeText("");
     setMode("text");
     window.requestAnimationFrame(() => textRef.current?.focus());
@@ -101,7 +116,7 @@ export function SabtView() {
       const response = await fetch("/api/cash-entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(toCashEntriesPayload(entries, mode === "voice" ? "VOICE" : "TEXT")),
+        body: JSON.stringify(toCashEntriesPayload(entries, spoken || mode === "voice" ? "VOICE" : "TEXT")),
       });
       if (!response.ok) {
         setSaveError({ status: response.status, message: t(saveErrorKey(response.status)) });
@@ -117,8 +132,8 @@ export function SabtView() {
 
   const steps = [
     {
-      title: mode === "text" ? t("sabt.steps.wrote") : t("sabt.steps.said"),
-      note: mode === "text" ? plural("sabt.steps.characters", text.length) : plural("sabt.steps.seconds", seconds),
+      title: mode === "text" && !spoken ? t("sabt.steps.wrote") : t("sabt.steps.said"),
+      note: mode === "text" && !spoken ? plural("sabt.steps.characters", text.length) : plural("sabt.steps.seconds", seconds),
       done: !recording,
     },
     {
@@ -144,8 +159,8 @@ export function SabtView() {
                 key={item.id}
                 type="button"
                 aria-pressed={mode === item.id}
-                disabled={item.disabled}
-                onClick={() => setMode(item.id)}
+                disabled={item.disabled || (item.id === "voice" && !speech.supported)}
+                onClick={() => chooseMode(item.id)}
                 className={cn(
                   "flex h-[38px] items-center gap-1.5 rounded-full border-[1.5px] border-ink px-4 disabled:border-dashed disabled:border-ink-3 disabled:text-ink-3 disabled:hover:text-ink-3",
                   mode === item.id ? "bg-ink font-semibold text-card" : "bg-card font-medium text-ink hover:text-pen",
@@ -160,6 +175,11 @@ export function SabtView() {
             ✕ {t("sabt.close")}
           </Link>
         </div>
+        {!speech.supported && (
+          <p role="status" className="-mt-2 text-sm text-ink-2">
+            {t("sabt.voice.unsupported")}
+          </p>
+        )}
 
         <SaidCard
           mode={mode}
@@ -189,17 +209,30 @@ export function SabtView() {
             </div>
           </div>
         )}
-        {mode === "voice" &&
-          (speech.supported ? (
-            <Recorder recording={recording} seconds={seconds} onToggle={toggleRecording} />
-          ) : (
-            <p role="status" className="rounded-[20px] border-[1.5px] border-dashed border-ink-3 bg-card px-4 py-4 text-sm text-ink-2">
-              {t("sabt.voice.unsupported")}{" "}
-              <button type="button" onClick={edit} className="font-semibold text-pen underline">
-                {t("sabt.voice.toText")}
-              </button>
-            </p>
-          ))}
+        {mode === "voice" && canChooseVoiceLanguage(locale) && (
+          <div className="flex flex-col gap-2">
+            <div role="group" aria-label={t("sabt.voice.language")} className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold">{t("sabt.voice.language")}</span>
+              {VOICE_LANGUAGES.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={voiceLanguage === id}
+                  disabled={recording}
+                  onClick={() => setVoiceLanguage(id)}
+                  className={cn(
+                    "h-9 rounded-full border-[1.5px] border-ink px-3.5 text-sm disabled:text-ink-3",
+                    voiceLanguage === id ? "bg-ink font-semibold text-card" : "bg-card font-medium text-ink hover:text-pen",
+                  )}
+                >
+                  {t(`sabt.voice.languages.${id}`)}
+                </button>
+              ))}
+            </div>
+            <p className="text-sm text-ink-2">{t("sabt.voice.tajikSoon")}</p>
+          </div>
+        )}
+        {mode === "voice" && <Recorder recording={recording} seconds={seconds} onToggle={toggleRecording} />}
         {mode === "voice" && speech.error && (
           <p role="alert" className="text-sm font-medium text-red">
             {t(speechErrorKey(speech.error))}{" "}

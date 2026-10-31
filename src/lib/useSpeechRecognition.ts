@@ -25,12 +25,11 @@ type BrowserRecognition = {
 
 type RecognitionConstructor = new () => BrowserRecognition;
 
-type SpeechWindow = Window & {
+export type SpeechScope = {
   SpeechRecognition?: RecognitionConstructor;
   webkitSpeechRecognition?: RecognitionConstructor;
 };
 
-// The hook reports the browser's error code; the screen turns it into text in the chosen language.
 const errorKeys: Record<string, MessageKey> = {
   "not-allowed": "sabt.speech.notAllowed",
   "service-not-allowed": "sabt.speech.serviceNotAllowed",
@@ -47,25 +46,30 @@ export function speechErrorKey(code: string): MessageKey {
   return errorKeys[code] ?? "sabt.speech.failed";
 }
 
+export function findRecognition(scope: SpeechScope | undefined): RecognitionConstructor | null {
+  return scope?.SpeechRecognition ?? scope?.webkitSpeechRecognition ?? null;
+}
+
 function getRecognition() {
-  const scope = window as SpeechWindow;
-  return scope.SpeechRecognition ?? scope.webkitSpeechRecognition ?? null;
+  return findRecognition(typeof window === "undefined" ? undefined : (window as Window & SpeechScope));
 }
 
 function subscribe() {
   return () => {};
 }
 
-export function useSpeechRecognition(lang: string, onText: (text: string) => void) {
+export function useSpeechRecognition(lang: string, onText: (text: string) => void, onEnd: () => void) {
   const supported = useSyncExternalStore(subscribe, () => getRecognition() !== null, () => true);
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<BrowserRecognition | null>(null);
   const onTextRef = useRef(onText);
+  const onEndRef = useRef(onEnd);
 
   useEffect(() => {
     onTextRef.current = onText;
-  }, [onText]);
+    onEndRef.current = onEnd;
+  }, [onText, onEnd]);
 
   useEffect(() => () => recognitionRef.current?.abort(), []);
 
@@ -88,10 +92,12 @@ export function useSpeechRecognition(lang: string, onText: (text: string) => voi
     recognition.onerror = (event) => {
       if (event.error === "aborted") return;
       setError(event.error);
+      setListening(false);
     };
     recognition.onend = () => {
       if (recognitionRef.current === recognition) recognitionRef.current = null;
       setListening(false);
+      onEndRef.current();
     };
 
     setError(null);
@@ -100,6 +106,7 @@ export function useSpeechRecognition(lang: string, onText: (text: string) => voi
       recognitionRef.current = recognition;
       setListening(true);
     } catch {
+      setListening(false);
       setError(FAILED);
     }
   }, [lang]);

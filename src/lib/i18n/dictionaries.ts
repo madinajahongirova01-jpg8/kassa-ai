@@ -41,7 +41,7 @@ const tg = {
     },
     newEntry: {
       write: "Нависед",
-      voiceSoon: "Овоз — санҷишӣ",
+      voiceSoon: "Овоз — бо русӣ ва англисӣ; тоҷикӣ — ба наздикӣ",
     },
     entries: {
       title: "Сабтҳои имрӯз",
@@ -85,7 +85,7 @@ const tg = {
     modes: {
       text: "Матн",
       voice: "Овоз",
-      voiceTag: "санҷишӣ",
+      voiceTag: "RU · EN",
       photo: "Акси чек",
       photoTag: "Ба наздикӣ",
     },
@@ -117,16 +117,21 @@ const tg = {
       moreHint: "агар чизе монда бошад",
     },
     voice: {
-      unsupported: "Ин браузер шинохтани овозро дастгирӣ намекунад. Матнро дастӣ нависед.",
-      toText: "Ба матн гузаштан",
+      unsupported: "Ин браузер овозро намешиносад, бинобар ин «Овоз» хомӯш аст. Матнро нависед ё Chrome-ро кушоед.",
       typeManually: "Дастӣ навиштан",
+      language: "Забони овоз:",
+      languages: {
+        ru: "Русӣ",
+        en: "English",
+      },
+      tajikSoon: "Овоз ба тоҷикӣ — ба наздикӣ. Ҳоло ба русӣ ё англисӣ гап занед.",
     },
     speech: {
       notAllowed: "Иҷозати микрофон дода нашуд. Дар танзимоти браузер микрофонро иҷозат диҳед.",
       serviceNotAllowed: "Браузер шинохтани овозро манъ кард. Матнро дастӣ нависед.",
       audioCapture: "Микрофон ёфт нашуд. Онро пайваст карда, боз кӯшиш кунед.",
       network: "Барои шинохтани овоз интернет лозим аст. Пайвастро санҷед.",
-      languageNotSupported: "Ин браузер забони тоҷикиро барои овоз дастгирӣ намекунад. Матнро дастӣ нависед.",
+      languageNotSupported: "Ин браузер ин забонро барои овоз дастгирӣ намекунад. Забони дигарро интихоб кунед ё матнро нависед.",
       noSpeech: "Овоз шунида нашуд. Наздиктар ба микрофон боз гап занед.",
       failed: "Шинохтани овоз қатъ шуд. Боз кӯшиш кунед ё матнро дастӣ нависед.",
     },
@@ -476,7 +481,7 @@ const tg = {
       note: "Шумо менависед…",
       marker: "ҳисоб мекунад.",
       text: "Дафтари рақамӣ барои дӯкон ва тиҷорати хурд. Пули даромад ва пули рафтро бо як ҷумла сабт кунед — Kassa суммаҳоро ҷудо мекунад ва чек месозад. Насияро дар дафтари насия нигоҳ доред.",
-      soon: "Овоз — санҷишӣ, акси чек — ба наздикӣ.",
+      soon: "Овоз — бо русӣ ва англисӣ; тоҷикӣ — ба наздикӣ. Акси чек — ба наздикӣ.",
       write: "Нависед",
       sample: "Ройгон санҷед",
       sampleNote: "Бақайдгирӣ кунед ва ройгон санҷед.",
@@ -487,7 +492,7 @@ const tg = {
       note: "ягон қалам лозим нашуд :)",
       talk: {
         title: "Шумо менависед",
-        note: "як ҷумла бо матн; овоз — санҷишӣ",
+        note: "як ҷумла бо матн; овоз — бо русӣ ва англисӣ, тоҷикӣ — ба наздикӣ",
       },
       count: {
         title: "Kassa ҳисоб мекунад",
@@ -748,7 +753,7 @@ const ru: Dictionary = {
     },
     newEntry: {
       write: "Напишите",
-      voiceSoon: "Голос — тест",
+      voiceSoon: "Голос — на русском и английском; таджикский — скоро",
     },
     entries: {
       title: "Записи за сегодня",
@@ -792,7 +797,7 @@ const ru: Dictionary = {
     modes: {
       text: "Текст",
       voice: "Голос",
-      voiceTag: "тест",
+      voiceTag: "RU · EN",
       photo: "Фото чека",
       photoTag: "Скоро",
     },
@@ -824,16 +829,21 @@ const ru: Dictionary = {
       moreHint: "если что-то осталось",
     },
     voice: {
-      unsupported: "Этот браузер не поддерживает распознавание голоса. Введите текст вручную.",
-      toText: "Перейти к тексту",
+      unsupported: "Этот браузер не распознаёт голос, поэтому «Голос» выключен. Напишите текст или откройте Chrome.",
       typeManually: "Ввести вручную",
+      language: "Язык голоса:",
+      languages: {
+        ru: "Русский",
+        en: "English",
+      },
+      tajikSoon: "Голос на таджикском — скоро. Пока говорите по-русски или по-английски.",
     },
     speech: {
       notAllowed: "Доступ к микрофону не разрешён. Разрешите микрофон в настройках браузера.",
       serviceNotAllowed: "Браузер запретил распознавание голоса. Введите текст вручную.",
       audioCapture: "Микрофон не найден. Подключите его и попробуйте снова.",
       network: "Для распознавания голоса нужен интернет. Проверьте подключение.",
-      languageNotSupported: "Этот браузер не поддерживает таджикский язык для голосового ввода. Введите текст вручную.",
+      languageNotSupported: "Этот браузер не поддерживает этот язык для голоса. Выберите другой язык или напишите текст.",
       noSpeech: "Голос не услышан. Говорите ближе к микрофону и попробуйте снова.",
       failed: "Распознавание голоса прервалось. Попробуйте снова или введите текст вручную.",
     },
@@ -1183,7 +1193,7 @@ const ru: Dictionary = {
       note: "Вы пишете…",
       marker: "считает.",
       text: "Цифровая тетрадь для магазина и малого бизнеса. Записывайте доходы и расходы одной фразой — Kassa разберёт суммы и составит чек. Долги ведите в тетради насии.",
-      soon: "Голос — тест, фото чека — скоро.",
+      soon: "Голос — на русском и английском; таджикский — скоро. Фото чека — скоро.",
       write: "Написать",
       sample: "Попробовать бесплатно",
       sampleNote: "Зарегистрируйтесь и попробуйте бесплатно.",
@@ -1194,7 +1204,7 @@ const ru: Dictionary = {
       note: "ручка не понадобилась :)",
       talk: {
         title: "Вы пишете",
-        note: "одна фраза текстом; голос — в тесте",
+        note: "одна фраза текстом; голос — на русском и английском, таджикский — скоро",
       },
       count: {
         title: "Kassa считает",
@@ -1452,7 +1462,7 @@ const en: Dictionary = {
     },
     newEntry: {
       write: "Type it",
-      voiceSoon: "Voice — beta",
+      voiceSoon: "Voice — in Russian and English; Tajik — coming soon",
     },
     entries: {
       title: "Today's entries",
@@ -1496,7 +1506,7 @@ const en: Dictionary = {
     modes: {
       text: "Text",
       voice: "Voice",
-      voiceTag: "beta",
+      voiceTag: "RU · EN",
       photo: "Receipt photo",
       photoTag: "Coming soon",
     },
@@ -1528,16 +1538,21 @@ const en: Dictionary = {
       moreHint: "if anything is left",
     },
     voice: {
-      unsupported: "This browser doesn't support voice recognition. Type the text instead.",
-      toText: "Switch to text",
+      unsupported: "This browser can't recognise voice, so Voice is turned off. Type the text or open Chrome.",
       typeManually: "Type it instead",
+      language: "Voice language:",
+      languages: {
+        ru: "Russian",
+        en: "English",
+      },
+      tajikSoon: "Voice in Tajik is coming soon. For now, speak Russian or English.",
     },
     speech: {
       notAllowed: "Microphone access was not allowed. Allow the microphone in your browser settings.",
       serviceNotAllowed: "The browser blocked voice recognition. Type the text instead.",
       audioCapture: "No microphone found. Connect one and try again.",
       network: "Voice recognition needs an internet connection. Check your connection.",
-      languageNotSupported: "This browser doesn't support Tajik for voice input. Type the text instead.",
+      languageNotSupported: "This browser doesn't support this language for voice. Choose another language or type the text.",
       noSpeech: "No speech was heard. Move closer to the microphone and speak again.",
       failed: "Voice recognition stopped. Try again or type the text instead.",
     },
@@ -1887,7 +1902,7 @@ const en: Dictionary = {
       note: "You write…",
       marker: "does the math.",
       text: "A digital cash book for shops and small businesses. Record money in and money out in one sentence — Kassa picks out the amounts and builds a receipt. Keep debts in the nasiya book.",
-      soon: "Voice is in beta, receipt photos are coming soon.",
+      soon: "Voice — in Russian and English; Tajik — coming soon. Receipt photos — coming soon.",
       write: "Write it",
       sample: "Try it free",
       sampleNote: "Sign up and try it for free.",
@@ -1898,7 +1913,7 @@ const en: Dictionary = {
       note: "no pen needed :)",
       talk: {
         title: "You write",
-        note: "one sentence of text; voice is in beta",
+        note: "one sentence of text; voice — in Russian and English, Tajik coming soon",
       },
       count: {
         title: "Kassa does the math",

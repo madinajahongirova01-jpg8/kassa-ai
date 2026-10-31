@@ -45,7 +45,7 @@ Kassa AI дафтари электронии хазина ва насия бар
 - Бе калид, ҳангоми хато, тайм-аут (8 сония) ё ҷавоби нодурусти AI матн **бо қоидаҳо** (regex) таҳлил мешавад. Дар болои чек ҳамеша навишта мешавад: «AI фаҳмид» ё «Бо қоидаҳо ҳисоб шуд».
 - AI худаш ҳеҷ чиз сабт намекунад: сабт танҳо пас аз «Тасдиқ» мешавад. Насия ҳеҷ гоҳ ҳамчун хароҷот сабт намешавад.
 - Дар сайти зинда калиди Gemini ҳоло нест, бинобар ин матн бо қоидаҳо таҳлил мешавад.
-- Овоз — **санҷишӣ**: шинохтани овози худи браузер истифода мешавад; тоҷикӣ ҳоло боэътимод нест.
+- Овоз — **бо русӣ ва англисӣ; тоҷикӣ — ба наздикӣ**. Шинохтани овози худи браузер истифода мешавад (масалан Chrome). Дар интерфейси тоҷикӣ забони овозро интихоб мекунед: «Русӣ» ё «English». Матни шинохташуда ба майдон меояд ва мисли матни навишташуда таҳлил мешавад; сабт танҳо пас аз «Тасдиқ» мешавад. Агар браузер овозро дастгирӣ накунад, «Овоз» хомӯш аст.
 - Акси чек — **ба наздикӣ**.
 - Пардохти онлайни тарофаҳо **нест**.
 
@@ -189,7 +189,7 @@ Kassa AI — электронная тетрадь кассы и долгов д
 - Без ключа, при ошибке, таймауте (8 секунд) или неверном ответе AI текст разбирается **по правилам** (regex). Над чеком всегда написано: «Разобрал AI» или «Посчитано по правилам».
 - AI сам ничего не сохраняет: запись сохраняется только после «Тасдиқ». Долг никогда не сохраняется как расход.
 - На живом сайте ключа Gemini пока нет, поэтому текст разбирается по правилам.
-- Голос — **тестовый**: используется распознавание речи браузера; таджикский пока ненадёжен.
+- Голос — **на русском и английском; таджикский — скоро**. Используется распознавание речи браузера (например, Chrome). В таджикском интерфейсе язык голоса выбирается: «Русӣ» или «English». Распознанный текст попадает в поле и разбирается так же, как напечатанный; запись сохраняется только после «Тасдиқ». Если браузер не поддерживает распознавание, «Голос» выключен.
 - Фото чека — **скоро** («ба наздикӣ»).
 - Онлайн-оплаты тарифов — **нет**.
 
@@ -333,7 +333,7 @@ To be honest:
 - Without a key, or on an error, a timeout (8 seconds) or an invalid AI answer, the text is parsed **by rules** (regex). The receipt always says which one: "Understood by AI" or "Counted by rules".
 - AI never saves anything by itself: entries are saved only after "Tasdiq" (confirm). A debt is never saved as an expense.
 - The live site has no Gemini key yet, so text is parsed by rules.
-- Voice is **in beta**: it uses the browser's own speech recognition; Tajik is not reliable yet.
+- Voice — **in Russian and English; Tajik — coming soon**. It uses the browser's own speech recognition (for example Chrome). In the Tajik interface you choose the voice language: "Русӣ" (Russian) or "English". The recognised text goes into the text field and is parsed just like typed text; nothing is saved until "Tasdiq" (confirm). If the browser doesn't support speech recognition, Voice is turned off.
 - Receipt photos are **coming soon** («ба наздикӣ»).
 - Online payment for plans is **not available**.
 
