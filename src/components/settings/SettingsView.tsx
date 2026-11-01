@@ -5,9 +5,11 @@ import { useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { Card } from "@/components/daftar/Card";
 import { HandNote } from "@/components/daftar/HandNote";
 import { PasswordInput } from "@/components/daftar/PasswordInput";
+import { TelegramLinkCard } from "@/components/settings/TelegramLinkCard";
 import { useLocale, useT } from "@/components/i18n/I18nProvider";
 import { Field, fieldClass, useSubmitGuard } from "@/components/nasiya/NasiyaForms";
 import type { ApiMe } from "@/lib/api/types";
+import type { TelegramLinkStatus } from "@/lib/telegramLink";
 import { cn } from "@/lib/cn";
 import {
   changePassword,
@@ -184,7 +186,7 @@ function PasswordForm() {
   );
 }
 
-export function SettingsView({ user }: { user: ApiMe["user"] }) {
+export function SettingsView({ user, telegram }: { user: ApiMe["user"]; telegram: TelegramLinkStatus | null }) {
   const t = useT();
   return (
     <div className="flex flex-col gap-5">
@@ -192,6 +194,7 @@ export function SettingsView({ user }: { user: ApiMe["user"] }) {
       <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
         <ProfileForm user={user} />
         <PasswordForm />
+        <TelegramLinkCard initial={telegram} />
       </div>
     </div>
   );

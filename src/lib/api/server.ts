@@ -15,7 +15,7 @@ export type ApiError = {
 export type ApiResult<T> = { ok: true; status: number; data: T } | { ok: false; error: ApiError };
 
 type ApiRequest = {
-  method?: "GET" | "POST" | "PATCH";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   token?: string;
   clientIp?: string;

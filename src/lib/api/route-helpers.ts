@@ -96,6 +96,23 @@ export async function forwardMutation(request: NextRequest, path: string, fields
   return jsonResponse(result.data, result.status);
 }
 
+// Deletions made by the signed-in user: same checks as forwardMutation, without a body.
+export async function forwardDelete(request: NextRequest, path: string) {
+  const rejected = rejectCrossOrigin(request);
+  if (rejected) return rejected;
+
+  const token = readSessionToken(request);
+  if (!token) return errorResponse({ status: 401, message: "Not signed in" });
+
+  const result = await apiRequest<unknown>(path, { method: "DELETE", token, clientIp: clientIp(request) });
+  if (!result.ok) {
+    const response = errorResponse(result.error);
+    if (result.error.status === 401) clearSessionCookie(response);
+    return response;
+  }
+  return result.status === 204 ? new NextResponse(null, { status: 204, headers: NO_STORE }) : jsonResponse(result.data, result.status);
+}
+
 // Login and registration share one flow: call the API, keep the token in the httpOnly cookie
 // and return only the public user to the browser.
 export async function startSession(request: NextRequest, path: "/auth/login" | "/auth/register", fields: string[]) {

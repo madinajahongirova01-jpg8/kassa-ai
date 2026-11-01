@@ -14,12 +14,16 @@ export function patchJson<T = unknown>(url: string, body: unknown): Promise<Post
   return sendJson<T>("PATCH", url, body);
 }
 
-async function sendJson<T>(method: "POST" | "PATCH", url: string, body: unknown): Promise<PostResult<T>> {
+export function deleteJson<T = unknown>(url: string): Promise<PostResult<T>> {
+  return sendJson<T>("DELETE", url, undefined);
+}
+
+async function sendJson<T>(method: "POST" | "PATCH" | "DELETE", url: string, body: unknown): Promise<PostResult<T>> {
   try {
     const response = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
     });
     const data: unknown = await response.json().catch(() => null);
