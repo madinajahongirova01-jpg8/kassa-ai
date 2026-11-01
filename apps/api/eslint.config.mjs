@@ -23,4 +23,11 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'error',
     },
   },
+  {
+    // Telegram bot code is kept identical to the standalone bot; its handlers use `ctx.from!`.
+    files: ['src/telegram/bot/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+    },
+  },
 );
