@@ -69,7 +69,7 @@ const tg: Messages = {
   debtsTitle: "📒 Қарзҳо",
   total: "Ҷамъ",
   noDebts: "Ҳоло касе қарздор нест ✅",
-  overdueHeader: "⚠️ Дер мондаанд (зиёда аз 30 рӯз):",
+  overdueHeader: "⚠️ Мӯҳлаташон гузаштааст:",
   otherHeader: "Дигар қарзҳо:",
   help:
     "ℹ️ Роҳнамо\n\nБа ман бо матн нависед, ки чӣ кор кардед:\n• 50 сомонӣ нон фурӯхтам\n• харидам 120 сомонӣ орд\n• Ба Ҷамшед насия 100 сомонӣ нон додам\n• Ҷамшед 40 сомонӣ баргардонд\n\nБот квитансия нишон медиҳад. Тасдиқ кунед ё бекор кунед.\n\n/today — имрӯз\n/debts — қарзҳо\n/language — забон\n/link — рамзи пайвастшавӣ\n/stop — қатъ кардан",
@@ -109,7 +109,7 @@ const ru: Messages = {
   debtsTitle: "📒 Долги",
   total: "Итого",
   noDebts: "Пока никто не должен ✅",
-  overdueHeader: "⚠️ Просрочены (больше 30 дней):",
+  overdueHeader: "⚠️ Срок истёк:",
   otherHeader: "Остальные долги:",
   help:
     "ℹ️ Помощь\n\nПишите мне текстом, что вы сделали:\n• Продал хлеб за 50 сомони\n• Купил муку 120 сомони\n• Продал Алишеру в долг на 100\n• Алишер вернул 40 сомони\n\nБот покажет квитанцию. Подтвердите или отмените.\n\n/today — сегодня\n/debts — долги\n/language — язык\n/link — код привязки\n/stop — остановить",
@@ -149,7 +149,7 @@ const en: Messages = {
   debtsTitle: "📒 Debts",
   total: "Total",
   noDebts: "Nobody owes you right now ✅",
-  overdueHeader: "⚠️ Overdue (more than 30 days):",
+  overdueHeader: "⚠️ Past due date:",
   otherHeader: "Other debts:",
   help:
     "ℹ️ Help\n\nWrite to me in text what you did:\n• Sold bread for 50 somoni\n• Bought flour 120 somoni\n• Sold bread to Ali on credit 100 somoni\n• Ali returned 40 somoni\n\nThe bot shows a receipt. Confirm or cancel it.\n\n/today — today\n/debts — debts\n/language — language\n/link — linking code\n/stop — stop the bot",

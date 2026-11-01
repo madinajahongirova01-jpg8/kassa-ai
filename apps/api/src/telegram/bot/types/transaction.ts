@@ -27,7 +27,8 @@ export interface DailySummary {
 export interface DebtBalance {
   customerName: string;
   balanceDiram: number;
-  oldestCreditAt: Date | null;
+  /** Earliest due date ("YYYY-MM-DD") among the customer's unpaid debts, null when none has one. */
+  dueOn: string | null;
 }
 
 export interface DebtorSummary {

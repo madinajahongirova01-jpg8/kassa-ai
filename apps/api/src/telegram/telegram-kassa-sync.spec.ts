@@ -1,4 +1,3 @@
-import { UnprocessableEntityException } from '@nestjs/common';
 import { createPgliteDatabase, PgliteDatabase } from '../../test/pglite-database';
 import { parseCalendarDate, todayInBusinessTimeZone } from '../common/dates';
 import { formatDirams } from '../common/money';
@@ -7,6 +6,8 @@ import { DebtsService } from '../debts/debts.service';
 import { Prisma, TelegramTransaction } from '../generated/prisma/client';
 import { CashCategory, CashEntryKind, DebtStatus, EntrySource, PaymentMethod } from '../generated/prisma/enums';
 import { ReportsService } from '../reports/reports.service';
+import { addDays } from './bot/services/day-range';
+import { buildDebtList, DEFAULT_DUE_DAYS } from './bot/services/debts';
 import { TransactionService } from './bot/services/transaction-service';
 import type { ParsedTransaction, StoredTransaction } from './bot/types/transaction';
 import { PrismaTransactionRepository } from './repositories/prisma-transaction-repository';
@@ -147,7 +148,8 @@ describe('Confirmed Telegram receipts written to Kassa', () => {
           status: DebtStatus.ACTIVE,
           description: 'nasia ba Ali 500',
           occurredOn: parseCalendarDate(today),
-          dueOn: null,
+          // The website has no default due date, so a Telegram nasia is due 30 days after it.
+          dueOn: parseCalendarDate(addDays(today, DEFAULT_DUE_DAYS)),
           customer: expect.objectContaining({ ownerId: ownerA, name: 'Ali' }) as unknown,
         }),
       ]);
@@ -155,6 +157,32 @@ describe('Confirmed Telegram receipts written to Kassa', () => {
       expect(await row(tx!.id)).toMatchObject({ debtId: debts[0].id, cashEntryId: null });
       const summary = await service.getTodaySummary(TG_A);
       expect(summary).toEqual({ incomeDiram: 0, expenseDiram: 0, creditGivenDiram: 50_000, profitDiram: 0 });
+    });
+
+    it('dates the nasia and its due date by the Dushanbe day of the receipt', async () => {
+      const created = await draft(TG_A, { type: 'credit_sale', amountDiram: 1_000, customerName: 'Ali' });
+      // 19:30 UTC on 31 October is already 1 November in Dushanbe.
+      await db.prisma.telegramTransaction.update({ where: { id: created.id }, data: { occurredAt: new Date('2026-10-31T19:30:00.000Z') } });
+
+      await service.confirm(TG_A, created.id);
+
+      expect(await db.prisma.debt.findFirstOrThrow()).toMatchObject({
+        occurredOn: parseCalendarDate('2026-11-01'),
+        dueOn: parseCalendarDate('2026-12-01'),
+      });
+    });
+
+    it('is not overdue in /debts until its due date has passed, like on the website', async () => {
+      const created = await draft(TG_A, { type: 'credit_sale', amountDiram: 1_000, customerName: 'Ali' });
+      await db.prisma.telegramTransaction.update({ where: { id: created.id }, data: { occurredAt: new Date('2026-09-01T07:00:00.000Z') } });
+      await service.confirm(TG_A, created.id);
+      const balances = await new PrismaTransactionRepository(db.prisma, new TelegramKassaSync(debtsService)).getDebtBalances(
+        (await users.findByTelegramUserId(TG_A))!.id,
+      );
+
+      expect(balances).toEqual([{ customerName: 'Ali', balanceDiram: 1_000, dueOn: '2026-10-01' }]);
+      expect(buildDebtList(balances, new Date('2026-10-01T18:59:00.000Z'))[0].isOverdue).toBe(false);
+      expect(buildDebtList(balances, new Date('2026-10-01T19:00:00.000Z'))[0].isOverdue).toBe(true);
     });
 
     it('reuses the existing customer whatever the letter case', async () => {
@@ -225,8 +253,8 @@ describe('Confirmed Telegram receipts written to Kassa', () => {
 
     it.each([
       ['an unknown customer', null, new TelegramSyncError('customer-not-found')],
-      ['a customer who owes nothing', 0, UnprocessableEntityException],
-      ['more than the customer owes', 4_000, UnprocessableEntityException],
+      ['a customer who owes nothing', 0, new TelegramSyncError('no-open-debts')],
+      ['more than the customer owes', 4_000, new TelegramSyncError('exceeds-debt', 4_000)],
     ])('rolls back a payment from %s and keeps the draft pending', async (_label, owed, expected) => {
       if (owed !== null) {
         const ali = await customer(ownerA, 'Ali');
@@ -237,12 +265,12 @@ describe('Confirmed Telegram receipts written to Kassa', () => {
       const created = await draft(TG_A, { type: 'debt_payment', amountDiram: 5_000, customerName: 'Ali' });
       const before = await kassaCounts(ownerA);
 
-      const attempt = service.confirm(TG_A, created.id);
-      if (expected instanceof Error) {
-        await expect(attempt).rejects.toEqual(expected);
-      } else {
-        await expect(attempt).rejects.toBeInstanceOf(expected);
-      }
+      const error = await service.confirm(TG_A, created.id).then(
+        () => null,
+        (rejection: unknown) => rejection,
+      );
+      expect(error).toEqual(expected);
+      expect((error as TelegramSyncError).remainingDirams).toBe(expected.remainingDirams);
 
       expect(await kassaCounts(ownerA)).toEqual(before);
       expect(await row(created.id)).toMatchObject({ status: 'PENDING', syncedAt: null, paymentGroupId: null });

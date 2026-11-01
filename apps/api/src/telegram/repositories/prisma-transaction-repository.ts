@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { parseCalendarDate, todayInBusinessTimeZone } from '../../common/dates';
+import { formatCalendarDate, parseCalendarDate, todayInBusinessTimeZone } from '../../common/dates';
 import { MAX_AMOUNT_DIRAMS } from '../../common/money';
 import { Prisma, TelegramTransaction } from '../../generated/prisma/client';
 import {
@@ -10,6 +10,8 @@ import {
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { TransactionRepository } from '../bot/repositories/transaction-repository';
+import { addDays, getDushanbeDate } from '../bot/services/day-range';
+import { DEFAULT_DUE_DAYS } from '../bot/services/debts';
 import { TelegramKassaSync } from '../telegram-kassa-sync';
 import type {
   DailySummary,
@@ -19,6 +21,14 @@ import type {
   TransactionStatus,
   TransactionType,
 } from '../bot/types/transaction';
+
+/** An amount the bot cannot record: not a positive whole number of dirams or above the Kassa limit. */
+export class TelegramAmountError extends RangeError {
+  constructor() {
+    super('Amount must be a positive integer number of dirams within the Kassa limit');
+    this.name = 'TelegramAmountError';
+  }
+}
 
 const TYPE_TO_DB: Record<TransactionType, TelegramTransactionType> = {
   sale: TelegramTransactionType.SALE,
@@ -76,7 +86,7 @@ export class PrismaTransactionRepository implements TransactionRepository {
 
   async createPending(userId: number, parsed: ParsedTransaction): Promise<StoredTransaction> {
     if (!Number.isSafeInteger(parsed.amountDiram) || parsed.amountDiram <= 0 || parsed.amountDiram > MAX_AMOUNT_DIRAMS) {
-      throw new RangeError('Amount must be a positive integer number of dirams within the Kassa limit');
+      throw new TelegramAmountError();
     }
     const row = await this.prisma.telegramTransaction.create({
       data: {
@@ -194,25 +204,33 @@ export class PrismaTransactionRepository implements TransactionRepository {
     };
   }
 
-  /** Open Kassa debts of the owner, one row per customer. */
+  /**
+   * Open Kassa debts of the owner, one row per customer. dueOn is the earliest due date of the
+   * customer's unpaid debts, exactly as the website derives a customer's due date.
+   */
   private async kassaDebtBalances(ownerId: string): Promise<DebtBalance[]> {
     const debts = await this.prisma.debt.findMany({
       where: { ownerId, status: { not: DebtStatus.PAID } },
-      select: { customerId: true, amountDirams: true, paidDirams: true, occurredOn: true, customer: { select: { name: true } } },
+      select: { customerId: true, amountDirams: true, paidDirams: true, dueOn: true, customer: { select: { name: true } } },
     });
     const byCustomer = new Map<string, DebtBalance>();
     for (const debt of debts) {
-      const entry = byCustomer.get(debt.customerId) ?? { customerName: debt.customer.name, balanceDiram: 0, oldestCreditAt: null };
+      const entry = byCustomer.get(debt.customerId) ?? { customerName: debt.customer.name, balanceDiram: 0, dueOn: null };
       entry.balanceDiram += debt.amountDirams - debt.paidDirams;
-      if (entry.oldestCreditAt === null || debt.occurredOn < entry.oldestCreditAt) {
-        entry.oldestCreditAt = debt.occurredOn;
+      const dueOn = debt.dueOn === null ? null : formatCalendarDate(debt.dueOn);
+      if (dueOn !== null && (entry.dueOn === null || dueOn < entry.dueOn)) {
+        entry.dueOn = dueOn;
       }
       byCustomer.set(debt.customerId, entry);
     }
     return [...byCustomer.values()].filter((entry) => entry.balanceDiram > 0).sort(byBalanceDesc);
   }
 
-  /** Same result as the standalone bot: customers grouped by name, ignoring case. */
+  /**
+   * Bot-only records, customers grouped by name ignoring case. Payments cover the oldest nasia
+   * first, as in Kassa; the customer is due DEFAULT_DUE_DAYS after their oldest unpaid nasia, the
+   * same default a Telegram nasia gets when it is written to Kassa.
+   */
   private async botDebtBalances(accountId: number): Promise<DebtBalance[]> {
     const rows = await this.prisma.telegramTransaction.findMany({
       where: {
@@ -223,25 +241,41 @@ export class PrismaTransactionRepository implements TransactionRepository {
         customerName: { not: null },
       },
       select: { type: true, amountDirams: true, customerName: true, occurredAt: true },
+      orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
     });
-    const byName = new Map<string, DebtBalance>();
+    const byName = new Map<string, { customerName: string; credits: { amount: number; on: string }[]; paid: number }>();
     for (const row of rows) {
       const name = row.customerName ?? '';
       const key = name.toLowerCase();
-      const entry = byName.get(key) ?? { customerName: name, balanceDiram: 0, oldestCreditAt: null };
+      const entry = byName.get(key) ?? { customerName: name, credits: [], paid: 0 };
       if (name < entry.customerName) {
         entry.customerName = name;
       }
       if (row.type === TelegramTransactionType.CREDIT_SALE) {
-        entry.balanceDiram += row.amountDirams;
-        if (entry.oldestCreditAt === null || row.occurredAt < entry.oldestCreditAt) {
-          entry.oldestCreditAt = row.occurredAt;
-        }
+        entry.credits.push({ amount: row.amountDirams, on: getDushanbeDate(row.occurredAt) });
       } else {
-        entry.balanceDiram -= row.amountDirams;
+        entry.paid += row.amountDirams;
       }
       byName.set(key, entry);
     }
-    return [...byName.values()].filter((entry) => entry.balanceDiram > 0).sort(byBalanceDesc);
+
+    const balances: DebtBalance[] = [];
+    for (const { customerName, credits, paid } of byName.values()) {
+      let left = paid;
+      let oldestUnpaid: string | null = null;
+      for (const credit of credits) {
+        if (left >= credit.amount) {
+          left -= credit.amount;
+          continue;
+        }
+        oldestUnpaid = credit.on;
+        break;
+      }
+      const balanceDiram = credits.reduce((sum, credit) => sum + credit.amount, 0) - paid;
+      if (balanceDiram > 0) {
+        balances.push({ customerName, balanceDiram, dueOn: oldestUnpaid === null ? null : addDays(oldestUnpaid, DEFAULT_DUE_DAYS) });
+      }
+    }
+    return balances.sort(byBalanceDesc);
   }
 }

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { parseCalendarDate, todayInBusinessTimeZone } from '../common/dates';
 import { DebtsService } from '../debts/debts.service';
+import { addDays } from './bot/services/day-range';
+import { DEFAULT_DUE_DAYS } from './bot/services/debts';
 import { Customer, Prisma, TelegramTransaction } from '../generated/prisma/client';
 import {
   CashCategory,
@@ -15,11 +17,15 @@ import {
 const TITLE_MAX_LENGTH = 200;
 const CUSTOMER_NAME_MAX_LENGTH = 100;
 
-export type TelegramSyncFailure = 'customer-not-found' | 'customer-ambiguous';
+export type TelegramSyncFailure = 'customer-not-found' | 'customer-ambiguous' | 'no-open-debts' | 'exceeds-debt';
 
 /** A confirmed receipt that cannot be written to Kassa; the whole confirmation is rolled back. */
 export class TelegramSyncError extends Error {
-  constructor(readonly reason: TelegramSyncFailure) {
+  constructor(
+    readonly reason: TelegramSyncFailure,
+    /** For exceeds-debt: what the customer still owes, in dirams. */
+    readonly remainingDirams?: number,
+  ) {
     super(`Telegram receipt cannot be written to Kassa: ${reason}`);
     this.name = 'TelegramSyncError';
   }
@@ -73,6 +79,8 @@ export class TelegramKassaSync {
             amountDirams: receipt.amountDirams,
             description: title,
             occurredOn: parseCalendarDate(occurredOn),
+            // The website has no default due date; a Telegram nasia is due 30 days after it.
+            dueOn: parseCalendarDate(addDays(occurredOn, DEFAULT_DUE_DAYS)),
           },
           select: { id: true },
         });
@@ -81,6 +89,7 @@ export class TelegramKassaSync {
 
       case TelegramTransactionType.DEBT_PAYMENT: {
         const customer = await this.customerForPayment(tx, ownerId, this.customerName(receipt));
+        await this.assertCanPay(tx, ownerId, customer.id, receipt.amountDirams);
         const result = await this.debts.addCustomerPaymentInTransaction(tx, ownerId, customer.id, {
           amount: receipt.amountDirams,
           method: PaymentMethod.CASH,
@@ -89,6 +98,24 @@ export class TelegramKassaSync {
         });
         return { paymentGroupId: result.payments[0].groupId };
       }
+    }
+  }
+
+  /**
+   * Explains in advance why DebtsService would refuse the payment, so the bot can tell the owner.
+   * DebtsService still checks again under its row locks and stays the authority.
+   */
+  private async assertCanPay(tx: Prisma.TransactionClient, ownerId: string, customerId: string, amountDirams: number): Promise<void> {
+    const open = await tx.debt.aggregate({
+      where: { ownerId, customerId, status: { not: DebtStatus.PAID } },
+      _sum: { amountDirams: true, paidDirams: true },
+    });
+    const remaining = (open._sum.amountDirams ?? 0) - (open._sum.paidDirams ?? 0);
+    if (remaining <= 0) {
+      throw new TelegramSyncError('no-open-debts');
+    }
+    if (amountDirams > remaining) {
+      throw new TelegramSyncError('exceeds-debt', remaining);
     }
   }
 

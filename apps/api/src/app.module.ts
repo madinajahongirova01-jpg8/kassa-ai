@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { CashEntriesModule } from './cash-entries/cash-entries.module';
 import { validateEnv } from './config/env';
@@ -18,6 +19,7 @@ import { TelegramModule } from './telegram/telegram.module';
       cache: true,
       validate: validateEnv,
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     CustomersModule,

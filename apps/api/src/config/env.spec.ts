@@ -23,7 +23,23 @@ describe('validateEnv', () => {
       GEMINI_MODEL: 'gemini-3.5-flash-lite',
       ENTRY_PARSE_THROTTLE_LIMIT: 20,
       ENTRY_PARSE_THROTTLE_TTL_SECONDS: 60,
+      TELEGRAM_BOT_TOKEN: undefined,
     });
+  });
+
+  it('reads an optional Telegram bot token and rejects a malformed one without printing it', () => {
+    expect(validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: ' 123456:ABC-def_789 ' }).TELEGRAM_BOT_TOKEN).toBe('123456:ABC-def_789');
+    expect(validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: '' }).TELEGRAM_BOT_TOKEN).toBeUndefined();
+
+    const secret = 'not a token value';
+    let message = '';
+    try {
+      validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: secret });
+    } catch (error) {
+      message = error instanceof Error ? error.message : '';
+    }
+    expect(message).toMatch(/TELEGRAM_BOT_TOKEN does not look like a Telegram bot token/);
+    expect(message).not.toContain(secret);
   });
 
   it('reads the optional Gemini settings', () => {

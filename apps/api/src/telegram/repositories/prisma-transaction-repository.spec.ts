@@ -193,11 +193,26 @@ describe('PrismaTransactionRepository', () => {
       await repo.createPending(accountA, { type: 'credit_sale', amountDiram: 50_000, description: 'n', customerName: 'Ali' });
       await confirmed(accountB, 'credit_sale', 99_000, 'Ali');
 
+      // Due 30 days after the oldest unpaid nasia, counted in Dushanbe calendar days.
       expect(await repo.getDebtBalances(accountA)).toEqual([
-        { customerName: 'Vali', balanceDiram: 20_000, oldestCreditAt: IN_DAY },
-        { customerName: 'ALI', balanceDiram: 12_000, oldestCreditAt: old },
+        { customerName: 'Vali', balanceDiram: 20_000, dueOn: '2026-12-02' },
+        { customerName: 'ALI', balanceDiram: 12_000, dueOn: '2026-10-01' },
       ]);
-      expect(await repo.getDebtBalances(accountB)).toEqual([{ customerName: 'Ali', balanceDiram: 99_000, oldestCreditAt: IN_DAY }]);
+      expect(await repo.getDebtBalances(accountB)).toEqual([{ customerName: 'Ali', balanceDiram: 99_000, dueOn: '2026-12-02' }]);
+    });
+
+    it('takes the due date from the oldest nasia not yet covered by payments, oldest first', async () => {
+      await confirmed(accountA, 'credit_sale', 2_000, 'Zafar', new Date('2026-09-01T10:00:00.000Z'));
+      await confirmed(accountA, 'credit_sale', 4_000, 'Zafar', new Date('2026-10-10T10:00:00.000Z'));
+      await confirmed(accountA, 'debt_payment', 2_500, 'Zafar');
+
+      expect(await repo.getDebtBalances(accountA)).toEqual([{ customerName: 'Zafar', balanceDiram: 3_500, dueOn: '2026-11-09' }]);
+    });
+
+    it('dates a nasia by the Dushanbe day it was made, not the UTC day', async () => {
+      // 19:30 UTC on 31 October is already 1 November in Dushanbe.
+      await confirmed(accountA, 'credit_sale', 1_000, 'Ali', new Date('2026-10-31T19:30:00.000Z'));
+      expect((await repo.getDebtBalances(accountA))[0].dueOn).toBe('2026-12-01');
     });
   });
 
@@ -236,9 +251,17 @@ describe('PrismaTransactionRepository', () => {
     });
 
     it("lists its owner's open Kassa debts per customer and nothing of another owner or of the bot", async () => {
-      expect(await repo.getDebtBalances(accountA)).toEqual([
-        { customerName: 'Ali', balanceDiram: 31_000, oldestCreditAt: parseCalendarDate('2026-10-01') },
-      ]);
+      expect(await repo.getDebtBalances(accountA)).toEqual([{ customerName: 'Ali', balanceDiram: 31_000, dueOn: null }]);
+    });
+
+    it('uses the earliest due date of the unpaid Kassa debts, like the website', async () => {
+      const [ali, vali] = await Promise.all(['Ali', 'Vali'].map((name) => db.prisma.customer.findFirstOrThrow({ where: { ownerId: ownerA, name } })));
+      await db.prisma.debt.updateMany({ where: { customerId: ali.id, paidDirams: 0 }, data: { dueOn: parseCalendarDate('2026-12-20') } });
+      await db.prisma.debt.updateMany({ where: { customerId: ali.id, paidDirams: 4_000 }, data: { dueOn: parseCalendarDate('2026-11-10') } });
+      // A paid debt's due date does not count.
+      await db.prisma.debt.updateMany({ where: { customerId: vali.id }, data: { dueOn: parseCalendarDate('2026-10-20') } });
+
+      expect(await repo.getDebtBalances(accountA)).toEqual([{ customerName: 'Ali', balanceDiram: 31_000, dueOn: '2026-11-10' }]);
     });
 
     it('keeps two customers with the same name apart', async () => {
