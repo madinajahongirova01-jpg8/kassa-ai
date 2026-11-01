@@ -18,10 +18,12 @@ model User {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  customers   Customer[]
-  debts       Debt[]
-  payments    Payment[]
-  cashEntries CashEntry[]
+  customers            Customer[]
+  debts                Debt[]
+  payments             Payment[]
+  cashEntries          CashEntry[]
+  telegramAccount      TelegramAccount?
+  telegramLinkAttempts TelegramLinkAttempt[]
 
   @@map("users")
 }
@@ -64,9 +66,10 @@ model Debt {
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  customer Customer  @relation(fields: [customerId, ownerId], references: [id, ownerId], onDelete: NoAction)
-  payments Payment[]
+  owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  customer            Customer             @relation(fields: [customerId, ownerId], references: [id, ownerId], onDelete: NoAction)
+  payments            Payment[]
+  telegramTransaction TelegramTransaction?
 
   @@unique([id, ownerId])
   @@index([ownerId, status])
@@ -134,8 +137,112 @@ model CashEntry {
   source       EntrySource
   createdAt    DateTime      @default(now()) @map("created_at")
 
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  telegramTransaction TelegramTransaction?
 
   @@index([ownerId, occurredOn])
   @@map("cash_entries")
+}
+
+enum TelegramAccountStatus {
+  ACTIVE
+  STOPPED
+}
+
+enum TelegramLanguage {
+  TG
+  RU
+  EN
+}
+
+// A Telegram chat of a business owner. Integer ids because the bot's repository contracts use numbers.
+// Linking to a Kassa user is optional: an unlinked account keeps its own bot-only records.
+model TelegramAccount {
+  id             Int                   @id @default(autoincrement())
+  telegramUserId BigInt                @unique @map("telegram_user_id")
+  telegramChatId BigInt                @map("telegram_chat_id")
+  firstName      String?               @map("first_name")
+  status         TelegramAccountStatus @default(ACTIVE)
+  language       TelegramLanguage?
+  lastReminderOn DateTime?             @map("last_reminder_on") @db.Date
+  userId         String?               @unique @map("user_id") @db.Uuid
+  linkedAt       DateTime?             @map("linked_at")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  user         User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  linkCodes    TelegramLinkCode[]
+  transactions TelegramTransaction[]
+
+  @@index([status, lastReminderOn])
+  @@map("telegram_accounts")
+}
+
+// One-time /link codes. Only the SHA-256 hash of a code is stored.
+model TelegramLinkCode {
+  id        Int       @id @default(autoincrement())
+  accountId Int       @map("account_id")
+  codeHash  String    @unique @map("code_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  account TelegramAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("telegram_link_codes")
+}
+
+enum TelegramTransactionType {
+  SALE
+  EXPENSE
+  CREDIT_SALE
+  DEBT_PAYMENT
+}
+
+enum TelegramTransactionStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+// Receipts drafted in Telegram, stored as integer dirams. syncedAt is set when a confirmed receipt
+// was written to Kassa data; the reference columns point at what was created there.
+// The references are audit-only: they are set in the same transaction that creates the Kassa record
+// for the linked owner and are never used to read Kassa data, which is always queried by ownerId.
+// paymentGroupId matches payments.group_id, which is not unique, so it has no foreign key.
+// CHECK constraints for this model live in migration 20261101120000_telegram_bot (Prisma does not model them).
+model TelegramTransaction {
+  id             Int                       @id @default(autoincrement())
+  accountId      Int                       @map("account_id")
+  type           TelegramTransactionType
+  amountDirams   Int                       @map("amount_dirams")
+  description    String
+  customerName   String?                   @map("customer_name")
+  status         TelegramTransactionStatus @default(PENDING)
+  occurredAt     DateTime                  @default(now()) @map("occurred_at")
+  syncedAt       DateTime?                 @map("synced_at")
+  cashEntryId    String?                   @unique @map("cash_entry_id") @db.Uuid
+  debtId         String?                   @unique @map("debt_id") @db.Uuid
+  paymentGroupId String?                   @map("payment_group_id") @db.Uuid
+  createdAt      DateTime                  @default(now()) @map("created_at")
+
+  account   TelegramAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  cashEntry CashEntry?      @relation(fields: [cashEntryId], references: [id], onDelete: SetNull)
+  debt      Debt?           @relation(fields: [debtId], references: [id], onDelete: SetNull)
+
+  @@index([accountId, status, occurredAt])
+  @@map("telegram_transactions")
+}
+
+// Wrong link-code attempts per Kassa user, used to rate-limit the linking endpoint.
+model TelegramLinkAttempt {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id") @db.Uuid
+  attemptedAt DateTime @default(now()) @map("attempted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, attemptedAt])
+  @@map("telegram_link_attempts")
 }
