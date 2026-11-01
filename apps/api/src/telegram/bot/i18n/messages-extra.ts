@@ -15,6 +15,7 @@ export interface ExtraMessages {
   exceedsDebt: (remaining: string) => string;
   amountTooLarge: string;
   saveFailed: string;
+  tooManyMessages: string;
 }
 
 const tg: ExtraMessages = {
@@ -34,6 +35,7 @@ const tg: ExtraMessages = {
   exceedsDebt: (remaining) => `Маблағ аз қарз зиёд аст. Ин муштарӣ ҳамагӣ ${remaining} қарздор аст. Сабт нашуд.`,
   amountTooLarge: "Маблағ хеле калон аст. Сабт нашуд.",
   saveFailed: "Хато шуд, сабт нашуд. Каме баъдтар боз кӯшиш кунед.",
+  tooManyMessages: "Паёмҳо хеле зиёданд. Як дақиқа сабр кунед ва баъд боз нависед.",
 };
 
 const ru: ExtraMessages = {
@@ -53,6 +55,7 @@ const ru: ExtraMessages = {
   exceedsDebt: (remaining) => `Сумма больше долга. Этот клиент должен всего ${remaining}. Не сохранено.`,
   amountTooLarge: "Слишком большая сумма. Не сохранено.",
   saveFailed: "Произошла ошибка, запись не сохранена. Попробуйте чуть позже.",
+  tooManyMessages: "Слишком много сообщений. Подождите минуту и напишите снова.",
 };
 
 const en: ExtraMessages = {
@@ -72,6 +75,7 @@ const en: ExtraMessages = {
   exceedsDebt: (remaining) => `The amount is more than the debt. This customer owes only ${remaining}. Not saved.`,
   amountTooLarge: "The amount is too large. Not saved.",
   saveFailed: "Something went wrong, nothing was saved. Please try again a little later.",
+  tooManyMessages: "Too many messages. Wait a minute and write again.",
 };
 
 export const MESSAGES_EXTRA: Record<Lang, ExtraMessages> = { tg, ru, en };

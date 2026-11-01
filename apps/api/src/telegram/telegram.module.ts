@@ -6,6 +6,7 @@ import { PrismaTransactionRepository } from './repositories/prisma-transaction-r
 import { PrismaUserRepository } from './repositories/prisma-user-repository';
 import { TelegramLinkController } from './telegram-link.controller';
 import { TelegramBotService } from './telegram-bot.service';
+import { TelegramCleanupTask } from './telegram-cleanup.task';
 import { TelegramKassaSync } from './telegram-kassa-sync';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramReminderTask } from './telegram-reminder.task';
@@ -18,6 +19,7 @@ import { TelegramReminderTask } from './telegram-reminder.task';
     TelegramKassaSync,
     TelegramBotService,
     TelegramReminderTask,
+    TelegramCleanupTask,
     PrismaUserRepository,
     PrismaLinkRepository,
     PrismaTransactionRepository,

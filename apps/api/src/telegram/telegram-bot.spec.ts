@@ -10,6 +10,7 @@ import { UserService } from './bot/services/user-service';
 import { PrismaLinkRepository } from './repositories/prisma-link-repository';
 import { PrismaTransactionRepository } from './repositories/prisma-transaction-repository';
 import { PrismaUserRepository } from './repositories/prisma-user-repository';
+import { CHAT_RATE_LIMIT } from './chat-rate-limit';
 import { botErrorMessage, createTelegramBot } from './telegram-bot';
 import { TelegramKassaSync, TelegramSyncError } from './telegram-kassa-sync';
 
@@ -145,6 +146,36 @@ describe('Telegram bot running in the API', () => {
       { method: 'sendMessage', payload: expect.objectContaining({ chat_id: OWNER, text: MESSAGES_EXTRA.ru.amountTooLarge }) as unknown },
     ]);
     expect(await db.prisma.telegramTransaction.count()).toBe(0);
+  });
+
+  it('stops handling a flooding chat after the per-chat limit and tells it once', async () => {
+    // Another chat than OWNER, so the shared bot's counter for OWNER is not used up by this test.
+    const flooder = { id: 5002, type: 'private' as const, first_name: 'Spam' };
+    await users.upsertFromTelegram({ telegramUserId: 5002, telegramChatId: 5002, firstName: 'Spam' });
+    await users.setLanguage(5002, 'en');
+    const send = (): Promise<void> =>
+      handle({
+        message: {
+          message_id: updateId,
+          date: 0,
+          chat: flooder,
+          from: { id: 5002, is_bot: false, first_name: 'Spam' },
+          text: '/help',
+          entities: [{ type: 'bot_command', offset: 0, length: 5 }],
+        },
+      });
+
+    for (let i = 0; i < CHAT_RATE_LIMIT + 5; i += 1) {
+      await send();
+    }
+
+    const replies = calls.filter((call) => call.method === 'sendMessage' && call.payload.chat_id === 5002);
+    expect(replies).toHaveLength(CHAT_RATE_LIMIT + 1);
+    expect(replies.at(-1)?.payload.text).toBe(MESSAGES_EXTRA.en.tooManyMessages);
+
+    // Other chats keep working.
+    await text('продажа 150');
+    expect(calls.at(-1)?.payload.chat_id).toBe(OWNER);
   });
 
   it('maps every refusal to its own message and anything unexpected to a generic one', () => {

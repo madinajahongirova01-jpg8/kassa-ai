@@ -15,6 +15,7 @@ import type { TransactionService } from './bot/services/transaction-service';
 import type { UserService } from './bot/services/user-service';
 import type { Lang } from './bot/types/language';
 import { TelegramAmountError } from './repositories/prisma-transaction-repository';
+import { ChatRateLimiter, chatRateLimit } from './chat-rate-limit';
 import { TelegramSyncError } from './telegram-kassa-sync';
 
 export interface TelegramBotDependencies {
@@ -76,9 +77,11 @@ export async function handleBotError(err: BotError, users: UserService): Promise
   }
 }
 
-/** The standalone bot's handlers, registered in the same order as its src/bot.ts. */
+/** The standalone bot's handlers, registered in the same order as its src/bot.ts, behind a per-chat rate limit. */
 export function createTelegramBot(token: string, deps: TelegramBotDependencies, botInfo?: UserFromGetMe): Bot {
   const bot = new Bot(token, botInfo === undefined ? undefined : { botInfo });
+
+  bot.use(chatRateLimit(new ChatRateLimiter(), deps.userService));
 
   registerStartCommand(bot, deps.userService);
   registerHelpCommand(bot, deps.userService);
