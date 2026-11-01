@@ -1,7 +1,7 @@
 import { createPgliteDatabase, PgliteDatabase } from '../../../test/pglite-database';
 import { hashCode } from '../bot/services/link-code';
 import { LinkService } from '../bot/services/link-service';
-import { PrismaLinkRepository } from './prisma-link-repository';
+import { PrismaLinkRepository, TelegramLinkConflictError } from './prisma-link-repository';
 import { PrismaUserRepository } from './prisma-user-repository';
 
 // Codes are created at the real current time, so the tested moments are relative to it.
@@ -91,21 +91,81 @@ describe('PrismaLinkRepository', () => {
     expect((await accountRow(account)).userId).toBeNull();
   });
 
-  it('keeps one Telegram account per Kassa user and never touches another user link', async () => {
+  it('refuses a second Telegram account for the same Kassa user and keeps that code usable', async () => {
     const first = await telegramAccount(1001);
     const second = await telegramAccount(1002);
-    const other = await telegramAccount(1003);
     await links.createCode(first, hashCode('AAAA2222'), IN_10_MIN);
     await links.createCode(second, hashCode('BBBB3333'), IN_10_MIN);
-    await links.createCode(other, hashCode('CCCC4444'), IN_10_MIN);
-
     await links.consume(hashCode('AAAA2222'), ownerA, NOW);
-    await links.consume(hashCode('CCCC4444'), ownerB, NOW);
-    await links.consume(hashCode('BBBB3333'), ownerA, NOW);
 
-    expect((await accountRow(first)).userId).toBeNull();
-    expect((await accountRow(second)).userId).toBe(ownerA);
-    expect((await accountRow(other)).userId).toBe(ownerB);
+    await expect(links.consume(hashCode('BBBB3333'), ownerA, NOW)).rejects.toEqual(
+      new TelegramLinkConflictError('kassa-user-linked'),
+    );
+
+    expect((await accountRow(first)).userId).toBe(ownerA);
+    expect((await accountRow(second)).userId).toBeNull();
+    expect((await db.prisma.telegramLinkCode.findUniqueOrThrow({ where: { codeHash: hashCode('BBBB3333') } })).usedAt).toBeNull();
+    expect(await links.consume(hashCode('BBBB3333'), ownerB, NOW)).toBe(second);
+  });
+
+  it('refuses to move a linked Telegram account to another Kassa user', async () => {
+    const account = await telegramAccount(1001);
+    await links.createCode(account, hashCode('AAAA2222'), IN_10_MIN);
+    await links.consume(hashCode('AAAA2222'), ownerA, NOW);
+    await links.createCode(account, hashCode('BBBB3333'), IN_10_MIN);
+
+    await expect(links.consume(hashCode('BBBB3333'), ownerB, NOW)).rejects.toEqual(
+      new TelegramLinkConflictError('telegram-account-linked'),
+    );
+
+    expect((await accountRow(account)).userId).toBe(ownerA);
+    expect((await db.prisma.telegramLinkCode.findUniqueOrThrow({ where: { codeHash: hashCode('BBBB3333') } })).usedAt).toBeNull();
+  });
+
+  it('accepts linking the same pair again', async () => {
+    const account = await telegramAccount(1001);
+    await links.createCode(account, hashCode('AAAA2222'), IN_10_MIN);
+    await links.consume(hashCode('AAAA2222'), ownerA, NOW);
+    await links.createCode(account, hashCode('BBBB3333'), IN_10_MIN);
+
+    expect(await links.consume(hashCode('BBBB3333'), ownerA, NOW)).toBe(account);
+    expect((await accountRow(account)).userId).toBe(ownerA);
+  });
+
+  it('maps a concurrent unique-link violation to a conflict', async () => {
+    const first = await telegramAccount(1001);
+    const second = await telegramAccount(1002);
+    await links.createCode(second, hashCode('BBBB3333'), IN_10_MIN);
+    await db.prisma.telegramAccount.update({ where: { id: first }, data: { userId: ownerA, linkedAt: NOW } });
+    // Simulates the other transaction committing after the "already linked?" check: the check sees
+    // nothing, so only the unique index on user_id can stop the second link.
+    const realTransaction = db.prisma.$transaction.bind(db.prisma) as (fn: (tx: object) => Promise<unknown>) => Promise<unknown>;
+    const spy = jest.spyOn(db.prisma, '$transaction').mockImplementation(((fn: (tx: object) => Promise<unknown>) =>
+      realTransaction((tx) => {
+        const hideLinks = (delegate: object): object =>
+          new Proxy(delegate, {
+            get: (target, property, receiver) =>
+              property === 'findFirst' ? () => Promise.resolve(null) : (Reflect.get(target, property, receiver) as unknown),
+          });
+        return fn(
+          new Proxy(tx, {
+            get: (target, property, receiver) => {
+              const value = Reflect.get(target, property, receiver) as unknown;
+              return property === 'telegramAccount' ? hideLinks(value as object) : value;
+            },
+          }),
+        );
+      })) as unknown as typeof db.prisma.$transaction);
+
+    try {
+      await expect(links.consume(hashCode('BBBB3333'), ownerA, NOW)).rejects.toEqual(
+        new TelegramLinkConflictError('kassa-user-linked'),
+      );
+    } finally {
+      spy.mockRestore();
+    }
+    expect((await accountRow(second)).userId).toBeNull();
+    expect((await db.prisma.telegramLinkCode.findUniqueOrThrow({ where: { codeHash: hashCode('BBBB3333') } })).usedAt).toBeNull();
   });
 
   it('lets only one of two concurrent attempts consume the same code', async () => {

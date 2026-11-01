@@ -9,6 +9,7 @@ import { EntriesModule } from './entries/entries.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReportsModule } from './reports/reports.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ReportsModule } from './reports/reports.module';
     CashEntriesModule,
     EntriesModule,
     ReportsModule,
+    TelegramModule,
     HealthModule,
   ],
 })
