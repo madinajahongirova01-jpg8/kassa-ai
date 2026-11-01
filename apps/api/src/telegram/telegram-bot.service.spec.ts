@@ -1,11 +1,12 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { GrammyError } from 'grammy';
 import { Env } from '../config/env';
 import { PrismaLinkRepository } from './repositories/prisma-link-repository';
 import { PrismaTransactionRepository } from './repositories/prisma-transaction-repository';
 import { PrismaUserRepository } from './repositories/prisma-user-repository';
 import { createTelegramBot } from './telegram-bot';
-import { TelegramBotService } from './telegram-bot.service';
+import { CONFLICT_RETRY_MS, TelegramBotService } from './telegram-bot.service';
 
 jest.mock('./telegram-bot', () => ({ createTelegramBot: jest.fn() }));
 
@@ -79,14 +80,65 @@ describe('TelegramBotService', () => {
   });
 
   it('marks itself off when polling fails, for example with a revoked token', async () => {
-    fakeBot.start.mockReturnValue(Promise.reject(new Error('Call to getMe failed! (401: Unauthorized)')));
+    fakeBot.start.mockReturnValue(Promise.reject(telegramError(401, 'Unauthorized')));
     const bot = service({ NODE_ENV: 'production', TELEGRAM_BOT_TOKEN: TOKEN });
     bot.onApplicationBootstrap();
-    await new Promise((resolve) => setImmediate(resolve));
+    await flush();
 
     expect(bot.running).toBe(false);
     const logged = errorLog.mock.calls.flat().join(' ');
     expect(logged).toContain('Telegram bot stopped');
     expect(logged).not.toContain(TOKEN);
   });
+
+  describe('while another instance polls the same bot (409 Conflict, e.g. during a deploy)', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('keeps the bot on and polls again later instead of giving up', async () => {
+      fakeBot.start
+        .mockReturnValueOnce(Promise.reject(telegramError(409, 'Conflict: terminated by other getUpdates request')))
+        .mockReturnValueOnce(new Promise<void>(() => undefined));
+      const bot = service({ NODE_ENV: 'production', TELEGRAM_BOT_TOKEN: TOKEN });
+      bot.onApplicationBootstrap();
+      await flush();
+
+      expect(bot.running).toBe(true);
+      expect(fakeBot.start).toHaveBeenCalledTimes(1);
+      await jest.advanceTimersByTimeAsync(CONFLICT_RETRY_MS);
+      expect(fakeBot.start).toHaveBeenCalledTimes(2);
+      expect(errorLog).not.toHaveBeenCalled();
+    });
+
+    it('does not poll again after shutdown', async () => {
+      fakeBot.start.mockReturnValueOnce(Promise.reject(telegramError(409, 'Conflict')));
+      fakeBot.isRunning.mockReturnValue(false);
+      const bot = service({ NODE_ENV: 'production', TELEGRAM_BOT_TOKEN: TOKEN });
+      bot.onApplicationBootstrap();
+      await flush();
+
+      await bot.onApplicationShutdown();
+      await jest.advanceTimersByTimeAsync(CONFLICT_RETRY_MS * 2);
+
+      expect(fakeBot.start).toHaveBeenCalledTimes(1);
+      expect(bot.running).toBe(false);
+    });
+  });
 });
+
+function telegramError(code: number, description: string): GrammyError {
+  return new GrammyError(`Call to 'getUpdates' failed! (${code}: ${description})`, { ok: false, error_code: code, description }, 'getUpdates', {});
+}
+
+/** Lets the rejected start() promise reach its catch handler. */
+async function flush(): Promise<void> {
+  for (let i = 0; i < 3; i += 1) {
+    await Promise.resolve();
+  }
+}

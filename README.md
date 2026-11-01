@@ -121,7 +121,7 @@ npx playwright install chromium && npm run test:browser
 ### Deploy
 
 - **Vercel** — frontend аз решаи лоиҳа. Тағйирёбанда: `KASSA_API_URL`.
-- **Render** — API аз `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Тағйирёбандаҳо: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (ихтиёрӣ; пешфарз `gemini-3.5-flash-lite`).
+- **Render** — API аз `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Тағйирёбандаҳо: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (ихтиёрӣ; пешфарз `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (ихтиёрӣ; бе он боти Telegram ва ёдраскуниҳо хомӯшанд; бот бояд танҳо дар як нусхаи API кор кунад).
 - **Neon** — PostgreSQL; сатри пайваст ба `DATABASE_URL`-и Render меравад.
 
 ### Сохтор
@@ -274,7 +274,7 @@ npx playwright install chromium && npm run test:browser
 ### Деплой
 
 - **Vercel** — frontend из корня проекта. Переменная: `KASSA_API_URL`.
-- **Render** — API из `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Переменные: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (необязательно; по умолчанию `gemini-3.5-flash-lite`).
+- **Render** — API из `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Переменные: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (необязательно; по умолчанию `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (необязательно; без него Telegram-бот и напоминания выключены; бот должен работать только в одном экземпляре API).
 - **Neon** — PostgreSQL; строка подключения идёт в `DATABASE_URL` на Render.
 
 ### Структура
@@ -427,7 +427,7 @@ npx playwright install chromium && npm run test:browser
 ### Deployment
 
 - **Vercel** — the frontend from the project root. Variable: `KASSA_API_URL`.
-- **Render** — the API from `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (optional; defaults to `gemini-3.5-flash-lite`).
+- **Render** — the API from `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (optional; defaults to `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (optional; without it the Telegram bot and its reminders stay off; run the bot in one API instance only).
 - **Neon** — PostgreSQL; its connection string goes into `DATABASE_URL` on Render.
 
 ### Structure
