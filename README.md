@@ -27,7 +27,9 @@ Kassa AI дафтари электронии хазина ва насия бар
 ### Чӣ кор мекунад ҳозир
 
 - Бақайдгирӣ, даромадан ва баромадан.
-- **Танзимот:** иваз кардани номи тиҷорат ва ном; иваз кардани парол.
+- **Танзимот:** иваз кардани номи тиҷорат ва ном; иваз кардани парол; пайваст ва ҷудо кардани Telegram.
+- **Боти Telegram:** фурӯш, хароҷот, насия ва баргардонидани қарзро ба бот бо матн менависед; бот квитансия нишон медиҳад ва пас аз «Тасдиқ» сабт ба дафтари Kassa AI меравад. Фармонҳо: /today, /debts, /language, /link, /stop. Ҳар рӯз соати 09:00 (Душанбе) бот ба худи соҳибкор рӯйхати қарзҳои мӯҳлатгузаштаро мефиристад; ба қарздорон ҳеҷ чиз фиристода намешавад.
+- **Пайваст кардани Telegram:** дар Telegram ботро кушоед, «Start»-ро пахш кунед ва забонро интихоб кунед → ба бот /link фиристед → рамзи 8-аломатаро (10 дақиқа эътибор дорад, як бор кор мекунад) дар «Танзимот → Боти Telegram» нависед. Дар ҳамон ҷо Telegram-ро ҷудо кардан мумкин аст.
 - **Ёрӣ барои корбари нав:** дар «Имрӯз» карточкаи «Аз чӣ сар кунем?» бо се қадам; дар «Сабти нав» намунаҳои тайёр; дар саҳифаҳои холӣ — як маслиҳат ва тугма.
 - **Сабти нав:** фурӯш ва хароҷотро бо як матн менависед, масалан «фурӯш 1800, такси 30» ё «продажа 500» ё «sale 500». Матн бо забонҳои тоҷикӣ, русӣ ва англисӣ фаҳмида мешавад.
 - **Имрӯз:** чеки рӯз, даромад, хароҷот ва фоидаи рӯз; қарздорони воқеӣ, аввал онҳое, ки мӯҳлаташон гузаштааст.
@@ -50,6 +52,7 @@ Kassa AI дафтари электронии хазина ва насия бар
 - Овоз — **бо русӣ ва англисӣ; тоҷикӣ — ба наздикӣ**. Шинохтани овози худи браузер истифода мешавад (масалан Chrome). Дар интерфейси тоҷикӣ забони овозро интихоб мекунед: «Русӣ» ё «English». Матни шинохташуда ба майдон меояд ва мисли матни навишташуда таҳлил мешавад; сабт танҳо пас аз «Тасдиқ» мешавад. Агар браузер овозро дастгирӣ накунад, «Овоз» хомӯш аст.
 - Акси чек — **ба наздикӣ**.
 - Пардохти онлайни тарофаҳо **нест**.
+- Матни паёмҳо ба боти Telegram дар сервер бо қоидаҳо таҳлил мешавад (ба Google фиристода намешавад). Квитансияҳо (маблағ, шарҳ, номи муштарӣ), ID ва номи Telegram ва забон дар базаи Kassa AI нигоҳ дошта мешаванд. Квитансияе, ки 7 рӯз тасдиқ нашудааст, худкор нест карда мешавад.
 
 ### Технологияҳо
 
@@ -121,7 +124,8 @@ npx playwright install chromium && npm run test:browser
 ### Deploy
 
 - **Vercel** — frontend аз решаи лоиҳа. Тағйирёбанда: `KASSA_API_URL`.
-- **Render** — API аз `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Тағйирёбандаҳо: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (ихтиёрӣ; пешфарз `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (ихтиёрӣ; бе он боти Telegram ва ёдраскуниҳо хомӯшанд; бот бояд танҳо дар як нусхаи API кор кунад).
+- **Render** — API аз `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Тағйирёбандаҳо: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (ихтиёрӣ; пешфарз `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (ихтиёрӣ; токен аз @BotFather, бе нохунак; бе он ё бо токени нодуруст бот ва ёдраскуниҳо хомӯшанд, вале API кор мекунад).
+- **Талабот барои боти Telegram:** бот бо long polling дар дохили ҳамон раванди API кор мекунад, вебхук лозим нест. API бояд ҳамеша бедор бошад: дар нақшаи ройгони Render хизмат пас аз 15 дақиқаи бекорӣ хоб меравад — он гоҳ бот ҷавоб намедиҳад ва ёдраскунии 09:00 то бедор шудан дер мемонад. Барои кори боэътимод нақшаи пулакии ҳамешабедор лозим аст. Бот бояд танҳо дар **як** нусхаи API кор кунад (ду нусха бо як токен ба ҳамдигар халал мерасонанд). Ёдраскуниҳо (09:00) ва тозакунии ҳаррӯза (03:00, вақти Душанбе) дар ҳамон раванд кор мекунанд; cron-и берунӣ лозим нест.
 - **Neon** — PostgreSQL; сатри пайваст ба `DATABASE_URL`-и Render меравад.
 
 ### Сохтор
@@ -135,7 +139,7 @@ npx playwright install chromium && npm run test:browser
 │   └── proxy.ts         # Забон, ҳимояи /app
 ├── apps/api/            # Backend (NestJS)
 │   ├── prisma/          # schema.prisma ва миграцияҳо
-│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
+│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, telegram, health
 │   └── test/            # Тестҳои e2e
 ├── e2e/                 # Тестҳои браузерӣ (Playwright)
 └── .github/             # CI ва Dependabot
@@ -147,8 +151,6 @@ npx playwright install chromium && npm run test:browser
 
 - овоз бо забони тоҷикӣ;
 - акси чек;
-- боти Telegram;
-- ёдраскунӣ дар бораи насия;
 - пардохти тарофаҳо.
 
 Нархҳо дар `/pricing` нархҳои пешбинӣ мебошанд.
@@ -180,7 +182,9 @@ Kassa AI — электронная тетрадь кассы и долгов д
 ### Что умеет сейчас
 
 - Регистрация, вход и выход.
-- **Настройки:** изменение названия бизнеса и имени; смена пароля.
+- **Настройки:** изменение названия бизнеса и имени; смена пароля; привязка и отвязка Telegram.
+- **Telegram-бот:** продажи, расходы, долги и возврат долга пишутся боту текстом; бот показывает квитанцию, а после «Тасдиқ» запись попадает в книгу Kassa AI. Команды: /today, /debts, /language, /link, /stop. Каждый день в 09:00 (Душанбе) бот присылает самому владельцу список просроченных долгов; должникам ничего не отправляется.
+- **Привязка Telegram:** откройте бота в Telegram, нажмите «Start» и выберите язык → отправьте боту /link → введите код из 8 символов (действует 10 минут, работает один раз) в «Настройки → Telegram-бот». Там же Telegram можно отвязать.
 - **Помощь новому пользователю:** на «Сегодня» карточка «С чего начать?» с тремя шагами; в «Новой записи» готовые примеры; на пустых страницах — одна подсказка и кнопка.
 - **Новая запись:** продажи и расходы одним текстом, например «фурӯш 1800, такси 30», «продажа 500» или «sale 500». Понимает таджикский, русский и английский.
 - **Сегодня:** чек за день, доход, расход и прибыль; реальные должники, сначала просроченные.
@@ -203,6 +207,7 @@ Kassa AI — электронная тетрадь кассы и долгов д
 - Голос — **на русском и английском; таджикский — скоро**. Используется распознавание речи браузера (например, Chrome). В таджикском интерфейсе язык голоса выбирается: «Русӣ» или «English». Распознанный текст попадает в поле и разбирается так же, как напечатанный; запись сохраняется только после «Тасдиқ». Если браузер не поддерживает распознавание, «Голос» выключен.
 - Фото чека — **скоро** («ба наздикӣ»).
 - Онлайн-оплаты тарифов — **нет**.
+- Текст сообщений Telegram-боту разбирается на сервере по правилам (в Google не отправляется). Квитанции (сумма, описание, имя клиента), ID и имя в Telegram и язык хранятся в базе Kassa AI. Квитанция, не подтверждённая за 7 дней, удаляется автоматически.
 
 ### Технологии
 
@@ -274,7 +279,8 @@ npx playwright install chromium && npm run test:browser
 ### Деплой
 
 - **Vercel** — frontend из корня проекта. Переменная: `KASSA_API_URL`.
-- **Render** — API из `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Переменные: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (необязательно; по умолчанию `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (необязательно; без него Telegram-бот и напоминания выключены; бот должен работать только в одном экземпляре API).
+- **Render** — API из `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Переменные: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (необязательно; по умолчанию `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (необязательно; токен от @BotFather, без кавычек; без него или с неверным токеном бот и напоминания выключены, но API работает).
+- **Требования для Telegram-бота:** бот работает через long polling внутри того же процесса API, вебхук не нужен. API должен работать постоянно: на бесплатном тарифе Render сервис засыпает после 15 минут простоя — тогда бот не отвечает, а напоминание в 09:00 откладывается до пробуждения. Для надёжной работы нужен платный тариф без засыпания. Бот должен работать только в **одном** экземпляре API (два экземпляра с одним токеном мешают друг другу). Напоминания (09:00) и ежедневная очистка (03:00, по Душанбе) выполняются в том же процессе; внешний cron не нужен.
 - **Neon** — PostgreSQL; строка подключения идёт в `DATABASE_URL` на Render.
 
 ### Структура
@@ -288,7 +294,7 @@ npx playwright install chromium && npm run test:browser
 │   └── proxy.ts         # Язык, защита /app
 ├── apps/api/            # Backend (NestJS)
 │   ├── prisma/          # schema.prisma и миграции
-│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
+│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, telegram, health
 │   └── test/            # e2e-тесты
 ├── e2e/                 # Браузерные тесты (Playwright)
 └── .github/             # CI и Dependabot
@@ -300,8 +306,6 @@ npx playwright install chromium && npm run test:browser
 
 - голос на таджикском;
 - фото чека;
-- Telegram-бот;
-- напоминания о долгах;
 - оплата тарифов.
 
 Цены на `/pricing` — планируемые.
@@ -333,7 +337,9 @@ Many small business owners in Tajikistan keep track of money in a paper notebook
 ### What it does now
 
 - Sign up, sign in and sign out.
-- **Settings:** change the business name and your name; change the password.
+- **Settings:** change the business name and your name; change the password; link and unlink Telegram.
+- **Telegram bot:** write sales, expenses, debts and debt repayments to the bot as text; it shows a receipt, and after "Tasdiq" (confirm) the record goes into the Kassa AI ledger. Commands: /today, /debts, /language, /link, /stop. Every day at 09:00 (Dushanbe) the bot sends the owner a list of overdue debts; nothing is ever sent to debtors.
+- **Linking Telegram:** open the bot in Telegram, tap "Start" and choose a language → send /link to the bot → enter the 8-character code (valid for 10 minutes, works once) in Settings → Telegram bot. You can unlink Telegram there too.
 - **Help for new users:** a "Where to start?" card with three steps on Today; ready examples on New entry; a hint and a button on empty pages.
 - **New entry:** sales and expenses in one line of text, e.g. «фурӯш 1800, такси 30», «продажа 500» or "sale 500". Tajik, Russian and English are understood.
 - **Today:** the day's receipt, income, expenses and profit; real debtors, overdue ones first.
@@ -356,6 +362,7 @@ To be honest:
 - Voice — **in Russian and English; Tajik — coming soon**. It uses the browser's own speech recognition (for example Chrome). In the Tajik interface you choose the voice language: "Русӣ" (Russian) or "English". The recognised text goes into the text field and is parsed just like typed text; nothing is saved until "Tasdiq" (confirm). If the browser doesn't support speech recognition, Voice is turned off.
 - Receipt photos are **coming soon** («ба наздикӣ»).
 - Online payment for plans is **not available**.
+- Messages to the Telegram bot are parsed on the server by rules (they are not sent to Google). Receipts (amount, description, customer name), your Telegram ID and first name, and your language are stored in the Kassa AI database. A receipt left unconfirmed for 7 days is deleted automatically.
 
 ### Technology
 
@@ -427,7 +434,8 @@ npx playwright install chromium && npm run test:browser
 ### Deployment
 
 - **Vercel** — the frontend from the project root. Variable: `KASSA_API_URL`.
-- **Render** — the API from `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (optional; defaults to `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (optional; without it the Telegram bot and its reminders stay off; run the bot in one API instance only).
+- **Render** — the API from `apps/api`. Build: `npm ci --include=dev && npm run prisma:generate && npm run prisma:migrate:deploy && npm run build`. Start: `npm start`. Variables: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`, `NODE_ENV`, `AUTH_THROTTLE_LIMIT`, `AUTH_THROTTLE_TTL_SECONDS`, `TRUST_PROXY`, `ENTRY_PARSE_THROTTLE_LIMIT`, `ENTRY_PARSE_THROTTLE_TTL_SECONDS`, `GEMINI_API_KEY`, `GEMINI_MODEL` (optional; defaults to `gemini-3.5-flash-lite`), `TELEGRAM_BOT_TOKEN` (optional; the token from @BotFather, without quotes; without it, or with a malformed or rejected token, the bot and its reminders stay off while the rest of the API keeps working).
+- **Hosting the Telegram bot:** the bot uses long polling inside the API process, so no webhook is needed. The API must stay awake: on Render's free plan the service sleeps after 15 minutes without traffic, the bot then stops answering, and the 09:00 reminder waits until it wakes up. Reliable use needs an always-on paid plan. Run the bot in **one** API instance only (two instances with the same token conflict). Reminders (09:00) and the daily cleanup (03:00, Dushanbe time) run in the same process; no external cron is needed.
 - **Neon** — PostgreSQL; its connection string goes into `DATABASE_URL` on Render.
 
 ### Structure
@@ -441,7 +449,7 @@ npx playwright install chromium && npm run test:browser
 │   └── proxy.ts         # Language, /app protection
 ├── apps/api/            # Backend (NestJS)
 │   ├── prisma/          # schema.prisma and migrations
-│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, health
+│   ├── src/             # auth, customers, debts, cash-entries, entries (AI + rules), reports, telegram, health
 │   └── test/            # e2e tests
 ├── e2e/                 # Browser tests (Playwright)
 └── .github/             # CI and Dependabot
@@ -453,8 +461,6 @@ These are plans, with no dates:
 
 - voice in Tajik;
 - receipt photos;
-- a Telegram bot;
-- debt reminders;
 - payment for plans.
 
 Prices on `/pricing` are planned prices.
