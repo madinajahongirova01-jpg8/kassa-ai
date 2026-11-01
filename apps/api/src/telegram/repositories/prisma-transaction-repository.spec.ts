@@ -1,9 +1,13 @@
 import { createPgliteDatabase, PgliteDatabase } from '../../../test/pglite-database';
 import { parseCalendarDate } from '../../common/dates';
+import { MAX_AMOUNT_DIRAMS } from '../../common/money';
+import { CustomersService } from '../../customers/customers.service';
+import { DebtsService } from '../../debts/debts.service';
 import { CashCategory, CashEntryKind, DebtStatus, EntrySource } from '../../generated/prisma/enums';
 import { getTodayRange } from '../bot/services/day-range';
 import type { StoredTransaction, TransactionType } from '../bot/types/transaction';
-import { MAX_AMOUNT_DIRAMS, PrismaTransactionRepository } from './prisma-transaction-repository';
+import { PrismaTransactionRepository } from './prisma-transaction-repository';
+import { TelegramKassaSync } from '../telegram-kassa-sync';
 import { PrismaUserRepository } from './prisma-user-repository';
 
 // 20:30 UTC is 01:30 on 2 November in Dushanbe: the bot day is 2026-11-02.
@@ -78,7 +82,7 @@ describe('PrismaTransactionRepository', () => {
 
   beforeAll(async () => {
     db = await createPgliteDatabase();
-    repo = new PrismaTransactionRepository(db.prisma);
+    repo = new PrismaTransactionRepository(db.prisma, new TelegramKassaSync(new DebtsService(db.prisma, new CustomersService(db.prisma))));
     users = new PrismaUserRepository(db.prisma);
   }, 60_000);
 

@@ -5,6 +5,7 @@ import { calendarDateFilter } from '../common/date-range.dto';
 import { formatDirams } from '../common/money';
 import { decodeCursor, DEFAULT_PAGE_SIZE, Page, toPage } from '../common/pagination';
 import { CUSTOMER_NOT_FOUND_MESSAGE, CustomersService } from '../customers/customers.service';
+import { Prisma } from '../generated/prisma/client';
 import { DebtStatus, PaymentMethod } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { allocatePayment, applyPayment } from './debt-calculations';
@@ -187,70 +188,81 @@ export class DebtsService {
     customerId: string,
     dto: CreatePaymentDto,
   ): Promise<CustomerPaymentResultResponse> {
+    return this.prisma.$transaction((tx) => this.addCustomerPaymentInTransaction(tx, ownerId, customerId, dto));
+  }
+
+  /**
+   * addCustomerPayment inside a transaction the caller already opened, so the payment commits or
+   * rolls back together with the caller's own writes (used by the Telegram bot).
+   */
+  async addCustomerPaymentInTransaction(
+    tx: Prisma.TransactionClient,
+    ownerId: string,
+    customerId: string,
+    dto: CreatePaymentDto,
+  ): Promise<CustomerPaymentResultResponse> {
     const paidOn = dto.paidOn ?? todayInBusinessTimeZone();
     if (paidOn > todayInBusinessTimeZone()) {
       throw invalidInput('paidOn must not be in the future');
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const customer = await tx.customer.findFirst({ where: { id: customerId, ownerId }, select: { id: true } });
-      if (customer === null) {
-        throw new NotFoundException(CUSTOMER_NOT_FOUND_MESSAGE);
-      }
+    const customer = await tx.customer.findFirst({ where: { id: customerId, ownerId }, select: { id: true } });
+    if (customer === null) {
+      throw new NotFoundException(CUSTOMER_NOT_FOUND_MESSAGE);
+    }
 
-      await tx.$queryRaw`
-        SELECT "id" FROM "debts"
-        WHERE "customer_id" = ${customerId}::uuid AND "owner_id" = ${ownerId}::uuid AND "paid_dirams" < "amount_dirams"
-        ORDER BY "occurred_on", "created_at", "id"
-        FOR UPDATE`;
-      const open = await tx.debt.findMany({
-        where: { customerId, ownerId, status: { not: DebtStatus.PAID } },
-        orderBy: [{ occurredOn: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
-      });
-      if (open.length === 0) {
-        throw new UnprocessableEntityException({
-          message: 'Customer has no open debts',
-          details: ['remainingAmount: 0.00'],
-        });
-      }
-
-      // A payment can only cover debts that already existed on its date.
-      const eligible = open.filter((debt) => formatCalendarDate(debt.occurredOn) <= paidOn);
-      if (eligible.length === 0) {
-        throw invalidInput('paidOn must not be earlier than the debt occurredOn date');
-      }
-
-      const outcome = allocatePayment(eligible, dto.amount);
-      if (!outcome.ok) {
-        throw new UnprocessableEntityException({
-          message: 'Payment exceeds the remaining debt',
-          details: [`remainingAmount: ${formatDirams(outcome.remainingDirams)}`],
-        });
-      }
-
-      const groupId = randomUUID();
-      const payments: PaymentResponse[] = [];
-      const debts: DebtResponse[] = [];
-      for (const part of outcome.parts) {
-        const payment = await tx.payment.create({
-          data: {
-            ownerId,
-            debtId: part.debtId,
-            groupId,
-            amountDirams: part.amountDirams,
-            method: dto.method ?? PaymentMethod.CASH,
-            paidOn: parseCalendarDate(paidOn),
-            note: dto.note ?? null,
-          },
-        });
-        const updated = await tx.debt.update({
-          where: { id: part.debtId },
-          data: { paidDirams: part.paidDirams, status: part.status },
-        });
-        payments.push(toPaymentResponse(payment));
-        debts.push(toDebtResponse(updated));
-      }
-      return { amount: formatDirams(dto.amount), payments, debts };
+    await tx.$queryRaw`
+      SELECT "id" FROM "debts"
+      WHERE "customer_id" = ${customerId}::uuid AND "owner_id" = ${ownerId}::uuid AND "paid_dirams" < "amount_dirams"
+      ORDER BY "occurred_on", "created_at", "id"
+      FOR UPDATE`;
+    const open = await tx.debt.findMany({
+      where: { customerId, ownerId, status: { not: DebtStatus.PAID } },
+      orderBy: [{ occurredOn: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
+    if (open.length === 0) {
+      throw new UnprocessableEntityException({
+        message: 'Customer has no open debts',
+        details: ['remainingAmount: 0.00'],
+      });
+    }
+
+    // A payment can only cover debts that already existed on its date.
+    const eligible = open.filter((debt) => formatCalendarDate(debt.occurredOn) <= paidOn);
+    if (eligible.length === 0) {
+      throw invalidInput('paidOn must not be earlier than the debt occurredOn date');
+    }
+
+    const outcome = allocatePayment(eligible, dto.amount);
+    if (!outcome.ok) {
+      throw new UnprocessableEntityException({
+        message: 'Payment exceeds the remaining debt',
+        details: [`remainingAmount: ${formatDirams(outcome.remainingDirams)}`],
+      });
+    }
+
+    const groupId = randomUUID();
+    const payments: PaymentResponse[] = [];
+    const debts: DebtResponse[] = [];
+    for (const part of outcome.parts) {
+      const payment = await tx.payment.create({
+        data: {
+          ownerId,
+          debtId: part.debtId,
+          groupId,
+          amountDirams: part.amountDirams,
+          method: dto.method ?? PaymentMethod.CASH,
+          paidOn: parseCalendarDate(paidOn),
+          note: dto.note ?? null,
+        },
+      });
+      const updated = await tx.debt.update({
+        where: { id: part.debtId },
+        data: { paidDirams: part.paidDirams, status: part.status },
+      });
+      payments.push(toPaymentResponse(payment));
+      debts.push(toDebtResponse(updated));
+    }
+    return { amount: formatDirams(dto.amount), payments, debts };
   }
 }

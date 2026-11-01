@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { parseCalendarDate, todayInBusinessTimeZone } from '../../common/dates';
-import { TelegramTransaction } from '../../generated/prisma/client';
+import { MAX_AMOUNT_DIRAMS } from '../../common/money';
+import { Prisma, TelegramTransaction } from '../../generated/prisma/client';
 import {
   CashEntryKind,
   DebtStatus,
@@ -9,6 +10,7 @@ import {
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { TransactionRepository } from '../bot/repositories/transaction-repository';
+import { TelegramKassaSync } from '../telegram-kassa-sync';
 import type {
   DailySummary,
   DebtBalance,
@@ -17,9 +19,6 @@ import type {
   TransactionStatus,
   TransactionType,
 } from '../bot/types/transaction';
-
-/** Amount columns are PostgreSQL INTEGER, like every other Kassa amount. */
-export const MAX_AMOUNT_DIRAMS = 2_147_483_647;
 
 const TYPE_TO_DB: Record<TransactionType, TelegramTransactionType> = {
   sale: TelegramTransactionType.SALE,
@@ -70,11 +69,14 @@ function byBalanceDesc(a: DebtBalance, b: DebtBalance): number {
  */
 @Injectable()
 export class PrismaTransactionRepository implements TransactionRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly kassa: TelegramKassaSync,
+  ) {}
 
   async createPending(userId: number, parsed: ParsedTransaction): Promise<StoredTransaction> {
     if (!Number.isSafeInteger(parsed.amountDiram) || parsed.amountDiram <= 0 || parsed.amountDiram > MAX_AMOUNT_DIRAMS) {
-      throw new RangeError('Amount must be a positive integer number of dirams within the supported range');
+      throw new RangeError('Amount must be a positive integer number of dirams within the Kassa limit');
     }
     const row = await this.prisma.telegramTransaction.create({
       data: {
@@ -97,6 +99,8 @@ export class PrismaTransactionRepository implements TransactionRepository {
     newStatus: Exclude<TransactionStatus, 'pending'>,
   ): Promise<StoredTransaction | null> {
     return this.prisma.$transaction(async (tx) => {
+      // The conditional UPDATE claims the draft: a second or concurrent confirmation finds it no
+      // longer pending and gets null, so a receipt is written to Kassa at most once.
       const { count } = await tx.telegramTransaction.updateMany({
         where: { id: transactionId, accountId: userId, status: TelegramTransactionStatus.PENDING },
         data: { status: STATUS_TO_DB[newStatus] },
@@ -104,9 +108,31 @@ export class PrismaTransactionRepository implements TransactionRepository {
       if (count !== 1) {
         return null;
       }
-      const row = await tx.telegramTransaction.findFirstOrThrow({ where: { id: transactionId, accountId: userId } });
+      let row = await tx.telegramTransaction.findFirstOrThrow({ where: { id: transactionId, accountId: userId } });
+
+      if (newStatus === 'confirmed') {
+        const ownerId = await this.lockedOwnerId(tx, userId);
+        if (ownerId !== null) {
+          // Any failure here throws and rolls back the whole transaction: the draft stays pending.
+          const references = await this.kassa.write(tx, ownerId, row);
+          row = await tx.telegramTransaction.update({
+            where: { id: transactionId },
+            data: { syncedAt: new Date(), ...references },
+          });
+        }
+      }
       return toStoredTransaction(row);
     });
+  }
+
+  /**
+   * The Kassa owner the account is linked to, read with a row lock so the link cannot change
+   * (unlink, /stop, relink) until this confirmation commits.
+   */
+  private async lockedOwnerId(tx: Prisma.TransactionClient, accountId: number): Promise<string | null> {
+    const rows = await tx.$queryRaw<{ user_id: string | null }[]>`
+      SELECT "user_id" FROM "telegram_accounts" WHERE "id" = ${accountId} FOR UPDATE`;
+    return rows[0]?.user_id ?? null;
   }
 
   async getSummary(userId: number, from: Date, to: Date): Promise<DailySummary> {
