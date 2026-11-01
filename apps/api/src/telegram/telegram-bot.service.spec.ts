@@ -6,7 +6,7 @@ import { PrismaLinkRepository } from './repositories/prisma-link-repository';
 import { PrismaTransactionRepository } from './repositories/prisma-transaction-repository';
 import { PrismaUserRepository } from './repositories/prisma-user-repository';
 import { createTelegramBot } from './telegram-bot';
-import { CONFLICT_RETRY_MS, TelegramBotService } from './telegram-bot.service';
+import { CONFLICT_RETRY_MS, isTelegramBotToken, TelegramBotService } from './telegram-bot.service';
 
 jest.mock('./telegram-bot', () => ({ createTelegramBot: jest.fn() }));
 
@@ -79,7 +79,30 @@ describe('TelegramBotService', () => {
     expect(bot.running).toBe(false);
   });
 
-  it('marks itself off when polling fails, for example with a revoked token', async () => {
+  it.each([
+    ['with quotes', '"123456:ABC-def"'],
+    ['with a space inside', '123456:ABC def'],
+    ['without the numeric part', 'ABC-def_789'],
+    ['without the secret part', '123456:'],
+    ['with other characters', '123456:ABC/def+ghi='],
+  ])('stays off with a malformed token (%s) and logs a clear error without the token', (_label, malformed) => {
+    const bot = service({ NODE_ENV: 'production', TELEGRAM_BOT_TOKEN: malformed });
+    bot.onApplicationBootstrap();
+
+    expect(bot.running).toBe(false);
+    expect(createTelegramBot).not.toHaveBeenCalled();
+    const logged = errorLog.mock.calls.flat().join(' ');
+    expect(logged).toContain('TELEGRAM_BOT_TOKEN is malformed');
+    expect(logged).toContain('The rest of the API keeps running');
+    expect(logged).not.toContain(malformed);
+  });
+
+  it('accepts the shape of a real @BotFather token', () => {
+    expect(isTelegramBotToken('1234567890:AAH-abc_DEF123ghiJKL456mnoPQR789stu')).toBe(true);
+    expect(isTelegramBotToken(TOKEN)).toBe(true);
+  });
+
+  it('turns only the bot off when Telegram rejects a well-formed token (401), without logging it', async () => {
     fakeBot.start.mockReturnValue(Promise.reject(telegramError(401, 'Unauthorized')));
     const bot = service({ NODE_ENV: 'production', TELEGRAM_BOT_TOKEN: TOKEN });
     bot.onApplicationBootstrap();
@@ -87,8 +110,19 @@ describe('TelegramBotService', () => {
 
     expect(bot.running).toBe(false);
     const logged = errorLog.mock.calls.flat().join(' ');
-    expect(logged).toContain('Telegram bot stopped');
+    expect(logged).toContain('Telegram rejected TELEGRAM_BOT_TOKEN (401 Unauthorized)');
     expect(logged).not.toContain(TOKEN);
+    await expect(bot.send(1, 'hi')).rejects.toThrow('Telegram bot is not running');
+  });
+
+  it('turns the bot off on another fatal polling error', async () => {
+    fakeBot.start.mockReturnValue(Promise.reject(new Error('boom')));
+    const bot = service({ NODE_ENV: 'production', TELEGRAM_BOT_TOKEN: TOKEN });
+    bot.onApplicationBootstrap();
+    await flush();
+
+    expect(bot.running).toBe(false);
+    expect(errorLog.mock.calls.flat().join(' ')).toContain('Telegram bot stopped: boom');
   });
 
   describe('while another instance polls the same bot (409 Conflict, e.g. during a deploy)', () => {

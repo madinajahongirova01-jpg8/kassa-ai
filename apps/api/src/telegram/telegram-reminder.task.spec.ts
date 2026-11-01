@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { createPgliteDatabase, PgliteDatabase } from '../../test/pglite-database';
 import { parseCalendarDate } from '../common/dates';
 import { CustomersService } from '../customers/customers.service';
@@ -163,5 +164,82 @@ describe('TelegramReminderTask', () => {
     expect(await task.run(NOV_1_0900)).toBe(2);
     expect(new Set(sent.map((message) => message.chatId))).toEqual(new Set([TG_B, TG_FREE]));
     errors.mockRestore();
+  });
+
+  describe('database load', () => {
+    const MINUTE = 60_000;
+    // Dushanbe midnight of 1 November is 19:00 UTC on 31 October.
+    const NOV_1_0000 = new Date('2026-10-31T19:00:00.000Z');
+    const at = (minutesAfterMidnight: number): Date => new Date(NOV_1_0000.getTime() + minutesAfterMidnight * MINUTE);
+    let queries: jest.SpyInstance;
+
+    beforeEach(() => {
+      queries = jest.spyOn(users, 'listDueForReminder');
+    });
+
+    afterEach(() => {
+      queries.mockRestore();
+    });
+
+    it("asks the database 15 times over a whole Dushanbe day of minute ticks, not about 900", async () => {
+      for (let minute = 0; minute < 24 * 60; minute += 1) {
+        await task.run(at(minute));
+      }
+
+      // Once at 09:00, then hourly from 10:00 to 23:00.
+      expect(queries).toHaveBeenCalledTimes(15);
+      expect(queries.mock.calls.every(([date]) => date === '2026-11-01')).toBe(true);
+      expect(sent).toHaveLength(3);
+    });
+
+    it('never touches the database before 09:00 in Dushanbe', async () => {
+      for (let minute = 0; minute < 9 * 60; minute += 1) {
+        await task.run(at(minute));
+      }
+      expect(queries).not.toHaveBeenCalled();
+    });
+
+    it('reminds an account that becomes due later in the day at the next hourly check', async () => {
+      await task.run(at(9 * 60));
+      const ownerC = (await db.prisma.user.create({ data: { email: 'c@example.com', passwordHash: 'x' } })).id;
+      await account(7005, ownerC);
+      await debt(ownerC, 'Karim', 9_000, '2026-10-15');
+
+      for (let minute = 9 * 60 + 1; minute < 10 * 60; minute += 1) {
+        expect(await task.run(at(minute))).toBe(0);
+      }
+      expect(sentTo(7005)).toEqual([]);
+      expect(queries).toHaveBeenCalledTimes(1);
+
+      expect(await task.run(at(10 * 60))).toBe(1);
+      expect(sentTo(7005)[0]).toContain('Karim');
+    });
+
+    it('reminds at once when the server wakes up after 09:00', async () => {
+      expect(await task.run(at(14 * 60 + 37))).toBe(3);
+      expect(queries).toHaveBeenCalledTimes(1);
+    });
+
+    it('checks again on the next tick after a failed run', async () => {
+      const errors = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+      queries.mockRejectedValueOnce(new Error('connection refused'));
+
+      expect(await task.run(at(9 * 60))).toBe(0);
+      expect(await task.run(at(9 * 60 + 1))).toBe(3);
+      expect(queries).toHaveBeenCalledTimes(2);
+      errors.mockRestore();
+    });
+
+    it('starts a new day with a fresh check and never sends twice, even from a second instance', async () => {
+      await task.run(at(23 * 60 + 30));
+      const second = new TelegramReminderTask(users, transactions, bot as unknown as TelegramBotService);
+
+      expect(await second.run(at(23 * 60 + 31))).toBe(0);
+      expect(sent).toHaveLength(3);
+
+      sent = [];
+      expect(await task.run(at(24 * 60 + 9 * 60))).toBe(3);
+      expect(queries.mock.calls.at(-1)).toEqual(['2026-11-02']);
+    });
   });
 });

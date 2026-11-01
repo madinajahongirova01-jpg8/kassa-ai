@@ -9,7 +9,8 @@ process.env.AUTH_THROTTLE_LIMIT = '10000';
 process.env.AUTH_THROTTLE_TTL_SECONDS = '60';
 process.env.TRUST_PROXY = 'loopback';
 process.env.GEMINI_API_KEY = '';
-// The bot never polls Telegram from tests, even if .env has a token.
-process.env.TELEGRAM_BOT_TOKEN = '';
+// Tests never poll Telegram (NODE_ENV=test), and a token from .env is never used: it is blanked
+// unless a test file set its own fake value first.
+process.env.TELEGRAM_BOT_TOKEN ??= '';
 
 export {};

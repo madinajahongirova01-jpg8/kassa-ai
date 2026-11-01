@@ -27,19 +27,15 @@ describe('validateEnv', () => {
     });
   });
 
-  it('reads an optional Telegram bot token and rejects a malformed one without printing it', () => {
+  it('reads an optional Telegram bot token, trimmed, and treats an empty one as missing', () => {
     expect(validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: ' 123456:ABC-def_789 ' }).TELEGRAM_BOT_TOKEN).toBe('123456:ABC-def_789');
     expect(validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: '' }).TELEGRAM_BOT_TOKEN).toBeUndefined();
+    expect(validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: '   ' }).TELEGRAM_BOT_TOKEN).toBeUndefined();
+  });
 
-    const secret = 'not a token value';
-    let message = '';
-    try {
-      validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: secret });
-    } catch (error) {
-      message = error instanceof Error ? error.message : '';
-    }
-    expect(message).toMatch(/TELEGRAM_BOT_TOKEN does not look like a Telegram bot token/);
-    expect(message).not.toContain(secret);
+  it('never refuses to start because of a malformed Telegram bot token: only the bot is turned off', () => {
+    expect(() => validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: '"123456:ABC"' })).not.toThrow();
+    expect(validateEnv({ ...validConfig, TELEGRAM_BOT_TOKEN: 'not a token value' }).TELEGRAM_BOT_TOKEN).toBe('not a token value');
   });
 
   it('reads the optional Gemini settings', () => {

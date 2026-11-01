@@ -15,7 +15,10 @@ export interface Env {
   GEMINI_MODEL: string;
   ENTRY_PARSE_THROTTLE_LIMIT: number;
   ENTRY_PARSE_THROTTLE_TTL_SECONDS: number;
-  /** Optional: without it the Telegram bot and its reminders stay off. */
+  /**
+   * Optional: without it the Telegram bot and its reminders stay off. Its format is checked by
+   * TelegramBotService, so a wrong token only turns the bot off and never stops the API.
+   */
   TELEGRAM_BOT_TOKEN: string | undefined;
 }
 
@@ -25,7 +28,6 @@ const PLACEHOLDER_JWT_SECRET = 'replace-with-a-random-string-of-at-least-32-char
 export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 const GEMINI_MODEL_PATTERN = /^[a-z0-9][a-z0-9.-]{1,63}$/;
 const TRUST_PROXY_NAMES: readonly string[] = ['loopback', 'linklocal', 'uniquelocal'];
-const TELEGRAM_BOT_TOKEN_PATTERN = /^\d+:[A-Za-z0-9_-]+$/;
 
 function isTrustProxyEntry(entry: string): boolean {
   if (TRUST_PROXY_NAMES.includes(entry)) {
@@ -120,12 +122,6 @@ export function validateEnv(config: Record<string, unknown>): Env {
   }
   const parseThrottleLimit = readPositiveInteger(config, 'ENTRY_PARSE_THROTTLE_LIMIT', 20, errors);
   const parseThrottleTtl = readPositiveInteger(config, 'ENTRY_PARSE_THROTTLE_TTL_SECONDS', 60, errors);
-  const telegramBotToken = readString(config, 'TELEGRAM_BOT_TOKEN');
-  if (telegramBotToken !== undefined && !TELEGRAM_BOT_TOKEN_PATTERN.test(telegramBotToken)) {
-    // The value itself is never echoed: it is a secret.
-    errors.push('TELEGRAM_BOT_TOKEN does not look like a Telegram bot token');
-  }
-
   if (errors.length > 0 || nodeEnv === undefined || databaseUrl === undefined || jwtSecret === undefined) {
     throw new Error(`Invalid environment configuration:\n- ${errors.join('\n- ')}`);
   }
@@ -143,6 +139,6 @@ export function validateEnv(config: Record<string, unknown>): Env {
     GEMINI_MODEL: geminiModel,
     ENTRY_PARSE_THROTTLE_LIMIT: parseThrottleLimit,
     ENTRY_PARSE_THROTTLE_TTL_SECONDS: parseThrottleTtl,
-    TELEGRAM_BOT_TOKEN: telegramBotToken,
+    TELEGRAM_BOT_TOKEN: readString(config, 'TELEGRAM_BOT_TOKEN'),
   };
 }

@@ -10,8 +10,16 @@ import { PrismaTransactionRepository } from './repositories/prisma-transaction-r
 import { PrismaUserRepository } from './repositories/prisma-user-repository';
 import { createTelegramBot, TelegramBotDependencies } from './telegram-bot';
 
+const UNAUTHORIZED = 401;
 const CONFLICT = 409;
 export const CONFLICT_RETRY_MS = 15_000;
+
+const TELEGRAM_BOT_TOKEN_PATTERN = /^\d+:[A-Za-z0-9_-]+$/;
+
+/** The shape of a @BotFather token; whether Telegram accepts it is only known when polling starts. */
+export function isTelegramBotToken(value: string): boolean {
+  return TELEGRAM_BOT_TOKEN_PATTERN.test(value);
+}
 
 /**
  * Runs the Telegram bot (long polling) inside the API process when TELEGRAM_BOT_TOKEN is set.
@@ -41,10 +49,21 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
     return this.bot !== null;
   }
 
+  /** Problems with the token turn only the bot off; the log names the variable, never its value. */
   onApplicationBootstrap(): void {
     const token = this.config.get('TELEGRAM_BOT_TOKEN', { infer: true });
-    if (token === undefined || this.config.get('NODE_ENV', { infer: true }) === 'test') {
+    if (token === undefined) {
       this.logger.log('Telegram bot is off (TELEGRAM_BOT_TOKEN is not set)');
+      return;
+    }
+    if (!isTelegramBotToken(token)) {
+      this.logger.error(
+        'Telegram bot is off: TELEGRAM_BOT_TOKEN is malformed (expected the "<digits>:<letters>" token from @BotFather, without quotes). The rest of the API keeps running',
+      );
+      return;
+    }
+    if (this.config.get('NODE_ENV', { infer: true }) === 'test') {
+      this.logger.log('Telegram bot is off in tests');
       return;
     }
 
@@ -76,7 +95,11 @@ export class TelegramBotService implements OnApplicationBootstrap, OnApplication
           }, CONFLICT_RETRY_MS);
           return;
         }
-        this.logger.error(`Telegram bot stopped: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        if (error instanceof GrammyError && error.error_code === UNAUTHORIZED) {
+          this.logger.error('Telegram bot is off: Telegram rejected TELEGRAM_BOT_TOKEN (401 Unauthorized). The rest of the API keeps running');
+        } else {
+          this.logger.error(`Telegram bot stopped: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
         this.bot = null;
       });
   }
